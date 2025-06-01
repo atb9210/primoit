@@ -22,6 +22,7 @@ use App\Http\Controllers\InquiryController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Admin\ITSaleScraperController as AdminITSaleScraperController;
+use App\Http\Controllers\Admin\ITSaleScraperController as ITSaleScraperController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -40,12 +41,23 @@ Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/about', [HomeController::class, 'about'])->name('about');
 Route::get('/how-it-works', [HomeController::class, 'howItWorks'])->name('how-it-works');
 Route::get('/contact', [HomeController::class, 'contact'])->name('contact');
+Route::get('/terms', [HomeController::class, 'terms'])->name('terms');
+Route::get('/privacy', [HomeController::class, 'privacy'])->name('privacy');
+Route::get('/cookies', [HomeController::class, 'cookies'])->name('cookies');
 Route::post('/contact', [InquiryController::class, 'store'])->name('contact.store');
 
+// Batches routes
+Route::get('/batches', [App\Http\Controllers\BatchesController::class, 'index'])->name('batches.index');
+Route::get('/batches/{batch}', [App\Http\Controllers\BatchesController::class, 'show'])->name('batches.show');
+
+// Categories routes
+Route::get('/categories', [App\Http\Controllers\CategoriesController::class, 'index'])->name('categories.index');
+Route::get('/categories/{category}', [App\Http\Controllers\CategoriesController::class, 'show'])->name('categories.show');
+
 // Product routes
-Route::get('/available-stock', [ProductController::class, 'index'])->name('products.index');
-Route::get('/available-stock/{product:slug}', [ProductController::class, 'show'])->name('products.show');
-Route::post('/available-stock/{product}/inquiry', [InquiryController::class, 'storeProductInquiry'])->name('products.inquiry');
+Route::get('/products', [ProductController::class, 'index'])->name('products.index');
+Route::get('/products/{product:slug}', [ProductController::class, 'show'])->name('products.show');
+Route::post('/products/{product}/inquiry', [InquiryController::class, 'storeProductInquiry'])->name('products.inquiry');
 
 // Authentication routes
 Route::middleware('guest')->group(function () {
@@ -115,9 +127,10 @@ Route::middleware(['auth', 'verified', \App\Http\Middleware\AdminMiddleware::cla
     Route::post('suppliers/{supplier}/configure', [AdminThirdPartySupplierController::class, 'updateCredentials'])->name('suppliers.update-credentials');
     Route::get('suppliers/{supplier}/itsale-scraper', [AdminThirdPartySupplierController::class, 'showItsaleScraper'])->name('suppliers.itsale-scraper');
     
-    // ITSale.pl Scraper
-    Route::get('itsale/{supplier}', [AdminITSaleScraperController::class, 'index'])->name('itsale.index');
-    Route::get('itsale/{supplier}/list/{listSlug}', [AdminITSaleScraperController::class, 'showList'])->name('itsale.show-list');
+    // ITSale Scraper Routes
+    Route::get('/itsale/{supplier}', [ITSaleScraperController::class, 'index'])->name('itsale.index');
+    Route::get('/itsale/{supplier}/{listSlug}', [ITSaleScraperController::class, 'showList'])->name('itsale.show-list');
+    Route::post('/itsale/{supplier}/{listSlug}/import', [ITSaleScraperController::class, 'importAsBatch'])->name('itsale.import-batch');
     
     // Orders
     Route::resource('orders', AdminOrderController::class);

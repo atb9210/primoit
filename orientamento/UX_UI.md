@@ -1,109 +1,109 @@
-# PRIMO IT - Linee Guida UX/UI
 
-## Ispirazione
-Il design è ispirato al sito [Return Trading](https://www.returntrading.nl/), mantenendo un'interfaccia pulita e professionale adatta al settore B2B per la vendita di stock IT.
 
-## Principi generali
-- **Semplicità**: Design pulito e funzionale che mette in risalto i prodotti
-- **Trasparenza**: Tutte le informazioni sui prodotti devono essere facilmente accessibili
-- **B2B-oriented**: Focus sull'esperienza utente aziendale, con funzionalità specifiche per acquisti all'ingrosso
-- **Responsive**: Design ottimizzato per desktop, tablet e mobile
+Principi di Design
+Semplicità
+Interfaccia intuitiva che richiede minima formazione per l'utilizzo
+Focus sulle azioni principali in ogni schermata
+Rimozione degli elementi non essenziali
+Chiarezza
+Etichette e descrizioni esplicite
+Feedback visivo per le azioni
+Messaggi di errore informativi
+Stato del sistema sempre visibile
+Consistenza
+Pattern di design coerenti in tutta l'applicazione
+Terminologia uniforme
+Comportamenti prevedibili
+Reattività
+Design responsive per tutti i dispositivi
+Feedback immediato per le azioni dell'utente
+Caricamenti asincroni per evitare blocchi dell'interfaccia
+Palette di Colori
+L'applicazione utilizza una palette di colori basata sul sistema di Tailwind CSS:
 
-## Palette colori
-- **Primario**: #3D5AFE (Blu acceso)
-- **Secondario**: #FF6D00 (Arancione per call-to-action)
-- **Neutro chiaro**: #F5F7FA
-- **Neutro scuro**: #212B36
-- **Accento**: #00C853 (Verde per stati positivi)
-- **Errore**: #D50000
-
-## Tipografia
-- **Titoli**: Poppins, bold
-- **Corpo**: Inter, regular
-- **Accento**: Poppins, semibold
-- **Dimensioni**:
-  - H1: 36px
-  - H2: 28px
-  - H3: 22px
-  - Corpo: 16px
-  - Small: 14px
-
-## Componenti UI
-
-### Header
-- Logo aziendale
-- Menu di navigazione principale
-- Pulsanti di accesso/registrazione
-- Pulsante "Stock disponibile" in evidenza
-- Contatti diretti (telefono)
-
-### Footer
-- Menu di navigazione secondario
-- Informazioni di contatto
-- Collegamenti a pagine legali
-- Copyright
-
-### Pagina Home
-- Hero section con slogan e pulsante CTA
-- Slider dei prodotti in evidenza
-- Sezione "Chi siamo" breve
-- Sezione "Come funziona" con step
-- Form di contatto
-
-### Pagina Listino Prodotti
-- Filtri per categorie
-- Card dei prodotti con:
-  - Immagine
-  - Numero batch
-  - Titolo descrittivo
-  - Breve descrizione tecnica
-  - Stato (disponibile, riservato, venduto)
-  - Pulsante "Maggiori informazioni"
-
-### Pagina Singolo Prodotto
-- Galleria immagini
-- Dettagli completi del prodotto
-- Scheda tecnica dettagliata
-- Numero di lotto
-- Quantità disponibile
-- Prezzo (visibile solo a utenti registrati)
-- Pulsante "Prenota ora" (visibile solo a utenti registrati)
-- Sezione download PDF specifiche
-- Form di contatto rapido
-
-### Componenti comuni
-- **Pulsanti**:
-  - Primario: sfondo blu, testo bianco
-  - Secondario: sfondo bianco, bordo blu, testo blu
-  - CTA: sfondo arancione, testo bianco
-- **Card**:
-  - Sfondo bianco
-  - Ombra leggera
-  - Bordi arrotondati (4px)
-- **Form**:
-  - Input con label sopra
-  - Validazione in tempo reale
-  - Messaggi di errore chiari
-
-## Stati utente
-1. **Visitatore**: Accesso limitato, vede prodotti ma non prezzi
-2. **Cliente B2B registrato**: Accesso completo a prezzi, dettagli e funzionalità di acquisto
-3. **Amministratore**: Gestione completa dei prodotti e utenti
-
-## Comportamenti responsivi
-- **Desktop**: Layout completo a 3-4 colonne per i prodotti
-- **Tablet**: Layout a 2 colonne, menu compattato
-- **Mobile**: Layout a 1 colonna, menu a hamburger
-
-## Elementi di accessibilità
-- Contrasto adeguato per tutti i testi
-- Testi alternativi per tutte le immagini
-- Navigazione possibile da tastiera
-- Messaggi di feedback chiari per le azioni
-
-## Funzionalità specifiche B2B
-- Richiesta preventivi personalizzati
-- Download listino prezzi in PDF
-- Richiesta di riservare stock
-- Visualizzazione storico ordini
-- Area personale con dashboard cliente
+Colori Primari
+Blu/Indigo (text-indigo-600, bg-indigo-500) per azioni primarie e link
+Grigio (text-gray-700, bg-gray-100) per elementi neutri e secondari
+Bianco (bg-white) per lo sfondo dei contenitori
+Colori di Stato
+Verde (text-green-700, bg-green-100) per successo e stati positivi
+Rosso (text-red-700, bg-red-100) per errori e stati negativi
+Giallo (text-yellow-700, bg-yellow-100) per avvisi
+Blu (text-blue-700, bg-blue-100) per stati informativi e in corso
+Tipografia
+Font sans-serif di sistema (font-sans)
+Gerarchia chiara di titoli e testo:
+Titoli di pagina: text-2xl font-bold
+Sottotitoli: text-xl font-medium
+Intestazioni di sezione: text-lg font-medium
+Testo normale: text-base
+Testo secondario e note: text-sm text-gray-600
+Layout
+Struttura generale
+Header con navigazione principale e menu utente
+Sidebar per navigazione secondaria (in pagine complesse)
+Area contenuti principale con breadcrumb
+Footer con informazioni legali e link utili
+Pattern di layout comuni
+Card per contenuti autonomi
+Tabelle per dati strutturati
+Form organizzati in sezioni logiche
+Liste espandibili per gestire grandi set di dati
+Componenti UI
+Dashboard
+Cards con statistiche chiave e metriche
+Sezioni per contenuti recenti
+Link rapidi alle azioni più frequenti
+Elenchi e Tabelle
+Ordinamento delle colonne
+Paginazione
+Azioni di riga accessibili
+Filtri rapidi
+Form
+Validazione in tempo reale
+Suggerimenti contestuali
+Raggruppamento logico dei campi
+Salvataggio automatico dove possibile
+Notifiche
+Toast notifications per conferme
+Banner per messaggi persistenti
+Modal dialogs per azioni distruttive
+Flussi Utente
+Creazione Campagna
+Click su "Nuova Campagna"
+Compilazione form con parametri
+Conferma e creazione
+Redirect alla lista campagne con messaggio di conferma
+Monitoraggio Risultati
+Accesso dashboard
+Visualizzazione campagne con stati
+Click su campagna per dettagli
+Esplorazione risultati e log
+Configurazione Notifiche
+Accesso impostazioni
+Inserimento credenziali Telegram
+Test della notifica
+Conferma e salvataggio
+Accessibilità
+Principi implementati
+Contrasto adeguato per testo e elementi UI
+Etichette ARIA per componenti interattivi
+Supporto per tastiera per tutte le azioni principali
+Testo alternativo per le immagini
+Aree di miglioramento
+Test con screen reader
+Miglioramento della navigazione da tastiera
+Implementazione completa degli standard WCAG
+Modalità di Feedback e Test
+Raccolta feedback
+Osservazione diretta degli utenti
+Form di feedback nell'applicazione
+Analisi dei pattern di utilizzo
+Segnalazioni di bug e problemi
+Ciclo di miglioramento
+Raccolta dati sull'utilizzo
+Identificazione dei problemi UX
+Prototipazione di soluzioni
+Testing delle modifiche
+Implementazione
+Valutazione dei risultati

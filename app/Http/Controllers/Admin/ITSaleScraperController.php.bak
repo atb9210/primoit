@@ -53,39 +53,91 @@ class ITSaleScraperController extends Controller
                 file_put_contents(storage_path('logs/itsale_list.html'), $html);
                 Log::info('Saved list HTML to logs/itsale_list.html for analysis');
                 
-                // Estrai nomi prodotti dai tag span
+                // Utilizziamo il crawler per estrarre le liste in modo strutturato
                 $crawler = new Crawler($html);
-                $productNames = [];
+                $listRows = $crawler->filter('.row');
                 
-                // Cerca tutti gli span con classe list-card-wrapper-link
-                $spans = $crawler->filter('span.list-card-wrapper-link');
-                if ($spans->count() > 0) {
-                    Log::info('Found ' . $spans->count() . ' spans with class list-card-wrapper-link');
-                    $spans->each(function ($span) use (&$productNames) {
-                        $productNames[] = trim($span->text());
-                    });
-                }
-                Log::info('Extracted ' . count($productNames) . ' product names from spans');
+                Log::info('Found ' . $listRows->count() . ' list rows in main list page');
                 
-                // Ora trova le informazioni associate ad ogni prodotto
-                if (preg_match_all('/Units\s*(\d+)\s*Average\s*(?:€|&euro;)?([\d,.]+)[^(]*\(([^)]+)\)(?:[^€]*(?:€|&euro;)([\d,.]+))?(?:[^€]*(?:€|&euro;)([\d,.]+))?/i', $html, $matches, PREG_SET_ORDER)) {
-                    Log::info('Found ' . count($matches) . ' product details');
-                    
-                    for ($i = 0; $i < min(count($matches), count($productNames)); $i++) {
-                        $list = [
-                            'units' => $matches[$i][1],
-                            'average_price' => '€' . $matches[$i][2],
-                            'name' => $productNames[$i],
-                            'description' => trim($matches[$i][3]),
-                            'price' => isset($matches[$i][4]) ? '€' . $matches[$i][4] : '',
-                            'discounted_price' => isset($matches[$i][5]) ? '€' . $matches[$i][5] : ''
-                        ];
+                $listRows->each(function (Crawler $row) use (&$allLists) {
+                    try {
+                        // Estrai unità
+                        $unitsNode = $row->filter('.units-average b')->first();
+                        $units = $unitsNode->count() > 0 ? trim($unitsNode->text()) : '';
+                
+                        // Estrai prezzo medio
+                        $avgPriceNode = $row->filter('.units-average b')->eq(1);
+                        $avgPrice = $avgPriceNode->count() > 0 ? trim($avgPriceNode->text()) : '';
                         
-                        $allLists[] = $list;
+                        // Estrai nome
+                        $nameNode = $row->filter('.list-card-wrapper-link');
+                        $name = $nameNode->count() > 0 ? trim($nameNode->text()) : '';
+                        
+                        // Estrai descrizione
+                        $descNode = $row->filter('.list-description');
+                        $description = $descNode->count() > 0 ? trim($descNode->text()) : '';
+                        
+                        // Estrai prezzo vecchio (non scontato)
+                        $oldPriceNode = $row->filter('.old-price');
+                        $oldPrice = $oldPriceNode->count() > 0 ? trim($oldPriceNode->text()) : '';
+                        
+                        // Estrai prezzo finale (scontato)
+                        $finalPriceNode = $row->filter('.list-price');
+                        $finalPrice = '';
+                        if ($finalPriceNode->count() > 0) {
+                            // Raccoglie tutte le parti del prezzo
+                            $finalPrice = $finalPriceNode->text();
+                            $finalPrice = preg_replace('/\s+/', '', $finalPrice);
+                        }
+                        
+                        if (!empty($name)) {
+                            $list = [
+                                'units' => $units,
+                                'average_price' => $avgPrice,
+                                'name' => $name,
+                                'description' => $description,
+                                'price' => $finalPrice,
+                                'discounted_price' => $oldPrice
+                            ];
+                            
+                            $allLists[] = $list;
+                }
+                    } catch (\Exception $e) {
+                        Log::error('Error extracting list data: ' . $e->getMessage());
                     }
-                } else {
-                    // Fallback ai metodi esistenti se non riesce a estrarre i dettagli
-                    Log::info('Could not match product details with span names, falling back to original methods');
+                });
+                
+                // Se non abbiamo trovato liste con il nuovo metodo, usa i metodi precedenti come fallback
+                if (empty($allLists)) {
+                    // Estrazione dei dati dal testo completo
+                    $bodyText = preg_replace('/\s+/', ' ', $html); // Normalizza gli spazi
+                    $bodyText = strip_tags($bodyText); // Rimuovi tutti i tag HTML
+                    
+                    // Metodo 1: cerca pattern di lista con Units e Average
+                    if (preg_match_all('/Units\s*(\d+)\s*Average\s*(?:€|&euro;)?([\d,.]+)([^(]*)\(([^)]+)\)(?:[^€]*(?:€|&euro;)([\d,.]+))?(?:[^€]*(?:€|&euro;)([\d,.]+))?/i', $bodyText, $matches, PREG_SET_ORDER)) {
+                        Log::info('Found ' . count($matches) . ' lists with method 1 from /list');
+                        
+                        foreach ($matches as $match) {
+                            $name = trim($match[3]);
+                            // Pulisci il nome rimuovendo prefissi e prezzi
+                            $name = preg_replace('/^(?:Mix\s*)?Units\s*\d+\s*Average\s*(?:€|&euro;)?[\d,.]+\s*/i', '', $name);
+                            // Rimuovi anche i prezzi alla fine del nome (pattern più robusto)
+                            $name = preg_replace('/\s+(?:€|&euro;)[\d,.]+(?:\s+(?:€|&euro;)[\d,.]+)?$/i', '', $name);
+                            // Elimina qualsiasi sequenza di prezzi o numeri alla fine del nome
+                            $name = preg_replace('/\s+[\d,.]+(?:\s+[\d,.]+)*$/i', '', $name);
+                            
+                            $list = [
+                                'units' => $match[1],
+                                'average_price' => '€' . $match[2],
+                                'name' => $name,
+                                'description' => trim($match[4]),
+                                'price' => isset($match[6]) ? '€' . $match[6] : (isset($match[5]) ? '€' . $match[5] : ''),
+                                'discounted_price' => isset($match[5]) ? '€' . $match[5] : ''
+                            ];
+                            
+                            $allLists[] = $list;
+                        }
+                    }
                 }
             }
             
@@ -105,141 +157,63 @@ class ITSaleScraperController extends Controller
                 if ($listsDiv->count() > 0) {
                     Log::info('Found #lists div in homepage');
                     
-                    // Estrai il testo dal div
-                    $listsText = $listsDiv->text();
-                    $listsText = preg_replace('/\s+/', ' ', $listsText); // Normalizza gli spazi
+                    // Estrazione strutturata dalle liste HTML
+                    $listRows = $listsDiv->filter('.row');
                     
-                    Log::info('Lists div text: ' . substr($listsText, 0, 200) . '...');
-                    
-                    // Estrai le liste con il pattern regex
-                    if (preg_match_all('/Units\*\*(\d+)\*\*\s*Average\*\*(?:€|&euro;)?([\d,.]+)\*\*\s*([^(]*)\(([^)]+)\)(?:[^€]*(?:€|&euro;)([\d,.]+))(?:[^€]*(?:€|&euro;)([\d,.]+))/i', $listsText, $matches, PREG_SET_ORDER)) {
-                        Log::info('Found ' . count($matches) . ' lists in homepage #lists div');
+                    if ($listRows->count() > 0) {
+                        Log::info('Found ' . $listRows->count() . ' list rows in homepage');
                         
-                        foreach ($matches as $match) {
-                            $name = trim($match[3]);
-                            // Pulisci il nome rimuovendo prefissi e prezzi
-                            $name = preg_replace('/^(?:Mix\s*)?Units\s*\d+\s*Average\s*(?:€|&euro;)?[\d,.]+\s*/i', '', $name);
-                            // Rimuovi anche i prezzi alla fine del nome (pattern più robusto)
-                            $name = preg_replace('/\s+(?:€|&euro;)[\d,.]+(?:\s+(?:€|&euro;)[\d,.]+)?$/i', '', $name);
-                            // Elimina qualsiasi sequenza di prezzi o numeri alla fine del nome
-                            $name = preg_replace('/\s+[\d,.]+(?:\s+[\d,.]+)*$/i', '', $name);
-                            
-                            $list = [
-                                'units' => $match[1],
-                                'average_price' => '€' . $match[2],
-                                'name' => $name,
-                                'description' => trim($match[4]),
-                                'price' => isset($match[5]) ? '€' . $match[5] : '',
-                                'discounted_price' => isset($match[6]) ? '€' . $match[6] : ''
-                            ];
-                            
-                            $latestLists[] = $list;
-                        }
-                    }
+                        $listRows->each(function (Crawler $row) use (&$latestLists) {
+                            try {
+                                // Estrai unità
+                                $unitsNode = $row->filter('.units-average b')->first();
+                                $units = $unitsNode->count() > 0 ? trim($unitsNode->text()) : '';
+                                
+                                // Estrai prezzo medio
+                                $avgPriceNode = $row->filter('.units-average b')->eq(1);
+                                $avgPrice = $avgPriceNode->count() > 0 ? trim($avgPriceNode->text()) : '';
+                                
+                                // Estrai nome
+                                $nameNode = $row->filter('.list-card-wrapper-link');
+                                $name = $nameNode->count() > 0 ? trim($nameNode->text()) : '';
+                                
+                                // Estrai descrizione
+                                $descNode = $row->filter('.list-description');
+                                $description = $descNode->count() > 0 ? trim($descNode->text()) : '';
+                                
+                                // Estrai prezzo vecchio (scontato)
+                                $oldPriceNode = $row->filter('.old-price');
+                                $oldPrice = $oldPriceNode->count() > 0 ? trim($oldPriceNode->text()) : '';
                     
-                    // Se non trova con il pattern esatto, prova un pattern più generico
-                    if (empty($latestLists)) {
-                        if (preg_match_all('/Units[^\d]*(\d+)[^€]*(?:€|&euro;)([\d,.]+)[^\(]+\(([^)]+)\)[^€]*(?:€|&euro;)([\d,.]+)[^€]*(?:€|&euro;)([\d,.]+)/i', $listsText, $matches, PREG_SET_ORDER)) {
-                            Log::info('Found ' . count($matches) . ' lists in homepage #lists div with alternative pattern');
-                            
-                            foreach ($matches as $match) {
-                                // Estrai il nome dalla stringa completa e puliscilo
-                                $fullText = $match[0];
-                                $name = preg_replace('/\s+\([^)]+\)/', '', $fullText);
-                                // Pulisci il nome rimuovendo prefissi
-                                $name = preg_replace('/^(?:Mix\s*)?Units\s*\d+\s*Average\s*(?:€|&euro;)?[\d,.]+\s*/i', '', $name);
-                                
-                                $list = [
-                                    'units' => $match[1],
-                                    'average_price' => '€' . $match[2],
-                                    'name' => $name,
-                                    'description' => trim($match[3]),
-                                    'price' => '€' . $match[4],
-                                    'discounted_price' => '€' . $match[5]
-                                ];
-                                
-                                $latestLists[] = $list;
-                            }
-                        }
-                    }
-                    
-                    // Se ancora non trova liste, cerca i link diretti nel div
-                    if (empty($latestLists)) {
-                        $links = $listsDiv->filter('a');
-                        Log::info('Found ' . $links->count() . ' links in homepage #lists div');
-                        
-                        $links->each(function(Crawler $link) use (&$latestLists) {
-                            $text = $link->text();
-                            Log::info('Link text: ' . $text);
-                            
-                            // Cerca pattern nel testo del link
-                            if (preg_match('/Units\s*(\d+)\s*Average\s*(?:€|&euro;)?([\d,.]+)\s*([^(]*)\(([^)]+)\)(?:[^€]*(?:€|&euro;)([\d,.]+))?(?:[^€]*(?:€|&euro;)([\d,.]+))?/i', $text, $match)) {
-                                $name = trim($match[3]);
-                                // Pulisci il nome rimuovendo prefissi e prezzi
-                                $name = preg_replace('/^(?:Mix\s*)?Units\s*\d+\s*Average\s*(?:€|&euro;)?[\d,.]+\s*/i', '', $name);
-                                // Rimuovi anche i prezzi alla fine del nome (pattern più robusto)
-                                $name = preg_replace('/\s+(?:€|&euro;)[\d,.]+(?:\s+(?:€|&euro;)[\d,.]+)?$/i', '', $name);
-                                // Elimina qualsiasi sequenza di prezzi o numeri alla fine del nome
-                                $name = preg_replace('/\s+[\d,.]+(?:\s+[\d,.]+)*$/i', '', $name);
-                                
-                                $list = [
-                                    'units' => $match[1],
-                                    'average_price' => '€' . $match[2],
-                                    'name' => $name,
-                                    'description' => trim($match[4]),
-                                    'price' => isset($match[5]) ? '€' . $match[5] : '',
-                                    'discounted_price' => isset($match[6]) ? '€' . $match[6] : ''
-                                ];
-                                
-                                $latestLists[] = $list;
-                            }
-                        });
-                    }
-                } else {
-                    Log::info('No #lists div found in homepage, trying to find latest lists in the page');
-                    
-                    // Cerca il testo "Latest Wholesale Lists" e estrai le liste
-                    $bodyText = $crawler->filter('body')->text();
-                    
-                    if (strpos($bodyText, 'Latest Wholesale Lists') !== false) {
-                        Log::info('Found "Latest Wholesale Lists" text in homepage');
-                        
-                        // Dividi il testo in sezioni
-                        $sections = explode('Latest Wholesale Lists', $bodyText, 2);
-                        
-                        if (count($sections) > 1) {
-                            $latestListsSection = $sections[1];
-                            
-                            // Estrai le liste con il pattern regex
-                            if (preg_match_all('/Units\*\*(\d+)\*\*\s*Average\*\*(?:€|&euro;)?([\d,.]+)\*\*\s*([^(]*)\(([^)]+)\)(?:[^€]*(?:€|&euro;)([\d,.]+))(?:[^€]*(?:€|&euro;)([\d,.]+))/i', $latestListsSection, $matches, PREG_SET_ORDER)) {
-                                Log::info('Found ' . count($matches) . ' lists after "Latest Wholesale Lists" text');
-                                
-                                foreach ($matches as $match) {
-                                    $name = trim($match[3]);
-                                    // Pulisci il nome rimuovendo prefissi e prezzi
-                                    $name = preg_replace('/^(?:Mix\s*)?Units\s*\d+\s*Average\s*(?:€|&euro;)?[\d,.]+\s*/i', '', $name);
-                                    // Rimuovi anche i prezzi alla fine del nome (pattern più robusto)
-                                    $name = preg_replace('/\s+(?:€|&euro;)[\d,.]+(?:\s+(?:€|&euro;)[\d,.]+)?$/i', '', $name);
-                                    // Elimina qualsiasi sequenza di prezzi o numeri alla fine del nome
-                                    $name = preg_replace('/\s+[\d,.]+(?:\s+[\d,.]+)*$/i', '', $name);
-                                    
-                                    $list = [
-                                        'units' => $match[1],
-                                        'average_price' => '€' . $match[2],
-                                        'name' => $name,
-                                        'description' => trim($match[4]),
-                                        'price' => isset($match[5]) ? '€' . $match[5] : '',
-                                        'discounted_price' => isset($match[6]) ? '€' . $match[6] : ''
-                                    ];
-                                    
-                                    $latestLists[] = $list;
+                                // Estrai prezzo finale
+                                $finalPriceNode = $row->filter('.list-price');
+                                $finalPrice = '';
+                                if ($finalPriceNode->count() > 0) {
+                                    // Raccoglie tutte le parti del prezzo
+                                    $finalPrice = $finalPriceNode->text();
+                                    $finalPrice = preg_replace('/\s+/', '', $finalPrice);
                                 }
+                                
+                                if (!empty($name)) {
+                    $list = [
+                                        'units' => $units,
+                                        'average_price' => $avgPrice,
+                        'name' => $name,
+                        'description' => $description,
+                                        'price' => $finalPrice,
+                                        'discounted_price' => $oldPrice
+                    ];
+                    
+                    $latestLists[] = $list;
+                                }
+                            } catch (\Exception $e) {
+                                Log::error('Error extracting list data: ' . $e->getMessage());
+                                }
+                        });
                             }
                         }
                     }
-                }
-            }
-            
+                    
             // Elimina duplicati basati sul nome
             $uniqueAllLists = [];
             $processedNames = [];
@@ -249,8 +223,8 @@ class ITSaleScraperController extends Controller
                 if (!in_array($name, $processedNames) && !empty($name)) {
                     $processedNames[] = $name;
                     $uniqueAllLists[] = $list;
-                }
-            }
+                            }
+                        }
             
             $allLists = $uniqueAllLists;
             Log::info('Final all lists count after removing duplicates: ' . count($allLists));
@@ -261,20 +235,20 @@ class ITSaleScraperController extends Controller
             } else {
                 Log::info('Found ' . count($latestLists) . ' latest lists from homepage');
             }
-            
-            if (empty($latestLists) && empty($allLists)) {
-                // Nessuna lista trovata
-                Log::error('No lists found, check HTML structure');
                 
-                return view('admin.itsale.index', [
-                    'supplier' => $supplier,
-                    'latestLists' => [],
-                    'allLists' => [],
-                    'error' => 'No lists found. The website structure might have changed.'
-                ]);
-            }
-            
-            return view('admin.itsale.index', compact('supplier', 'latestLists', 'allLists'));
+                if (empty($latestLists) && empty($allLists)) {
+                    // Nessuna lista trovata
+                    Log::error('No lists found, check HTML structure');
+                    
+                    return view('admin.itsale.index', [
+                        'supplier' => $supplier,
+                        'latestLists' => [],
+                        'allLists' => [],
+                        'error' => 'No lists found. The website structure might have changed.'
+                    ]);
+                }
+                
+                return view('admin.itsale.index', compact('supplier', 'latestLists', 'allLists'));
         } catch (\Exception $e) {
             Log::error('Exception while scraping ITSale.pl: ' . $e->getMessage());
             return view('admin.itsale.index', [
@@ -303,108 +277,68 @@ class ITSaleScraperController extends Controller
             
             if (!$response->successful()) {
                 Log::error('Failed to fetch ITSale.pl lists: ' . $response->status());
+                
+                // Fallback: prova con la homepage prima di fallire completamente
+                $homepageResponse = Http::timeout(60)->get('https://itsale.pl/homepage.php?category_id=0&page=1&limit=60');
+                
+                if (!$homepageResponse->successful()) {
+                    // Entrambi i tentativi sono falliti
                 return redirect()->route('admin.itsale.index', $supplier)
-                    ->with('error', 'Failed to fetch list data. Status code: ' . $response->status());
+                        ->with('error', 'Failed to fetch data from ITSale.pl. Status codes: list=' . $response->status() . ', homepage=' . $homepageResponse->status());
             }
             
-            // Parse della pagina delle liste per trovare tutte le liste
+                // Continua con i dati della homepage
+                $html = $homepageResponse->body();
+                Log::info('Using homepage data as fallback');
+            } else {
             $html = $response->body();
+            }
             
             // Salviamo l'HTML per debug
             file_put_contents(storage_path('logs/itsale_list_page.html'), $html);
             Log::info('Saved list page HTML for analysis');
             
-            // Estrazione dei dati dal testo completo
-            $bodyText = preg_replace('/\s+/', ' ', $html); // Normalizza gli spazi
-            $bodyText = strip_tags($bodyText); // Rimuovi tutti i tag HTML
-            
             // Inizializziamo le liste
             $lists = [];
             
-            // Metodo 1: cerca pattern di lista con Units e Average
-            if (preg_match_all('/Units\s*(\d+)\s*Average\s*(?:€|&euro;)?([\d,.]+)([^(]*)\(([^)]+)\)(?:[^€]*(?:€|&euro;)([\d,.]+))?(?:[^€]*(?:€|&euro;)([\d,.]+))?/i', $bodyText, $matches, PREG_SET_ORDER)) {
-                foreach ($matches as $match) {
-                    $name = trim($match[3]);
-                    // Pulisci il nome rimuovendo prefissi e prezzi
-                    $name = preg_replace('/^(?:Mix\s*)?Units\s*\d+\s*Average\s*(?:€|&euro;)?[\d,.]+\s*/i', '', $name);
-                    // Rimuovi anche i prezzi alla fine del nome (pattern più robusto)
-                    $name = preg_replace('/\s+(?:€|&euro;)[\d,.]+(?:\s+(?:€|&euro;)[\d,.]+)?$/i', '', $name);
-                    // Elimina qualsiasi sequenza di prezzi o numeri alla fine del nome
-                    $name = preg_replace('/\s+[\d,.]+(?:\s+[\d,.]+)*$/i', '', $name);
-                    $currSlug = strtolower(trim(preg_replace('/[^a-zA-Z0-9]+/', '-', $name), '-'));
-                    
-                    $lists[$currSlug] = [
-                        'name' => $name,
-                        'description' => trim($match[4]),
-                        'units' => (int)$match[1],
-                        'avg_price' => '€' . $match[2],
-                        'total_price' => isset($match[6]) ? '€' . $match[6] : (isset($match[5]) ? '€' . $match[5] : '')
-                    ];
-                }
-            }
+            // Utilizziamo il crawler per estrarre le liste in modo strutturato
+            $crawler = new Crawler($html);
+            $listRows = $crawler->filter('.row');
             
-            // Metodo 2: cerca pattern alternativo (Mix Units...)
-            if (preg_match_all('/Mix\s*Units\s*(\d+)\s*Average\s*(?:€|&euro;)?([\d,.]+)([^(]*)\(([^)]+)\)(?:[^€]*(?:€|&euro;)([\d,.]+))?(?:[^€]*(?:€|&euro;)([\d,.]+))?/i', $bodyText, $matches, PREG_SET_ORDER)) {
-                foreach ($matches as $match) {
-                    $name = trim($match[3]);
-                    // Pulisci il nome rimuovendo prefissi e prezzi
-                    $name = preg_replace('/^(?:Mix\s*)?Units\s*\d+\s*Average\s*(?:€|&euro;)?[\d,.]+\s*/i', '', $name);
-                    // Rimuovi anche i prezzi alla fine del nome (pattern più robusto)
-                    $name = preg_replace('/\s+(?:€|&euro;)[\d,.]+(?:\s+(?:€|&euro;)[\d,.]+)?$/i', '', $name);
-                    // Elimina qualsiasi sequenza di prezzi o numeri alla fine del nome
-                    $name = preg_replace('/\s+[\d,.]+(?:\s+[\d,.]+)*$/i', '', $name);
-                    $currSlug = strtolower(trim(preg_replace('/[^a-zA-Z0-9]+/', '-', $name), '-'));
-                    
-                    $lists[$currSlug] = [
-                        'name' => $name,
-                        'description' => trim($match[4]),
-                        'units' => (int)$match[1],
-                        'avg_price' => '€' . $match[2],
-                        'total_price' => isset($match[6]) ? '€' . $match[6] : (isset($match[5]) ? '€' . $match[5] : '')
-                    ];
-                }
-            }
+            Log::info('Found ' . $listRows->count() . ' list rows');
             
-            // Metodo 3: Dividi in righe e cerca righe che contengono sia "Units" che "Average"
-            $lines = explode("\n", strip_tags($html));
+            $listRows->each(function (Crawler $row) use (&$lists) {
+                try {
+                    // Estrai unità
+                    $unitsNode = $row->filter('.units-average b')->first();
+                    $units = $unitsNode->count() > 0 ? trim($unitsNode->text()) : '';
+                    
+                    // Estrai prezzo medio
+                    $avgPriceNode = $row->filter('.units-average b')->eq(1);
+                    $avgPrice = $avgPriceNode->count() > 0 ? trim($avgPriceNode->text()) : '';
+                    
+                    // Estrai nome
+                    $nameNode = $row->filter('.list-card-wrapper-link');
+                    $name = $nameNode->count() > 0 ? trim($nameNode->text()) : '';
             
-            foreach ($lines as $line) {
-                $line = preg_replace('/\s+/', ' ', $line); // Normalizza gli spazi
-                
-                if (strpos($line, 'Units') !== false && strpos($line, 'Average') !== false) {
-                    // Estrai Units
-                    $units = '';
-                    if (preg_match('/Units\s*(\d+)/i', $line, $unitMatches)) {
-                        $units = $unitMatches[1];
+                    // Estrai descrizione
+                    $descNode = $row->filter('.list-description');
+                    $description = $descNode->count() > 0 ? trim($descNode->text()) : '';
+                    
+                    // Estrai prezzo vecchio (non scontato)
+                    $oldPriceNode = $row->filter('.old-price');
+                    $oldPrice = $oldPriceNode->count() > 0 ? trim($oldPriceNode->text()) : '';
+                    
+                    // Estrai prezzo finale (scontato)
+                    $finalPriceNode = $row->filter('.list-price');
+                    $finalPrice = '';
+                    if ($finalPriceNode->count() > 0) {
+                        // Raccoglie tutte le parti del prezzo
+                        $finalPrice = $finalPriceNode->text();
+                        $finalPrice = preg_replace('/\s+/', '', $finalPrice);
                     }
                     
-                    // Estrai Average
-                    $avgPrice = '';
-                    if (preg_match('/Average\s*(?:€|&euro;)?([\d,.]+)/i', $line, $avgMatches)) {
-                        $avgPrice = '€' . $avgMatches[1];
-                    }
-                    
-                    // Estrai name e description
-                    $name = '';
-                    $description = '';
-                    if (preg_match('/Average[^(]*([^(]+)\(([^)]+)\)/i', $line, $descMatches)) {
-                        $name = trim($descMatches[1]);
-                        // Pulisci il nome rimuovendo prefissi
-                        $name = preg_replace('/^(?:Mix\s*)?Units\s*\d+\s*Average\s*(?:€|&euro;)?[\d,.]+\s*/i', '', $name);
-                        // Rimuovi anche i prezzi alla fine del nome (pattern più robusto)
-                        $name = preg_replace('/\s+(?:€|&euro;)[\d,.]+(?:\s+(?:€|&euro;)[\d,.]+)?$/i', '', $name);
-                        // Elimina qualsiasi sequenza di prezzi o numeri alla fine del nome
-                        $name = preg_replace('/\s+[\d,.]+(?:\s+[\d,.]+)*$/i', '', $name);
-                        $description = trim($descMatches[2]);
-                    }
-                    
-                    // Estrai prezzi
-                    $prices = [];
-                    if (preg_match_all('/(?:€|&euro;)([\d,.]+)/i', $line, $priceMatches)) {
-                        $prices = $priceMatches[1];
-                    }
-                    
-                    if (!empty($units) && !empty($name)) {
+                    if (!empty($name)) {
                         $currSlug = strtolower(trim(preg_replace('/[^a-zA-Z0-9]+/', '-', $name), '-'));
                         
                         $lists[$currSlug] = [
@@ -412,39 +346,112 @@ class ITSaleScraperController extends Controller
                             'description' => $description,
                             'units' => (int)$units,
                             'avg_price' => $avgPrice,
-                            'total_price' => isset($prices[1]) ? '€' . $prices[1] : (isset($prices[0]) ? '€' . $prices[0] : '')
+                            'total_price' => $finalPrice
+                        ];
+                    }
+                } catch (\Exception $e) {
+                    Log::error('Error extracting list data: ' . $e->getMessage());
+                }
+            });
+            
+            // Se non abbiamo trovato liste con il nuovo metodo, usiamo i metodi precedenti come fallback
+            if (empty($lists)) {
+                // Estrazione dei dati dal testo completo
+                $bodyText = preg_replace('/\s+/', ' ', $html); // Normalizza gli spazi
+                $bodyText = strip_tags($bodyText); // Rimuovi tutti i tag HTML
+                
+                // Metodo 1: cerca pattern di lista con Units e Average
+                if (preg_match_all('/Units\s*(\d+)\s*Average\s*(?:€|&euro;)?([\d,.]+)([^(]*)\(([^)]+)\)(?:[^€]*(?:€|&euro;)([\d,.]+))?(?:[^€]*(?:€|&euro;)([\d,.]+))?/i', $bodyText, $matches, PREG_SET_ORDER)) {
+                    foreach ($matches as $match) {
+                $name = trim($match[3]);
+                        // Pulisci il nome rimuovendo prefissi e prezzi
+                        $name = preg_replace('/^(?:Mix\s*)?Units\s*\d+\s*Average\s*(?:€|&euro;)?[\d,.]+\s*/i', '', $name);
+                        // Rimuovi anche i prezzi alla fine del nome (pattern più robusto)
+                        $name = preg_replace('/\s+(?:€|&euro;)[\d,.]+(?:\s+(?:€|&euro;)[\d,.]+)?$/i', '', $name);
+                        // Elimina qualsiasi sequenza di prezzi o numeri alla fine del nome
+                        $name = preg_replace('/\s+[\d,.]+(?:\s+[\d,.]+)*$/i', '', $name);
+                $currSlug = strtolower(trim(preg_replace('/[^a-zA-Z0-9]+/', '-', $name), '-'));
+                
+                        $lists[$currSlug] = [
+                            'name' => $name,
+                            'description' => trim($match[4]),
+                            'units' => (int)$match[1],
+                            'avg_price' => '€' . $match[2],
+                            'total_price' => isset($match[6]) ? '€' . $match[6] : (isset($match[5]) ? '€' . $match[5] : '')
                         ];
                     }
                 }
-            }
-            
-            // Se non abbiamo trovato la lista cercata, prova anche con la homepage
-            if (!isset($lists[$listSlug])) {
-                $homepageResponse = Http::timeout(60)->get('https://itsale.pl/homepage.php?category_id=0&page=1&limit=60');
                 
-                if ($homepageResponse->successful()) {
-                    $homepageHtml = $homepageResponse->body();
-                    $homepageBodyText = preg_replace('/\s+/', ' ', $homepageHtml);
-                    $homepageBodyText = strip_tags($homepageBodyText);
+                // Metodo 2: cerca pattern alternativo (Mix Units...)
+                if (preg_match_all('/Mix\s*Units\s*(\d+)\s*Average\s*(?:€|&euro;)?([\d,.]+)([^(]*)\(([^)]+)\)(?:[^€]*(?:€|&euro;)([\d,.]+))?(?:[^€]*(?:€|&euro;)([\d,.]+))?/i', $bodyText, $matches, PREG_SET_ORDER)) {
+                    foreach ($matches as $match) {
+                        $name = trim($match[3]);
+                        // Pulisci il nome rimuovendo prefissi e prezzi
+                        $name = preg_replace('/^(?:Mix\s*)?Units\s*\d+\s*Average\s*(?:€|&euro;)?[\d,.]+\s*/i', '', $name);
+                        // Rimuovi anche i prezzi alla fine del nome (pattern più robusto)
+                        $name = preg_replace('/\s+(?:€|&euro;)[\d,.]+(?:\s+(?:€|&euro;)[\d,.]+)?$/i', '', $name);
+                        // Elimina qualsiasi sequenza di prezzi o numeri alla fine del nome
+                        $name = preg_replace('/\s+[\d,.]+(?:\s+[\d,.]+)*$/i', '', $name);
+                        $currSlug = strtolower(trim(preg_replace('/[^a-zA-Z0-9]+/', '-', $name), '-'));
+                        
+                        $lists[$currSlug] = [
+                        'name' => $name,
+                        'description' => trim($match[4]),
+                        'units' => (int)$match[1],
+                            'avg_price' => '€' . $match[2],
+                            'total_price' => isset($match[6]) ? '€' . $match[6] : (isset($match[5]) ? '€' . $match[5] : '')
+                    ];
+                    }
+                }
+                
+                // Metodo 3: Dividi in righe e cerca righe che contengono sia "Units" che "Average"
+                $lines = explode("\n", strip_tags($html));
+                
+                foreach ($lines as $line) {
+                    $line = preg_replace('/\s+/', ' ', $line); // Normalizza gli spazi
                     
-                    // Cerca nella homepage
-                    if (preg_match_all('/Units\*\*(\d+)\*\*\s*Average\*\*(?:€|&euro;)?([\d,.]+)\*\*\s*([^(]*)\(([^)]+)\)(?:[^€]*(?:€|&euro;)([\d,.]+))(?:[^€]*(?:€|&euro;)([\d,.]+))/i', $homepageBodyText, $matches, PREG_SET_ORDER)) {
-                        foreach ($matches as $match) {
-                            $name = trim($match[3]);
-                            // Pulisci il nome rimuovendo prefissi e prezzi
+                    if (strpos($line, 'Units') !== false && strpos($line, 'Average') !== false) {
+                        // Estrai Units
+                        $units = '';
+                        if (preg_match('/Units\s*(\d+)/i', $line, $unitMatches)) {
+                            $units = $unitMatches[1];
+                        }
+                        
+                        // Estrai Average
+                        $avgPrice = '';
+                        if (preg_match('/Average\s*(?:€|&euro;)?([\d,.]+)/i', $line, $avgMatches)) {
+                            $avgPrice = '€' . $avgMatches[1];
+                        }
+                        
+                        // Estrai name e description
+                        $name = '';
+                        $description = '';
+                        if (preg_match('/Average[^(]*([^(]+)\(([^)]+)\)/i', $line, $descMatches)) {
+                            $name = trim($descMatches[1]);
+                            // Pulisci il nome rimuovendo prefissi
                             $name = preg_replace('/^(?:Mix\s*)?Units\s*\d+\s*Average\s*(?:€|&euro;)?[\d,.]+\s*/i', '', $name);
                             // Rimuovi anche i prezzi alla fine del nome (pattern più robusto)
                             $name = preg_replace('/\s+(?:€|&euro;)[\d,.]+(?:\s+(?:€|&euro;)[\d,.]+)?$/i', '', $name);
                             // Elimina qualsiasi sequenza di prezzi o numeri alla fine del nome
                             $name = preg_replace('/\s+[\d,.]+(?:\s+[\d,.]+)*$/i', '', $name);
+                            $description = trim($descMatches[2]);
+                }
+                        
+                        // Estrai prezzi
+                        $prices = [];
+                        if (preg_match_all('/(?:€|&euro;)([\d,.]+)/i', $line, $priceMatches)) {
+                            $prices = $priceMatches[1];
+            }
+            
+                        if (!empty($units) && !empty($name)) {
                             $currSlug = strtolower(trim(preg_replace('/[^a-zA-Z0-9]+/', '-', $name), '-'));
                             
                             $lists[$currSlug] = [
                                 'name' => $name,
-                                'description' => trim($match[4]),
-                                'units' => (int)$match[1],
-                                'avg_price' => '€' . $match[2],
-                                'total_price' => isset($match[6]) ? '€' . $match[6] : '€' . $match[5]
+                                'description' => $description,
+                                'units' => (int)$units,
+                                'avg_price' => $avgPrice,
+                                'total_price' => isset($prices[1]) ? '€' . $prices[1] : (isset($prices[0]) ? '€' . $prices[0] : '')
                             ];
                         }
                     }
@@ -459,6 +466,18 @@ class ITSaleScraperController extends Controller
             
             $foundList = $lists[$listSlug];
             
+            // Assicuriamoci che la lista abbia il campo discounted_price
+            if (!isset($foundList['discounted_price'])) {
+                $foundList['discounted_price'] = '';
+                
+                // Cerca il prezzo originale nell'HTML
+                $crawler = new Crawler($html);
+                $oldPriceNode = $crawler->filter('.old-price');
+                if ($oldPriceNode->count() > 0) {
+                    $foundList['discounted_price'] = trim($oldPriceNode->text());
+                }
+            }
+            
             // Cerca il link per i dettagli
             $crawler = new Crawler($html);
             
@@ -470,10 +489,21 @@ class ITSaleScraperController extends Controller
                 }
             });
             
+            // Se non abbiamo trovato un link, costruiamolo direttamente dallo slug
+            if (!$listLink) {
+                $listLink = 'https://itsale.pl/list/' . $listSlug;
+                Log::info('No direct link found, using constructed URL: ' . $listLink);
+            }
+            
             $items = [];
             
-            if ($listLink) {
                 // Abbiamo trovato un link alla lista, facciamo scraping della pagina dettaglio
+            // Assicuriamoci che l'URL sia completo
+            if (!str_starts_with($listLink, 'http')) {
+                $listLink = 'https://itsale.pl/' . ltrim($listLink, '/');
+            }
+            
+            Log::info('Fetching list details from URL: ' . $listLink);
                 $listResponse = Http::timeout(60)->get($listLink);
                 
                 if ($listResponse->successful()) {
@@ -500,36 +530,606 @@ class ITSaleScraperController extends Controller
                                 
                                 for ($i = 0; $i < min($cells->count(), count($headers)); $i++) {
                                     $key = strtolower(str_replace(' ', '_', $headers[$i]));
-                                    $item[$key] = trim($cells->eq($i)->text());
-                                }
-                                
-                                // Cerca immagini
-                                $imgNode = $row->filter('img');
-                                if ($imgNode->count() > 0) {
-                                    $photoUrl = $imgNode->attr('src');
-                                    if (!str_starts_with($photoUrl, 'http')) {
-                                        $photoUrl = 'https://itsale.pl' . $photoUrl;
+                                    $value = trim($cells->eq($i)->text());
+                                    
+                                    $productData = [
+                                        'name' => 'Dell Laptop ' . ($i + 1),
+                                        'specs' => [],
+                                        'quantity' => 1,
+                                        'price' => '0.00'
+                                    ];
+                                    
+                                    // Extract data from cells using headers as keys
+                                    for ($j = 0; $j < min($cells->count(), count($headers)); $j++) {
+                                        $key = $headers[$j];
+                                        $value = trim($cells->eq($j)->text());
+                                        
+                                        $productData['specs'][$key] = $value;
+                                        
+                                        // Map common fields to standardized properties
+                                        if (stripos($key, 'model') !== false) {
+                                            $productData['model'] = $value;
+                                            $productData['name'] = $value;
+                                        } elseif (stripos($key, 'type') !== false) {
+                                            $productData['type'] = $value;
+                                        } elseif (stripos($key, 'brand') !== false || stripos($key, 'producer') !== false) {
+                                            $productData['producer'] = $value;
+                                        } elseif (stripos($key, 'cpu') !== false || stripos($key, 'processor') !== false) {
+                                            $productData['cpu'] = $value;
+                                        } elseif (stripos($key, 'ram') !== false || stripos($key, 'memory') !== false) {
+                                            $productData['ram'] = $value;
+                                        } elseif (stripos($key, 'hdd') !== false || stripos($key, 'ssd') !== false || stripos($key, 'drive') !== false || stripos($key, 'storage') !== false) {
+                                            $productData['drive'] = $value;
+                                        } elseif (stripos($key, 'os') !== false || stripos($key, 'operating') !== false) {
+                                            $productData['operating_system'] = $value;
+                                        } elseif (stripos($key, 'price') !== false) {
+                                            $productData['price'] = preg_replace('/[^0-9,.]/', '', $value);
+                                            $productData['price'] = str_replace(',', '.', $productData['price']);
+                                            $productData['price'] = (float)$productData['price'];
+                                        } elseif (stripos($key, 'screen') !== false || stripos($key, 'display') !== false) {
+                                            $productData['screen_size'] = $value;
+                                        } elseif (stripos($key, 'grade') !== false && stripos($key, 'visual') !== false) {
+                                            $productData['visual_grade'] = $value;
+                                        } elseif (stripos($key, 'grade') !== false && stripos($key, 'tech') !== false) {
+                                            $productData['tech_grade'] = $value;
+                                        } elseif (stripos($key, 'battery') !== false) {
+                                            $productData['battery'] = $value;
+                                        } elseif (stripos($key, 'quantity') !== false) {
+                                            $productData['quantity'] = (int)preg_replace('/[^0-9]/', '', $value);
+                                        }
                                     }
-                                    $item['photo_url'] = $photoUrl;
+                                    
+                                    $products[] = $productData;
                                 }
-                                
-                                $items[] = $item;
                             }
                         });
+                    }
+                } else {
+                // Errore nel recupero dei dettagli della lista
+                Log::error('Failed to fetch list details: ' . $listResponse->status() . ' for URL ' . $listLink);
+                // Continuiamo senza dettagli della lista
+            }
+            
+            // Calcola statistiche per Visual Grade e Tech Grade
+            $visualGradeStats = [
+                'New' => '0%',
+                'A' => '0%',
+                'B' => '0%', 
+                'C' => '0%',
+                'D' => '0%',
+                'Undefined' => '0%'
+            ];
+            
+            $techGradeStats = [
+                'New' => '0%',
+                'Working' => '0%',
+                'Working*' => '0%',
+                'Not working' => '0%',
+                'Undefined' => '0%'
+            ];
+            
+            // Prova a estrarre statistiche direttamente dalla pagina dettaglio
+            if ($listResponse->successful()) {
+                $listCrawler = new Crawler($listHtml);
+                
+                // Estrai Visual Grade dalle statistiche
+                $boxStats = $listCrawler->filter('.box_stat');
+                $visualGradeBox = null;
+                
+                // Cerca il box Visual Grade
+                $boxStats->each(function (Crawler $node) use (&$visualGradeBox) {
+                    if ($visualGradeBox === null && stripos($node->text(), 'Visual grade') !== false) {
+                        $visualGradeBox = $node;
+                    }
+                });
+                
+                if ($visualGradeBox !== null) {
+                    Log::info('Found Visual Grade stats box in the HTML');
+                    
+                    // Trova tutte le coppie di content e sub_content
+                    $contents = $visualGradeBox->filter('.box_stat_content');
+                    $subContents = $visualGradeBox->filter('.box_stat_sub_content');
+                    
+                    for ($i = 0; $i < $contents->count(); $i++) {
+                        $grade = trim($contents->eq($i)->text());
+                        $stat = trim($subContents->eq($i)->text());
+                
+                        // Aggiorna le statistiche solo se il grado è valido
+                        if (isset($visualGradeStats[$grade])) {
+                            $visualGradeStats[$grade] = $stat;
+                        }
+                    }
+                }
+                
+                // Estrai Tech Grade dalle statistiche
+                $techGradeBox = null;
+                
+                // Cerca il box Tech Grade
+                $boxStats->each(function (Crawler $node) use (&$techGradeBox) {
+                    if ($techGradeBox === null && stripos($node->text(), 'Tech grade') !== false) {
+                        $techGradeBox = $node;
+                    }
+                });
+                
+                if ($techGradeBox !== null) {
+                    Log::info('Found Tech Grade stats box in the HTML');
+                    
+                    // Trova tutte le coppie di content e sub_content
+                    $contents = $techGradeBox->filter('.box_stat_content');
+                    $subContents = $techGradeBox->filter('.box_stat_sub_content');
+                    
+                    for ($i = 0; $i < $contents->count(); $i++) {
+                        $grade = trim($contents->eq($i)->text());
+                        $stat = trim($subContents->eq($i)->text());
+                        
+                        // Aggiorna le statistiche solo se il grado è valido
+                        if (isset($techGradeStats[$grade])) {
+                            $techGradeStats[$grade] = $stat;
+                        }
+                    }
+                }
+            }
+            
+            $totalItems = count($items);
+            
+            // Se non abbiamo trovato statistiche direttamente, calcoliamole dagli items
+            if ($totalItems > 0 && $visualGradeStats['A'] === '0%' && $visualGradeStats['B'] === '0%' && $visualGradeStats['C'] === '0%') {
+                $visualGrades = [];
+                $techGrades = [];
+                
+                foreach ($items as $item) {
+                    // Estrai visual grade
+                    $visualGrade = 'Undefined';
+                    if (isset($item['visual_grade'])) {
+                        $visualGrade = $item['visual_grade'];
+                    } elseif (isset($item['grade'])) {
+                        if (preg_match('/Visual\s+grade:\s*([A-Z])/i', $item['grade'], $matches)) {
+                            $visualGrade = strtoupper($matches[1]);
+                        } elseif (preg_match('/Grade\s+([A-Z])/i', $item['grade'], $matches)) {
+                            $visualGrade = strtoupper($matches[1]);
+                        }
+                    }
+                    
+                    if (!isset($visualGrades[$visualGrade])) {
+                        $visualGrades[$visualGrade] = 0;
+                    }
+                    $visualGrades[$visualGrade]++;
+                    
+                    // Estrai tech grade
+                    $techGrade = 'Undefined';
+                    if (isset($item['functionality'])) {
+                        $techGrade = $item['functionality'];
+                    } elseif (isset($item['grade'])) {
+                        if (preg_match('/Functionality:\s+([^"\n]+)/i', $item['grade'], $matches)) {
+                            $techGrade = trim($matches[1]);
+                        }
+                    }
+                    
+                    if (!isset($techGrades[$techGrade])) {
+                        $techGrades[$techGrade] = 0;
+                    }
+                    $techGrades[$techGrade]++;
+                }
+            
+                // Calcola percentuali per visual grades
+                foreach ($visualGrades as $grade => $count) {
+                    $percentage = round(($count / $totalItems) * 100, 2);
+                    if (isset($visualGradeStats[$grade])) {
+                        $visualGradeStats[$grade] = $percentage . '% (' . $count . ')';
+                    }
+                }
+                
+                // Calcola percentuali per tech grades
+                foreach ($techGrades as $grade => $count) {
+                    $percentage = round(($count / $totalItems) * 100, 2);
+                    if (isset($techGradeStats[$grade])) {
+                        $techGradeStats[$grade] = $percentage . '% (' . $count . ')';
                     }
                 }
             }
             
             $listDetails = array_merge($foundList, [
-                'items' => $items
+                'items' => $items,
+                'visual_grade' => $visualGradeStats,
+                'tech_grade' => $techGradeStats
             ]);
             
-            return view('admin.itsale.show-list', compact('supplier', 'listDetails'));
+            return view('admin.itsale.show-list', compact('supplier', 'listDetails', 'listSlug'));
             
         } catch (\Exception $e) {
             Log::error('Exception while scraping ITSale.pl list details: ' . $e->getMessage());
             return redirect()->route('admin.itsale.index', $supplier)
                 ->with('error', 'An error occurred while fetching list details: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Import a list from ITSale.pl as a batch with associated products.
+     */
+    public function importAsBatch(Request $request, ThirdPartySupplier $supplier, $listSlug)
+    {
+        // Check if this is actually ITSale.pl supplier
+        if ($supplier->slug !== 'itsale-pl') {
+            return redirect()->route('admin.suppliers.index')
+                ->with('error', 'This scraper is only available for ITSale.pl');
+        }
+
+        try {
+            // Recuperiamo i dettagli della lista
+            $response = Http::timeout(60)->get('https://itsale.pl/list');
+            
+            if (!$response->successful()) {
+                return redirect()->route('admin.itsale.show-list', ['supplier' => $supplier, 'listSlug' => $listSlug])
+                    ->with('error', 'Failed to fetch list details from ITSale.pl');
+            }
+            
+            $html = $response->body();
+            
+            // Inizializziamo le liste
+            $lists = [];
+            
+            // Utilizziamo il crawler per estrarre le liste in modo strutturato
+            $crawler = new Crawler($html);
+            $listRows = $crawler->filter('.row');
+            
+            // Estrai i dettagli di tutte le liste per trovare quella corretta
+            $listRows->each(function (Crawler $row) use (&$lists, $listSlug) {
+                try {
+                    // Estrai nome
+                    $nameNode = $row->filter('.list-card-wrapper-link');
+                    if ($nameNode->count() > 0) {
+                        $name = trim($nameNode->text());
+                        $currSlug = strtolower(trim(preg_replace('/[^a-zA-Z0-9]+/', '-', $name), '-'));
+                        
+                        // Se questa è la lista che cerchiamo, estrai tutti i dettagli
+                        if ($currSlug === $listSlug) {
+                            // Estrai unità
+                            $unitsNode = $row->filter('.units-average b')->first();
+                            $units = $unitsNode->count() > 0 ? trim($unitsNode->text()) : '';
+                            
+                            // Estrai prezzo medio
+                            $avgPriceNode = $row->filter('.units-average b')->eq(1);
+                            $avgPrice = $avgPriceNode->count() > 0 ? trim($avgPriceNode->text()) : '';
+                            
+                            // Estrai descrizione
+                            $descNode = $row->filter('.list-description');
+                            $description = $descNode->count() > 0 ? trim($descNode->text()) : '';
+                            
+                            // Estrai prezzo finale (scontato)
+                            $finalPriceNode = $row->filter('.list-price');
+                            $finalPrice = '';
+                            if ($finalPriceNode->count() > 0) {
+                                $finalPrice = $finalPriceNode->text();
+                                $finalPrice = preg_replace('/\s+/', '', $finalPrice);
+                            }
+                            
+                            $lists[$currSlug] = [
+                                'name' => $name,
+                                'description' => $description,
+                                'units' => (int)preg_replace('/[^0-9]/', '', $units),
+                                'avg_price' => $avgPrice,
+                                'total_price' => $finalPrice,
+                                'slug' => $currSlug
+                            ];
+                        }
+                    }
+                } catch (\Exception $e) {
+                    Log::error('Error extracting list data for import: ' . $e->getMessage());
+                }
+            });
+            
+            // Se non abbiamo trovato la lista, ritorniamo un errore
+            if (!isset($lists[$listSlug])) {
+                return redirect()->route('admin.itsale.show-list', ['supplier' => $supplier, 'listSlug' => $listSlug])
+                    ->with('error', 'List not found in ITSale.pl data');
+            }
+            
+            $listDetails = $lists[$listSlug];
+            
+            // Ora che abbiamo i dettagli della lista, carichiamo i dati dei prodotti
+            $productsUrl = "https://itsale.pl/list/{$listSlug}";
+            $productsResponse = Http::timeout(60)->get($productsUrl);
+            
+            if (!$productsResponse->successful()) {
+                return redirect()->route('admin.itsale.show-list', ['supplier' => $supplier, 'listSlug' => $listSlug])
+                    ->with('error', 'Failed to fetch products data from ITSale.pl');
+            }
+            
+            $productsHtml = $productsResponse->body();
+            $productsCrawler = new Crawler($productsHtml);
+            
+            // Estrai i prodotti dalla pagina
+            $products = [];
+            $productRows = $productsCrawler->filter('.product-list-item');
+            
+            // Debug info
+            Log::info('Dell list import - Found ' . $productRows->count() . ' product rows using .product-list-item selector');
+            
+            // Try alternative selectors if no products found
+            if ($productRows->count() == 0) {
+                Log::info('Dell list import - Trying alternative selector: tr.product-row');
+                $productRows = $productsCrawler->filter('tr.product-row');
+                Log::info('Dell list import - Found ' . $productRows->count() . ' product rows using tr.product-row selector');
+                
+                if ($productRows->count() == 0) {
+                    Log::info('Dell list import - Trying another selector: .product');
+                    $productRows = $productsCrawler->filter('.product');
+                    Log::info('Dell list import - Found ' . $productRows->count() . ' product rows using .product selector');
+                    
+                    // If still no products, try processing tables directly
+                    if ($productRows->count() == 0) {
+                        Log::info('Dell list import - Trying to process tables directly');
+                        $tables = $productsCrawler->filter('table');
+                        Log::info('Dell list import - Found ' . $tables->count() . ' tables in the page');
+                        
+                        if ($tables->count() > 0) {
+                            // Process the first table with data
+                            $tableRows = $tables->first()->filter('tr');
+                            Log::info('Dell list import - Found ' . $tableRows->count() . ' rows in the first table');
+                            
+                            // Extract headers
+                            $headers = [];
+                            $headerRow = $tableRows->first();
+                            $headerRow->filter('th')->each(function (Crawler $th) use (&$headers) {
+                                $headers[] = trim($th->text());
+                            });
+                            
+                            Log::info('Dell list import - Table headers: ' . json_encode($headers));
+                            
+                            // Process data rows
+                            $tableRows->slice(1)->each(function (Crawler $row, $i) use (&$products, $headers) {
+                                try {
+                                    $cells = $row->filter('td');
+                                    if ($cells->count() == 0) {
+                                        return; // Skip if no cells (might be a header or empty row)
+                                    }
+                                    
+                                    $productData = [
+                                        'name' => 'Dell Laptop ' . ($i + 1),
+                                        'specs' => [],
+                                        'quantity' => 1,
+                                        'price' => '0.00'
+                                    ];
+                                    
+                                    // Extract data from cells using headers as keys
+                                    for ($j = 0; $j < min($cells->count(), count($headers)); $j++) {
+                                        $key = $headers[$j];
+                                        $value = trim($cells->eq($j)->text());
+                                        
+                                        $productData['specs'][$key] = $value;
+                                        
+                                        // Map common fields to standardized properties
+                                        if (stripos($key, 'model') !== false) {
+                                            $productData['model'] = $value;
+                                            $productData['name'] = $value;
+                                        } elseif (stripos($key, 'type') !== false) {
+                                            $productData['type'] = $value;
+                                        } elseif (stripos($key, 'brand') !== false || stripos($key, 'producer') !== false) {
+                                            $productData['producer'] = $value;
+                                        } elseif (stripos($key, 'cpu') !== false || stripos($key, 'processor') !== false) {
+                                            $productData['cpu'] = $value;
+                                        } elseif (stripos($key, 'ram') !== false || stripos($key, 'memory') !== false) {
+                                            $productData['ram'] = $value;
+                                        } elseif (stripos($key, 'hdd') !== false || stripos($key, 'ssd') !== false || stripos($key, 'drive') !== false || stripos($key, 'storage') !== false) {
+                                            $productData['drive'] = $value;
+                                        } elseif (stripos($key, 'os') !== false || stripos($key, 'operating') !== false) {
+                                            $productData['operating_system'] = $value;
+                                        } elseif (stripos($key, 'price') !== false) {
+                                            $productData['price'] = preg_replace('/[^0-9,.]/', '', $value);
+                                            $productData['price'] = str_replace(',', '.', $productData['price']);
+                                            $productData['price'] = (float)$productData['price'];
+                                        } elseif (stripos($key, 'screen') !== false || stripos($key, 'display') !== false) {
+                                            $productData['screen_size'] = $value;
+                                        } elseif (stripos($key, 'grade') !== false && stripos($key, 'visual') !== false) {
+                                            $productData['visual_grade'] = $value;
+                                        } elseif (stripos($key, 'grade') !== false && stripos($key, 'tech') !== false) {
+                                            $productData['tech_grade'] = $value;
+                                        } elseif (stripos($key, 'battery') !== false) {
+                                            $productData['battery'] = $value;
+                                        } elseif (stripos($key, 'quantity') !== false) {
+                                            $productData['quantity'] = (int)preg_replace('/[^0-9]/', '', $value);
+                                        }
+                                    }
+                                    
+                                    $products[] = $productData;
+                                } catch (\Exception $e) {
+                                    Log::error('Error extracting table row data: ' . $e->getMessage());
+                                }
+                            });
+                        }
+                    }
+                }
+            }
+            
+            // Save the HTML structure for debugging
+            file_put_contents(storage_path('logs/itsale_debug_structure.html'), $productsHtml);
+            
+            $productRows->each(function (Crawler $row, $i) use (&$products) {
+                try {
+                    // Modello/Nome prodotto
+                    $nameNode = $row->filter('.product-title');
+                    $name = $nameNode->count() > 0 ? trim($nameNode->text()) : 'Unknown Product ' . ($i + 1);
+                    
+                    // Dettagli prodotto (specifiche)
+                    $specs = [];
+                    $specNodes = $row->filter('.product-property');
+                    $specNodes->each(function (Crawler $specNode) use (&$specs) {
+                        $label = $specNode->filter('.property-name');
+                        $value = $specNode->filter('.property-value');
+                        
+                        if ($label->count() > 0 && $value->count() > 0) {
+                            $labelText = trim($label->text());
+                            $valueText = trim($value->text());
+                            
+                            // Rimuovi i due punti dal label se presenti
+                            $labelText = rtrim($labelText, ':');
+                            
+                            $specs[$labelText] = $valueText;
+                        }
+                    });
+                    
+                    // Estrai prezzo unitario
+                    $priceNode = $row->filter('.price');
+                    $price = '';
+                    if ($priceNode->count() > 0) {
+                        $price = trim($priceNode->text());
+                        // Estrai solo i numeri dal prezzo
+                        $price = preg_replace('/[^0-9,.]/', '', $price);
+                        // Converti virgole in punti
+                        $price = str_replace(',', '.', $price);
+                        // Converti esplicitamente in float
+                        $price = (float)$price;
+                    }
+                    
+                    // Estrai quantità
+                    $quantity = 1; // Default
+                    if (isset($specs['Quantity'])) {
+                        $quantity = (int)preg_replace('/[^0-9]/', '', $specs['Quantity']);
+                    }
+                    
+                    // Mappa i valori delle specifiche alle proprietà del prodotto
+                    $productData = [
+                        'name' => $name,
+                        'type' => isset($specs['Type']) ? $specs['Type'] : null,
+                        'model' => isset($specs['Model']) ? $specs['Model'] : $name,
+                        'producer' => isset($specs['Brand']) ? $specs['Brand'] : (isset($specs['Producer']) ? $specs['Producer'] : null),
+                        'cpu' => isset($specs['CPU']) ? $specs['CPU'] : (isset($specs['Processor']) ? $specs['Processor'] : null),
+                        'ram' => isset($specs['RAM']) ? $specs['RAM'] : (isset($specs['Memory']) ? $specs['Memory'] : null),
+                        'drive' => isset($specs['HDD']) ? $specs['HDD'] : (isset($specs['SSD']) ? $specs['SSD'] : (isset($specs['Storage']) ? $specs['Storage'] : null)),
+                        'operating_system' => isset($specs['OS']) ? $specs['OS'] : (isset($specs['Operating System']) ? $specs['Operating System'] : null),
+                        'gpu' => isset($specs['GPU']) ? $specs['GPU'] : (isset($specs['Graphics']) ? $specs['Graphics'] : null),
+                        'color' => isset($specs['Color']) ? $specs['Color'] : null,
+                        'screen_size' => isset($specs['Screen Size']) ? $specs['Screen Size'] : (isset($specs['Display']) ? $specs['Display'] : null),
+                        'visual_grade' => isset($specs['Visual Grade']) ? $specs['Visual Grade'] : (isset($specs['Cosmetic']) ? $specs['Cosmetic'] : null),
+                        'tech_grade' => isset($specs['Tech Grade']) ? $specs['Tech Grade'] : (isset($specs['Technical']) ? $specs['Technical'] : null),
+                        'battery' => isset($specs['Battery']) ? $specs['Battery'] : null,
+                        'price' => $price,
+                        'quantity' => $quantity,
+                        'specs' => $specs, // Manteniamo tutte le specifiche originali
+                    ];
+                    
+                    $products[] = $productData;
+                } catch (\Exception $e) {
+                    Log::error('Error extracting product data for import: ' . $e->getMessage());
+                }
+            });
+            
+            // Log how many products were found
+            Log::info('Dell list import - Extracted ' . count($products) . ' products from the page');
+            
+            // Se non abbiamo trovato prodotti, ritorniamo un errore
+            if (empty($products)) {
+                return redirect()->route('admin.itsale.show-list', ['supplier' => $supplier, 'listSlug' => $listSlug])
+                    ->with('error', 'No products found in the list');
+            }
+            
+            // Ora creiamo il batch e i prodotti nel nostro sistema
+            
+            // 1. Crea un nuovo batch
+            $totalQuantity = array_sum(array_column($products, 'quantity'));
+            $cleanPrice = preg_replace('/[^0-9.,]/', '', $listDetails['total_price']);
+            $cleanPrice = str_replace(',', '.', $cleanPrice);
+            
+            $batch = new \App\Models\Batch();
+            $batch->name = $listDetails['name'];
+            $batch->reference_code = 'ITSALE-' . strtoupper($listSlug);
+            $batch->description = $listDetails['description'];
+            $batch->total_price = (float)$cleanPrice;
+            $batch->total_quantity = $totalQuantity;
+            $batch->status = 'active';
+            $batch->available_from = now();
+            $batch->save();
+            
+            // 2. Importa i prodotti e collegali al batch
+            $importedProducts = 0;
+            
+            foreach ($products as $productData) {
+                // Cerca una categoria appropriata (puoi migliorare questa logica)
+                $categoryId = 1; // Default category ID
+                
+                // Cerca di mappare la categoria in base al tipo di prodotto
+                $productType = strtolower($productData['type'] ?? '');
+                
+                if (strpos($productType, 'laptop') !== false || strpos($productType, 'notebook') !== false) {
+                    $categoryName = 'Laptops';
+                } elseif (strpos($productType, 'phone') !== false || strpos($productType, 'smartphone') !== false) {
+                    $categoryName = 'Smartphones';
+                } elseif (strpos($productType, 'tablet') !== false) {
+                    $categoryName = 'Tablets';
+                } elseif (strpos($productType, 'desktop') !== false || strpos($productType, 'pc') !== false) {
+                    $categoryName = 'Desktops';
+                } elseif (strpos($productType, 'monitor') !== false || strpos($productType, 'display') !== false) {
+                    $categoryName = 'Monitors';
+                } elseif (strpos($productType, 'printer') !== false) {
+                    $categoryName = 'Printers';
+                } elseif (strpos($productType, 'server') !== false) {
+                    $categoryName = 'Servers';
+                } else {
+                    $categoryName = 'Other';
+                }
+                
+                // Cerca la categoria nel database
+                $category = \App\Models\Category::where('name', 'like', '%' . $categoryName . '%')->first();
+                if ($category) {
+                    $categoryId = $category->id;
+                }
+                
+                // Crea il prodotto
+                $product = new \App\Models\Product();
+                $product->name = $productData['name'] ?? 'Unknown Product';
+                $product->slug = \Illuminate\Support\Str::slug($productData['name'] ?? 'unknown-product') . '-' . uniqid();
+                $product->batch_number = 'ITSALE-' . strtoupper($listSlug) . '-' . uniqid();
+                $product->description = 'Imported from ITSale.pl list: ' . $listDetails['name'];
+                $product->type = $productData['type'] ?? 'Unknown';
+                $product->producer = $productData['producer'] ?? 'Unknown';
+                $product->model = $productData['model'] ?? $productData['name'] ?? 'Unknown Model';
+                $product->cpu = $productData['cpu'] ?? '';
+                $product->ram = $productData['ram'] ?? '';
+                $product->drive = $productData['drive'] ?? '';
+                $product->operating_system = $productData['operating_system'] ?? '';
+                $product->gpu = $productData['gpu'] ?? '';
+                $product->color = $productData['color'] ?? '';
+                $product->screen_size = $productData['screen_size'] ?? '';
+                $product->lcd_quality = null;
+                $product->battery = $productData['battery'] ?? '';
+                $product->visual_grade = $productData['visual_grade'] ?? '';
+                $product->info = json_encode($productData['specs'] ?? []);
+                $product->price = (float)($productData['price'] ?? 0);
+                $product->quantity = $productData['quantity'] ?? 1;
+                $product->status = 'available';
+                $product->condition = 'used';
+                $product->category_id = $categoryId;
+                $product->save();
+                
+                // Aggiungi specifiche aggiuntive
+                foreach ($productData['specs'] as $key => $value) {
+                    if (!in_array($key, ['Type', 'Model', 'Brand', 'Producer', 'CPU', 'Processor', 'RAM', 'Memory', 
+                                         'HDD', 'SSD', 'Storage', 'OS', 'Operating System', 'GPU', 'Graphics', 
+                                         'Color', 'Screen Size', 'Display', 'Visual Grade', 'Cosmetic', 
+                                         'Tech Grade', 'Technical', 'Battery', 'Quantity'])) {
+                        $product->specifications()->create([
+                            'key' => $key,
+                            'value' => $value
+                        ]);
+                    }
+                }
+                
+                // Collega il prodotto al batch
+                $batch->products()->attach($product->id, [
+                    'quantity' => $productData['quantity'],
+                    'unit_price' => (float)($productData['price'] ?? 0)
+                ]);
+                
+                $importedProducts++;
+            }
+            
+            return redirect()->route('admin.batches.show', $batch)
+                ->with('success', "Successfully imported batch '{$batch->name}' with {$importedProducts} products from ITSale.pl");
+            
+        } catch (\Exception $e) {
+            Log::error('Exception while importing ITSale.pl list: ' . $e->getMessage());
+            return redirect()->route('admin.itsale.show-list', ['supplier' => $supplier, 'listSlug' => $listSlug])
+                ->with('error', 'An error occurred during import: ' . $e->getMessage());
         }
     }
 } 

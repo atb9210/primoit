@@ -72,7 +72,8 @@
                                                     @endif
                                                 </div>
                                                 <div class="mt-4 md:mt-0 md:ml-6 text-right">
-                                                    <p class="font-medium">€{{ number_format($item->price, 2) }}</p>
+                                                    <dt class="text-sm font-medium text-gray-500">Price:</dt>
+                                                    <p class="font-medium">@formatPrice($item->price)</p>
                                                     <p class="text-sm text-gray-500">Quantity: {{ $item->quantity }}</p>
                                                 </div>
                                             </div>
@@ -84,9 +85,9 @@
                                                     <p class="text-sm text-gray-600"><span class="font-medium">Notes:</span> {{ $order->notes }}</p>
                                                 @endif
                                             </div>
-                                            <div class="text-right">
-                                                <p class="text-sm text-gray-500">Total Amount</p>
-                                                <p class="text-xl font-bold">€{{ number_format($order->total_amount, 2) }}</p>
+                                            <div class="flex flex-col items-end">
+                                                <p class="text-sm text-gray-500">Order Total:</p>
+                                                <p class="text-xl font-bold">@formatPrice($order->total_amount)</p>
                                             </div>
                                         </div>
                                     </div>

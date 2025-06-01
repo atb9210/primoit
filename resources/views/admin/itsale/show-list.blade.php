@@ -11,7 +11,10 @@
                     </svg>
                     {{ __('Back to Lists') }}
                 </a>
-                <a href="https://itsale.pl/list/asus-samsung-clevo-laptops-" target="_blank" class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition ease-in-out duration-150">
+                @php
+                    $itsaleUrl = "https://itsale.pl/list/{$listSlug}";
+                @endphp
+                <a href="{{ $itsaleUrl }}" target="_blank" class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition ease-in-out duration-150">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                     </svg>
@@ -54,167 +57,412 @@
                 </div>
             @endif
 
-            <!-- List Overview -->
+            <!-- List Overview and Tabs -->
             <div class="bg-white rounded-lg shadow-sm overflow-hidden mb-6">
                 <div class="p-6">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="flex justify-between items-center mb-6">
                         <div>
-                            <h3 class="text-lg font-medium text-gray-900 mb-4">List Overview</h3>
-                            <div class="space-y-3">
-                                <div class="flex justify-between">
-                                    <span class="text-gray-500">ID:</span>
-                                    <span class="font-medium">{{ $listDetails['id'] }}</span>
-                                </div>
-                                <div class="flex justify-between">
-                                    <span class="text-gray-500">Description:</span>
-                                    <span class="font-medium">{{ $listDetails['description'] }}</span>
-                                </div>
-                                <div class="flex justify-between">
-                                    <span class="text-gray-500">Total Price:</span>
-                                    <span class="font-medium">{{ $listDetails['total_price'] }}</span>
-                                </div>
-                                <div class="flex justify-between">
-                                    <span class="text-gray-500">Average Price:</span>
-                                    <span class="font-medium">{{ $listDetails['avg_price'] }}</span>
-                                </div>
-                                <div class="flex justify-between">
-                                    <span class="text-gray-500">Units:</span>
-                                    <span class="font-medium">{{ $listDetails['units'] }}</span>
-                                </div>
-                            </div>
+                            <h3 class="text-2xl font-bold text-gray-900">{{ $listDetails['name'] }}</h3>
+                            <p class="text-gray-500">{{ $listDetails['description'] }}</p>
                         </div>
-                        <div>
-                            <div class="mb-4">
-                                <h3 class="text-lg font-medium text-gray-900 mb-2">Visual Grade</h3>
-                                <div class="grid grid-cols-2 gap-2">
-                                    @foreach($listDetails['visual_grade'] as $grade => $percentage)
-                                        <div class="flex justify-between">
-                                            <span class="text-gray-500">{{ $grade }}:</span>
-                                            <span class="font-medium">{{ $percentage }}</span>
-                                        </div>
-                                    @endforeach
+                        <div class="text-right">
+                            <div class="text-xl font-bold text-gray-900">{{ $listDetails['total_price'] }}</div>
+                            <div class="text-sm text-gray-500">Total</div>
+                            <div class="text-md font-medium text-gray-700 mt-1">~{{ $listDetails['avg_price'] }} Avg/unit</div>
+                            <div class="text-md font-medium text-gray-700 mt-1">{{ $listDetails['units'] }} units</div>
+                        </div>
+                    </div>
+
+                    <!-- Summary info in top section (not tabs) -->
+                    <div class="mb-6">
+                        <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                            <!-- Cost -->
+                            <div class="bg-gray-50 p-4 rounded-lg">
+                                <h4 class="text-lg font-semibold text-gray-900 mb-2">Cost</h4>
+                                <div class="flex items-center">
+                                    @if(isset($listDetails['discounted_price']) && !empty($listDetails['discounted_price']))
+                                        <div class="text-sm text-gray-500 line-through">{{ $listDetails['discounted_price'] }}</div>
+                                    @endif
+                                    <div class="ml-2 text-xl font-bold text-gray-900">{{ $listDetails['total_price'] }}</div>
+                                    <div class="text-sm text-gray-500 ml-2">Total</div>
                                 </div>
+                                <div class="text-md font-medium text-gray-700 mt-1">~{{ $listDetails['avg_price'] }} Avg/unit</div>
                             </div>
-                            <div>
-                                <h3 class="text-lg font-medium text-gray-900 mb-2">Tech Grade</h3>
-                                <div class="grid grid-cols-2 gap-2">
-                                    @foreach($listDetails['tech_grade'] as $grade => $percentage)
-                                        <div class="flex justify-between">
-                                            <span class="text-gray-500">{{ $grade }}:</span>
-                                            <span class="font-medium">{{ $percentage }}</span>
-                                        </div>
-                                    @endforeach
-                                </div>
+
+                            <!-- Quantity -->
+                            <div class="bg-gray-50 p-4 rounded-lg">
+                                <h4 class="text-lg font-semibold text-gray-900 mb-2">Quantity</h4>
+                                <div class="text-xl font-bold text-gray-900">{{ $listDetails['units'] }}<span class="text-sm text-gray-500 ml-1">units</span></div>
+                            </div>
+
+                            <!-- Visual Grade -->
+                            <div class="bg-gray-50 p-4 rounded-lg">
+                                <h4 class="text-lg font-semibold text-gray-900 mb-2">Visual grade</h4>
+                                @if(isset($listDetails['visual_grade']) && is_array($listDetails['visual_grade']))
+                                    <div class="flex flex-wrap gap-2">
+                                        @foreach(['A', 'B', 'C', 'D'] as $grade)
+                                            @if(isset($listDetails['visual_grade'][$grade]) && !str_starts_with($listDetails['visual_grade'][$grade], '0%'))
+                                                <div class="flex-shrink-0">
+                                                    <span class="inline-flex items-center justify-center px-2 py-1 text-xs font-medium rounded-md {{ $grade == 'A' ? 'bg-green-100 text-green-800' : ($grade == 'B' ? 'bg-yellow-100 text-yellow-800' : ($grade == 'C' ? 'bg-red-100 text-red-800' : 'bg-gray-100 text-gray-800')) }}">
+                                                        {{ $grade }}
+                                                        <span class="ml-1 whitespace-nowrap">
+                                                            @php
+                                                                // Estrai solo la percentuale dal testo
+                                                                $percentText = $listDetails['visual_grade'][$grade];
+                                                                if (preg_match('/(\d+(?:\.\d+)?)%/', $percentText, $matches)) {
+                                                                    echo $matches[0];
+                                                                } else {
+                                                                    echo $percentText;
+                                                                }
+                                                            @endphp
+                                                        </span>
+                                                    </span>
+                                                </div>
+                                            @endif
+                                        @endforeach
+                                    </div>
+                                @else
+                                    <p class="text-gray-500">No data</p>
+                                @endif
+                            </div>
+
+                            <!-- Tech Grade -->
+                            <div class="bg-gray-50 p-4 rounded-lg">
+                                <h4 class="text-lg font-semibold text-gray-900 mb-2">Tech grade</h4>
+                                @if(isset($listDetails['tech_grade']) && is_array($listDetails['tech_grade']))
+                                    <div class="flex flex-wrap gap-2">
+                                        @php
+                                            $techGrades = [
+                                                'Working' => ['bg-green-100', 'text-green-800'],
+                                                'Working*' => ['bg-yellow-100', 'text-yellow-800'],
+                                                'Not working' => ['bg-red-100', 'text-red-800']
+                                            ];
+                                            
+                                            // Versioni abbreviate dei nomi
+                                            $shortNames = [
+                                                'Working' => 'Work',
+                                                'Working*' => 'Work*',
+                                                'Not working' => 'Not work'
+                                            ];
+                                        @endphp
+
+                                        @foreach($techGrades as $grade => $classes)
+                                            @if(isset($listDetails['tech_grade'][$grade]) && !str_starts_with($listDetails['tech_grade'][$grade], '0%'))
+                                                <div class="flex-shrink-0">
+                                                    <span class="inline-flex items-center justify-center px-2 py-1 text-xs font-medium rounded-md {{ $classes[0] }} {{ $classes[1] }}">
+                                                        {{ $shortNames[$grade] }}
+                                                        <span class="ml-1 whitespace-nowrap">
+                                                            @php
+                                                                // Estrai solo la percentuale dal testo
+                                                                $percentText = $listDetails['tech_grade'][$grade];
+                                                                if (preg_match('/(\d+(?:\.\d+)?)%/', $percentText, $matches)) {
+                                                                    echo $matches[0];
+                                                                } else {
+                                                                    echo $percentText;
+                                                                }
+                                                            @endphp
+                                                        </span>
+                                                    </span>
+                                                </div>
+                                            @endif
+                                        @endforeach
+                                    </div>
+                                @else
+                                    <p class="text-gray-500">No data</p>
+                                @endif
                             </div>
                         </div>
                     </div>
-                    <div class="mt-6">
-                        <div class="flex justify-between">
-                            <button class="inline-flex items-center px-4 py-2 bg-green-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-green-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition ease-in-out duration-150">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+
+                    <!-- Action Buttons -->
+                    <div class="flex flex-wrap gap-4 mb-6">
+                        <button class="inline-flex justify-center items-center px-6 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-sm text-white uppercase tracking-widest hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition ease-in-out duration-150">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                            </svg>
+                            Make Offer
+                        </button>
+                        <form action="{{ route('admin.itsale.import-batch', ['supplier' => $supplier, 'listSlug' => $listSlug]) }}" method="POST">
+                            @csrf
+                            <button type="submit" class="inline-flex justify-center items-center px-6 py-2 bg-green-600 border border-transparent rounded-md font-semibold text-sm text-white uppercase tracking-widest hover:bg-green-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition ease-in-out duration-150">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10" />
                                 </svg>
-                                Import All Products
+                                Import As Batch
                             </button>
-                            <div class="flex space-x-2">
-                                <button class="inline-flex items-center px-4 py-2 bg-indigo-100 border border-indigo-300 rounded-md font-semibold text-xs text-indigo-700 uppercase tracking-widest hover:bg-indigo-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition ease-in-out duration-150">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-                                    </svg>
-                                    Make Offer
+                        </form>
+                        <button class="inline-flex justify-center items-center px-6 py-2 bg-gray-100 border border-gray-300 rounded-md font-semibold text-sm text-gray-700 uppercase tracking-widest hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition ease-in-out duration-150">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                            </svg>
+                            Export to Excel
+                        </button>
+                    </div>
+
+                    <!-- Tabs Navigation (only for products now) -->
+                    <div class="border-b border-gray-200 mb-6">
+                        <ul class="flex -mb-px" id="tabs" role="tablist">
+                            <li class="mr-1" role="presentation">
+                                <button class="py-2 px-4 text-sm font-medium text-indigo-600 border-b-2 border-indigo-600 active" id="products-tab" data-tab="products" type="button" role="tab" aria-controls="products" aria-selected="true">
+                                    Products ({{ count($listDetails['items']) }})
                                 </button>
-                                <button class="inline-flex items-center px-4 py-2 bg-gray-100 border border-gray-300 rounded-md font-semibold text-xs text-gray-700 uppercase tracking-widest hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition ease-in-out duration-150">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                                    </svg>
-                                    Export to Excel
-                                </button>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <!-- Tab Content -->
+                    <div id="tabContent">
+                        <!-- Products Tab (now always visible) -->
+                        <div class="block" id="products" role="tabpanel" aria-labelledby="products-tab">
+                            <div class="overflow-x-auto">
+                                @if(count($listDetails['items']) > 0)
+                                <table class="min-w-full divide-y divide-gray-200">
+                                    <thead class="bg-gray-50">
+                                        <tr>
+                                            <th scope="col" class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Image</th>
+                                            <th scope="col" class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type/Producer/Model</th>
+                                            <th scope="col" class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">CPU/RAM/Drive</th>
+                                            <th scope="col" class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Screen</th>
+                                            <th scope="col" class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Grade</th>
+                                            <th scope="col" class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Battery</th>
+                                            <th scope="col" class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Info/Problems</th>
+                                            <th scope="col" class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="bg-white divide-y divide-gray-200">
+                                        @foreach($listDetails['items'] as $index => $item)
+                                            <tr class="{{ $index % 2 == 0 ? 'bg-white' : 'bg-gray-50' }} hover:bg-indigo-50">
+                                                <td class="px-3 py-4 whitespace-nowrap">
+                                                    <div class="flex-shrink-0 h-20 w-20 rounded-md overflow-hidden">
+                                                        @if(isset($item['photo_url']))
+                                                            <img src="{{ $item['photo_url'] }}" alt="{{ $item['producer'] ?? '' }} {{ $item['model'] ?? '' }}" class="h-full w-full object-cover">
+                                                        @else
+                                                            <div class="h-full w-full flex items-center justify-center bg-gray-200 text-gray-500">No Image</div>
+                                                        @endif
+                                                    </div>
+                                                </td>
+                                                <td class="px-3 py-4">
+                                                    <div class="text-sm font-medium text-gray-900">{{ $item['producer'] ?? 'N/A' }}</div>
+                                                    <div class="text-sm text-gray-500">{{ $item['model'] ?? 'N/A' }}</div>
+                                                    <div class="text-xs text-gray-500 mt-1">{{ $item['type'] ?? 'N/A' }}</div>
+                                                </td>
+                                                <td class="px-3 py-4">
+                                                    <div class="text-sm text-gray-900">{{ $item['cpu'] ?? 'N/A' }}</div>
+                                                    <div class="text-sm text-gray-500">{{ $item['ram'] ?? 'N/A' }}</div>
+                                                    <div class="text-sm text-gray-500">{{ $item['drive'] ?? 'N/A' }}</div>
+                                                </td>
+                                                <td class="px-3 py-4">
+                                                    <div class="text-sm text-gray-900">{{ $item['screen_size'] ?? 'N/A' }}</div>
+                                                    <div class="text-sm text-gray-500">{{ $item['resolution'] ?? 'N/A' }}</div>
+                                                    <div class="text-xs text-gray-500 mt-1">LCD: {{ $item['lcd_quality'] ?? 'N/A' }}</div>
+                                                </td>
+                                                <td class="px-3 py-4">
+                                                    @php
+                                                        $visualGrade = '';
+                                                        $functionality = '';
+                                                        $securityMark = '';
+                                                        $problems = '';
+                                                        
+                                                        // Estrai visual grade
+                                                        if (isset($item['visual_grade'])) {
+                                                            // Estrae solo la lettera del grade se il valore contiene altri dettagli
+                                                            if (preg_match('/([A-C])[^A-C]*$/i', $item['visual_grade'], $gradeMatches)) {
+                                                                $visualGrade = strtoupper($gradeMatches[1]);
+                                                            } else {
+                                                                $visualGrade = $item['visual_grade'];
+                                                            }
+                                                        } elseif (isset($item['grade'])) {
+                                                            if (preg_match('/Visual\s+grade:\s*([A-Z])/i', $item['grade'], $matches)) {
+                                                                $visualGrade = strtoupper($matches[1]);
+                                                            } elseif (preg_match('/Grade\s+([A-Z])/i', $item['grade'], $matches)) {
+                                                                $visualGrade = strtoupper($matches[1]);
+                                                            }
+                                                        }
+                                                        
+                                                        // Estrai functionality
+                                                        if (isset($item['functionality'])) {
+                                                            $functionality = $item['functionality'];
+                                                        } elseif (isset($item['grade'])) {
+                                                            if (preg_match('/Functionality:\s+([^\n]+)/i', $item['grade'], $matches)) {
+                                                                $functionality = trim($matches[1]);
+                                                            }
+                                                        }
+                                                        
+                                                        // Estrai security mark
+                                                        if (isset($item['security_mark'])) {
+                                                            $securityMark = $item['security_mark'];
+                                                        } elseif (isset($item['grade']) && preg_match('/Security\s+mark:\s+([^\n]*)/i', $item['grade'], $matches)) {
+                                                            $securityMark = trim($matches[1]);
+                                                        }
+                                                        
+                                                        // Estrai problems
+                                                        if (isset($item['problems'])) {
+                                                            $problems = $item['problems'];
+                                                        } elseif (isset($item['grade']) && preg_match('/Problems:\s+([^\n]*)/i', $item['grade'], $matches)) {
+                                                            $problems = trim($matches[1]);
+                                                        }
+                                                        
+                                                        // Determina il colore in base alla functionality
+                                                        $badgeColor = '';
+                                                        if (stripos($functionality, 'Working') !== false && stripos($functionality, 'Working*') === false) {
+                                                            $badgeColor = 'bg-green-100 text-green-800';
+                                                        } elseif (stripos($functionality, 'Working*') !== false) {
+                                                            $badgeColor = 'bg-yellow-100 text-yellow-800';
+                                                        } elseif (stripos($functionality, 'Not working') !== false) {
+                                                            $badgeColor = 'bg-red-100 text-red-800';
+                                                        } else {
+                                                            $badgeColor = 'bg-gray-100 text-gray-800';
+                                                        }
+                                                    @endphp
+                                                    
+                                                    <!-- Badge con Grade X e tooltip con dettagli -->
+                                                    <div class="relative" id="grade-badge-{{ $index }}">
+                                                        @if(!empty($visualGrade))
+                                                            <div class="inline-block rounded-full px-3 py-1 text-xs font-bold {{ $badgeColor }} cursor-pointer">
+                                                                Grade {{ $visualGrade }}
+                                                            </div>
+                                                        @else
+                                                            <div class="inline-block rounded-full px-3 py-1 text-xs font-bold bg-gray-100 text-gray-800 cursor-pointer">
+                                                                N/A
+                                                            </div>
+                                                        @endif
+                                                        
+                                                        <!-- Tooltip con dettagli completi, inizialmente nascosto -->
+                                                        <div id="tooltip-{{ $index }}" style="display: none;" class="absolute z-50 w-60 p-3 mt-1 text-sm bg-white rounded-md shadow-lg border border-gray-200">
+                                                            <div class="text-xs text-gray-700 space-y-1">
+                                                                <div class="mb-2"><span class="font-semibold">Visual grade:</span> {{ $visualGrade ?: 'N/A' }}</div>
+                                                                <div class="mb-2"><span class="font-semibold">Functionality:</span> {{ $functionality ?: 'N/A' }}</div>
+                                                                @if(!empty($securityMark))
+                                                                    <div class="mb-2"><span class="font-semibold">Security mark:</span> {{ $securityMark }}</div>
+                                                                @endif
+                                                                @if(!empty($problems))
+                                                                    <div><span class="font-semibold">Problems:</span> {{ $problems }}</div>
+                                                                @endif
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    <script>
+                                                        document.addEventListener('DOMContentLoaded', function() {
+                                                            const badge = document.getElementById('grade-badge-{{ $index }}');
+                                                            const tooltip = document.getElementById('tooltip-{{ $index }}');
+                                                            
+                                                            badge.addEventListener('mouseenter', function() {
+                                                                tooltip.style.display = 'block';
+                                                            });
+                                                            
+                                                            badge.addEventListener('mouseleave', function() {
+                                                                tooltip.style.display = 'none';
+                                                            });
+                                                        });
+                                                    </script>
+                                                </td>
+                                                <td class="px-3 py-4 text-sm text-gray-500">
+                                                    {{ $item['battery'] ?? 'N/A' }}
+                                                </td>
+                                                <td class="px-3 py-4 text-sm">
+                                                    @if(isset($item['problems']) && !empty($item['problems']))
+                                                        <div class="text-sm text-red-500">{{ $item['problems'] }}</div>
+                                                    @endif
+                                                    @if(isset($item['info']) && !empty($item['info']))
+                                                        <div class="text-xs text-gray-500 mt-1">{{ $item['info'] }}</div>
+                                                    @endif
+                                                    <div class="text-xs text-gray-500 mt-1">
+                                                        @if(isset($item['keyboard']) && !empty($item['keyboard']))
+                                                            Keyboard: {{ $item['keyboard'] }}<br>
+                                                        @endif
+                                                        @if(isset($item['coa']) && !empty($item['coa']))
+                                                            COA: {{ $item['coa'] }}
+                                                        @endif
+                                                    </div>
+                                                </td>
+                                                <td class="px-3 py-4 whitespace-nowrap">
+                                                    <button class="text-indigo-600 hover:text-indigo-900 block mb-2">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 inline mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10" />
+                                                        </svg>
+                                                        Import
+                                                    </button>
+                                                    <button class="text-green-600 hover:text-green-900">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 inline mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                                                        </svg>
+                                                        Add to Cart
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                                @else
+                                <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200 text-center">
+                                    <div class="flex flex-col items-center justify-center">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-gray-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                        </svg>
+                                        <h3 class="text-lg font-semibold text-gray-900 mb-2">No Products Available</h3>
+                                        <p class="text-gray-600 mb-4">
+                                            ITSale.pl reports this list has 0 products or we couldn't extract product data from the page.
+                                        </p>
+                                        <p class="text-sm text-gray-500 mb-4">
+                                            This can happen if the products have already been sold or if the product list uses a different format than expected.
+                                            Try visiting the list directly on ITSale.pl to see if products are available.
+                                        </p>
+                                        <div class="flex space-x-4">
+                                            <a href="{{ route('admin.itsale.show-list', ['supplier' => $supplier, 'listSlug' => $listSlug, 'refresh' => true]) }}" 
+                                               class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition ease-in-out duration-150">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                                </svg>
+                                                Refresh Data
+                                            </a>
+                                            <a href="{{ $itsaleUrl }}" target="_blank" 
+                                               class="inline-flex items-center px-4 py-2 bg-gray-100 border border-gray-300 rounded-md font-semibold text-xs text-gray-700 uppercase tracking-widest hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition ease-in-out duration-150">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                                                </svg>
+                                                View on ITSale.pl
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                                @endif
                             </div>
                         </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Products Table -->
-            <div class="bg-white rounded-lg shadow-sm overflow-hidden mb-6">
-                <div class="p-6">
-                    <h3 class="text-lg font-medium text-gray-900 mb-4">Products ({{ count($listDetails['items']) }})</h3>
-                    <div class="overflow-x-auto">
-                        <table class="min-w-full divide-y divide-gray-200">
-                            <thead class="bg-gray-50">
-                                <tr>
-                                    <th scope="col" class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Image</th>
-                                    <th scope="col" class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Producer/Model</th>
-                                    <th scope="col" class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">CPU/RAM</th>
-                                    <th scope="col" class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Storage</th>
-                                    <th scope="col" class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Screen</th>
-                                    <th scope="col" class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Grade</th>
-                                    <th scope="col" class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">COA</th>
-                                    <th scope="col" class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Problems</th>
-                                    <th scope="col" class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody class="bg-white divide-y divide-gray-200">
-                                @foreach($listDetails['items'] as $index => $item)
-                                    <tr class="{{ $index % 2 == 0 ? 'bg-white' : 'bg-gray-50' }}">
-                                        <td class="px-3 py-4 whitespace-nowrap">
-                                            <div class="flex-shrink-0 h-20 w-20 rounded-md overflow-hidden">
-                                                <img src="{{ $item['photo_url'] }}" alt="{{ $item['producer'] }} {{ $item['model'] }}" class="h-full w-full object-cover">
-                                            </div>
-                                        </td>
-                                        <td class="px-3 py-4">
-                                            <div class="text-sm font-medium text-gray-900">{{ $item['producer'] }}</div>
-                                            <div class="text-sm text-gray-500">{{ $item['model'] }}</div>
-                                            <div class="text-xs text-gray-500 mt-1">{{ $item['type'] }}</div>
-                                        </td>
-                                        <td class="px-3 py-4">
-                                            <div class="text-sm text-gray-900">{{ $item['cpu'] }}</div>
-                                            <div class="text-sm text-gray-500">{{ $item['ram'] }}</div>
-                                        </td>
-                                        <td class="px-3 py-4 text-sm text-gray-500">
-                                            {{ $item['drive'] }}
-                                        </td>
-                                        <td class="px-3 py-4">
-                                            <div class="text-sm text-gray-900">{{ $item['screen_size'] }}</div>
-                                            <div class="text-sm text-gray-500">{{ $item['resolution'] }}</div>
-                                            <div class="text-xs text-gray-500 mt-1">LCD: {{ $item['lcd_quality'] }}</div>
-                                        </td>
-                                        <td class="px-3 py-4">
-                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full {{ $item['visual_grade'] == 'A' ? 'bg-green-100 text-green-800' : ($item['visual_grade'] == 'B' ? 'bg-yellow-100 text-yellow-800' : 'bg-gray-100 text-gray-800') }}">
-                                                {{ $item['visual_grade'] }}
-                                            </span>
-                                            <div class="text-xs text-gray-500 mt-1">{{ $item['functionality'] }}</div>
-                                            <div class="text-xs text-gray-500 mt-1">Battery: {{ $item['battery'] }}</div>
-                                        </td>
-                                        <td class="px-3 py-4 text-sm text-gray-500">
-                                            {{ $item['coa'] }}
-                                            <div class="text-xs text-gray-500 mt-1">Keyboard: {{ $item['keyboard'] }}</div>
-                                        </td>
-                                        <td class="px-3 py-4 text-sm text-gray-500">
-                                            <div class="text-sm text-red-500">{{ $item['problems'] }}</div>
-                                            <div class="text-xs text-gray-500 mt-1">{{ $item['info'] }}</div>
-                                        </td>
-                                        <td class="px-3 py-4 whitespace-nowrap">
-                                            <button class="text-indigo-600 hover:text-indigo-900 block mb-2">
-                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 inline mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10" />
-                                                </svg>
-                                                Import
-                                            </button>
-                                            <button class="text-green-600 hover:text-green-900">
-                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 inline mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-                                                </svg>
-                                                Add to Cart
-                                            </button>
-                                        </td>
-                                    </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
                     </div>
                 </div>
             </div>
         </div>
     </div>
+
+    <script>
+        // Tab functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const tabs = document.querySelectorAll('#tabs button');
+            
+            tabs.forEach(tab => {
+                tab.addEventListener('click', function() {
+                    const tabId = this.getAttribute('data-tab');
+                    
+                    // Update active tab
+                    tabs.forEach(t => {
+                        t.classList.remove('text-indigo-600', 'border-indigo-600');
+                        t.classList.add('text-gray-500', 'border-transparent');
+                        t.setAttribute('aria-selected', 'false');
+                    });
+                    
+                    this.classList.remove('text-gray-500', 'border-transparent');
+                    this.classList.add('text-indigo-600', 'border-indigo-600');
+                    this.setAttribute('aria-selected', 'true');
+                    
+                    // Show the selected tab content
+                    document.querySelectorAll('#tabContent > div').forEach(content => {
+                        content.classList.add('hidden');
+                    });
+                    
+                    document.getElementById(tabId).classList.remove('hidden');
+                });
+            });
+        });
+    </script>
 </x-admin-layout> 

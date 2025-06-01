@@ -87,7 +87,7 @@
                                     @auth
                                         @if(auth()->user()->is_approved)
                                             <div class="text-gray-600">Price:</div>
-                                            <div class="font-medium">€{{ number_format($product->price, 2) }}</div>
+                                            <div class="font-medium">@formatPrice($product->price)</div>
                                         @endif
                                     @endauth
                                 </div>

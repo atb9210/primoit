@@ -18,6 +18,10 @@ class Product extends Model
      * @var array<int, string>
      */
     protected $fillable = [
+        'name',
+        'slug',
+        'batch_number',
+        'description',
         'type',
         'producer',
         'model',
@@ -35,6 +39,8 @@ class Product extends Model
         'info',
         'price',
         'quantity',
+        'status',
+        'condition',
         'category_id',
     ];
 

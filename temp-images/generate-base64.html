@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Generate Base64 Images</title>
+</head>
+<body>
+    <h1>Base64 Image Generator</h1>
+    <canvas id="hardwareCanvas" width="600" height="400"></canvas>
+    <div id="hardwareOutput"></div>
+    
+    <canvas id="missionCanvas" width="600" height="400"></canvas>
+    <div id="missionOutput"></div>
+    
+    <canvas id="profileCanvas" width="128" height="128"></canvas>
+    <div id="profileOutput"></div>
+    
+    <script>
+        // Generate hardware image
+        const hardwareCanvas = document.getElementById('hardwareCanvas');
+        const hardwareCtx = hardwareCanvas.getContext('2d');
+        hardwareCtx.fillStyle = '#edf2f7'; // Light gray background
+        hardwareCtx.fillRect(0, 0, 600, 400);
+        hardwareCtx.fillStyle = '#1a2a36'; // Dark blue like our header
+        hardwareCtx.font = 'bold 30px Arial';
+        hardwareCtx.textAlign = 'center';
+        hardwareCtx.fillText('PrimoIT Hardware', 300, 200);
+        const hardwareBase64 = hardwareCanvas.toDataURL('image/jpeg');
+        document.getElementById('hardwareOutput').innerHTML = 
+            `<p>Hardware image base64:</p><textarea rows="5" cols="80">${hardwareBase64}</textarea>`;
+        
+        // Generate mission image
+        const missionCanvas = document.getElementById('missionCanvas');
+        const missionCtx = missionCanvas.getContext('2d');
+        missionCtx.fillStyle = '#edf2f7'; // Light gray background
+        missionCtx.fillRect(0, 0, 600, 400);
+        missionCtx.fillStyle = '#1a2a36'; // Dark blue like our header
+        missionCtx.font = 'bold 30px Arial';
+        missionCtx.textAlign = 'center';
+        missionCtx.fillText('Our Mission', 300, 200);
+        const missionBase64 = missionCanvas.toDataURL('image/jpeg');
+        document.getElementById('missionOutput').innerHTML = 
+            `<p>Mission image base64:</p><textarea rows="5" cols="80">${missionBase64}</textarea>`;
+        
+        // Generate profile image
+        const profileCanvas = document.getElementById('profileCanvas');
+        const profileCtx = profileCanvas.getContext('2d');
+        profileCtx.fillStyle = '#edf2f7'; // Light gray background
+        profileCtx.fillRect(0, 0, 128, 128);
+        profileCtx.fillStyle = '#1a2a36'; // Dark blue like our header
+        profileCtx.font = 'bold 36px Arial';
+        profileCtx.textAlign = 'center';
+        profileCtx.fillText('P', 64, 76);
+        const profileBase64 = profileCanvas.toDataURL('image/jpeg');
+        document.getElementById('profileOutput').innerHTML = 
+            `<p>Profile image base64:</p><textarea rows="5" cols="80">${profileBase64}</textarea>`;
+    </script>
+</body>
+</html> 

@@ -50,7 +50,7 @@
                                             </span>
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $batch->products_count }}</td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">€{{ number_format($batch->total_price, 2) }}</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">@formatPrice($batch->total_price)</td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $batch->total_quantity }}</td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                             <div class="flex space-x-2">

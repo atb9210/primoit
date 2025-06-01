@@ -69,13 +69,14 @@
                                         @foreach($category->products as $product)
                                             <tr>
                                                 <td class="px-6 py-4 whitespace-nowrap">
-                                                    <div class="text-sm font-medium text-gray-900">{{ $product->name }}</div>
+                                                    <div class="text-sm font-medium text-gray-900">{{ $product->producer }} {{ $product->model }}</div>
+                                                    <div class="text-sm text-gray-500">{{ $product->type }}</div>
                                                 </td>
                                                 <td class="px-6 py-4 whitespace-nowrap">
                                                     <div class="text-sm text-gray-500">{{ ucfirst($product->status) }}</div>
                                                 </td>
                                                 <td class="px-6 py-4 whitespace-nowrap">
-                                                    <div class="text-sm text-gray-500">{{ $product->price ? '€'.number_format($product->price, 2) : 'Call for price' }}</div>
+                                                    <div class="text-sm text-gray-500">@formatPrice($product->price)</div>
                                                 </td>
                                                 <td class="px-6 py-4 whitespace-nowrap text-sm">
                                                     <a href="{{ route('admin.products.edit', $product) }}" class="text-blue-600 hover:text-blue-900">Edit</a>

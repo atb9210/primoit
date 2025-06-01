@@ -1,0 +1,232 @@
+/* Critical CSS to load immediately */
+body {
+    font-family: 'Montserrat', sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    color: #333;
+    line-height: 1.6;
+}
+
+.bg-primary {
+    background-color: #0f2b46 !important;
+}
+
+.text-primary {
+    color: #0f2b46 !important;
+}
+
+.text-white {
+    color: #ffffff !important;
+}
+
+/* Header styles */
+header {
+    background-color: #0f2b46 !important;
+    color: #ffffff !important;
+    border-bottom: 1px solid #081b2e;
+}
+
+/* Top bar */
+.top-bar {
+    background-color: #081b2e;
+    padding: 8px 0;
+    font-size: 14px;
+    border-bottom: 1px solid #0f2b46;
+    color: #fff;
+}
+
+/* Navigation links */
+header a {
+    color: #ffffff !important;
+    font-weight: 500;
+}
+
+header a:hover {
+    color: #cbd5e0 !important;
+}
+
+.nav-link {
+    display: inline-block;
+    padding: 1.25rem 0.85rem;
+    font-size: 15px;
+    font-weight: 500;
+    text-transform: none;
+    color: #ffffff;
+    border-bottom: 3px solid transparent;
+    transition: all 0.2s ease;
+    margin: 0 0.25rem;
+}
+
+.nav-link:hover, .nav-link.active {
+    color: #ffffff;
+    border-bottom: 3px solid #ffffff;
+}
+
+.stock-button {
+    background-color: #ffffff;
+    color: #0f2b46 !important;
+    padding: 0.5rem 1.5rem;
+    border-radius: 3px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    text-transform: none;
+    letter-spacing: 0.3px;
+}
+
+.stock-button:hover {
+    background-color: #e2e8f0;
+    color: #0f2b46 !important;
+}
+
+/* Call to action buttons */
+.btn-primary {
+    background-color: #0f2b46;
+    color: white;
+    border-radius: 3px;
+    padding: 0.625rem 1.25rem;
+    font-weight: 500;
+    transition: background-color 0.2s;
+}
+
+.btn-primary:hover {
+    background-color: #081b2e;
+}
+
+.btn-outline {
+    background-color: transparent;
+    color: #0f2b46;
+    border: 1px solid #0f2b46;
+    border-radius: 3px;
+    padding: 0.625rem 1.25rem;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+
+.btn-outline:hover {
+    background-color: #0f2b46;
+    color: white;
+}
+
+/* Logo styles */
+.logo-container {
+    height: 60px;
+    display: flex;
+    align-items: center;
+}
+
+.logo-image {
+    height: 50px;
+    width: auto;
+    object-fit: contain;
+    max-width: 100%;
+}
+
+/* Section styling */
+.section-title {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #0f2b46;
+    margin-bottom: 1.5rem;
+}
+
+.section-subtitle {
+    font-size: 1.1rem;
+    color: #555;
+    max-width: 700px;
+    margin: 0 auto 2rem;
+    line-height: 1.6;
+}
+
+/* Card styling */
+.card {
+    background-color: white;
+    border-radius: 6px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.12);
+}
+
+/* Remove loading spinner and prevent infinite loading */
+#nprogress, .nprogress, .loading, .loader, [class*='loader'], 
+[class*='loading'], [class*='spinner'], [class*='progress'] {
+    display: none !important;
+    animation: none !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
+}
+
+/* Hide broken images and add placeholders */
+img[src=""], img:not([src]), img[src$="undefined"] {
+    visibility: hidden;
+    position: relative;
+}
+
+/* Image placeholder styles */
+img {
+    min-height: 30px;
+    background-color: transparent;
+    position: relative;
+}
+
+/* Stop all animations */
+.animate-spin, .animate-pulse, .spinner, .loading, [class*='spinner'], 
+[class*='loading'], [class*='animate-'] {
+    animation: none !important;
+    transition: none !important;
+}
+
+/* Stop any infinite HTTP requests */
+.infinite-loading, .infinite-scroll, [class*='infinite-'] {
+    display: none !important;
+}
+
+/* Footer styles */
+footer {
+    background-color: #0f2b46 !important;
+}
+
+.footer-heading {
+    color: white;
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 16px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.footer-link {
+    color: #cbd5e0;
+    transition: color 0.2s;
+    font-size: 15px;
+    display: block;
+    margin-bottom: 0.5rem;
+}
+
+.footer-link:hover {
+    color: white;
+}
+
+/* WhatsApp button */
+.whatsapp-button {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 60px;
+    height: 60px;
+    background-color: #25D366;
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    z-index: 1000;
+    transition: all 0.2s;
+}
+
+.whatsapp-button:hover {
+    transform: scale(1.1);
+    box-shadow: 0 3px 7px rgba(0,0,0,0.25);
+} 

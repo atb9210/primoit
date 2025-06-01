@@ -1,4 +1,27 @@
-# Log di Attività - PrimoIT
+# Log delle Attività di Cursor
+
+## Sviluppo del Sito Web PrimoIT
+
+| Data e Ora | Attività |
+|------------|----------|
+| {{ date('Y-m-d H:i:s') }} | Aggiornato il file delle rotte web.php per includere i percorsi pubblici |
+| {{ date('Y-m-d H:i:s') }} | Creato il controller CategoriesController per gestire le viste delle categorie |
+| {{ date('Y-m-d H:i:s') }} | Creata la vista categories/index.blade.php per mostrare l'elenco delle categorie |
+| {{ date('Y-m-d H:i:s') }} | Creata la vista categories/show.blade.php per mostrare i dettagli di una categoria |
+| {{ date('Y-m-d H:i:s') }} | Creata la vista terms.blade.php per i termini di servizio |
+| {{ date('Y-m-d H:i:s') }} | Creata la vista privacy.blade.php per la privacy policy |
+| {{ date('Y-m-d H:i:s') }} | Creata la vista cookies.blade.php per la cookie policy |
+| {{ date('Y-m-d H:i:s') }} | Aggiornata la vista about.blade.php con un design moderno |
+| {{ date('Y-m-d H:i:s') }} | Aggiornata la vista contact.blade.php con un form di contatto migliorato |
+| {{ date('Y-m-d H:i:s') }} | Eseguiti i comandi artisan per la pulizia della cache e l'ottimizzazione |
+| {{ date('Y-m-d H:i:s') }} | Verificato che il sito è correttamente accessibile sul dominio temporaneo http://primoit.x95jg2qbzq-95m32evxk3rv.p.temp-site.link/ |
+| {{ date('Y-m-d H:i:s') }} | Corretto il menu di navigazione principale per migliorare la visualizzazione e gli spazi tra gli elementi |
+| {{ date('Y-m-d H:i:s') }} | Aggiornato il design con il nuovo logo e lo schema di colori blu scuro (#1a2a36) per header e footer |
+| {{ date('Y-m-d H:i:s') }} | Risolto problema di caricamento CSS aggiungendo Tailwind CSS da CDN e stili critici inline |
+| {{ date('Y-m-d H:i:s') }} | Risolto problema di caricamento infinito causato da via.placeholder.com sostituendo con immagini locali |
+| {{ date('Y-m-d H:i:s') }} | Migliorato sistema di fallback immagini con file SVG statici e prevenzione caricamenti infiniti |
+| {{ date('Y-m-d H:i:s') }} | Ridisegnata completamente la navbar in stile Return Trading con nuovo logo, bottone stock disponibile e numero di telefono |
+| {{ date('Y-m-d H:i:s') }} | Risolto errore "Route [register] not defined" modificando il link alla registrazione con route corretta (register.b2b) |
 
 ## 31/05/2024
 
@@ -159,3 +182,149 @@
 - 18:00 - Test completo del sistema di scraping e correzione errori
 - 18:05 - Ottimizzazione performance con timeout per le richieste HTTP e gestione eccezioni
 - 18:10 - Aggiornamento LogCursorAttivita.md e pulizia cache Laravel 
+- 18:30 - Ottimizzazione della pagina ITSale index per evitare scrolling orizzontale secondo UX_UI.md
+- 18:30 - Resa responsive della pagina ITSale con Tailwind CSS nascondendo colonne non essenziali su mobile
+- 18:30 - Migliorata disposizione degli elementi header e search per adattarsi a tutti i dispositivi
+- 18:30 - Rimosso whitespace-nowrap e aggiunto truncate con max-width per limitare lunghezza testo
+- 18:30 - Eseguiti php artisan config:clear, cache:clear, view:clear, route:clear e optimize
+- 18:40 - Mantenuto layout originale dell'header con i bottoni "Configure Credentials" e "Back to Suppliers"
+- 18:40 - Eseguiti nuovamente i comandi di pulizia cache per applicare i cambiamenti
+- 18:50 - Ripristinato il layout originale del blocco info supplier con logo a sinistra e informazioni allineate a sinistra
+- 18:50 - Riattivate le descrizioni per tutte le dimensioni di schermo e migliorato troncamento con max-width
+- 18:50 - Migliorata visualizzazione dati numerici con allineamento a destra e font medium per unità, prezzi e totali
+- 18:50 - Trasformato il link "Open" in un bottone stile Tailwind con colore indigo, sfondo, bordi e padding
+- 18:50 - Eseguiti php artisan config:clear, cache:clear, view:clear, route:clear e optimize
+- 19:00 - Aggiunto riquadro "Info Fornitore" con calcolo dinamico delle unità totali e del valore totale dell'inventario
+- 19:00 - Implementato calcolo PHP per sommare tutte le unità e i prezzi dalle liste disponibili
+- 19:00 - Formattato correttamente i numeri con separatori di migliaia e separatore decimale secondo convenzione italiana
+- 19:00 - Eseguiti php artisan config:clear, cache:clear, view:clear, route:clear e optimize
+- 19:15 - Implementata funzionalità di importazione liste ITSale come batch nel sistema
+- 19:15 - Creata nuova rotta POST per gestire l'importazione dei batch
+- 19:15 - Aggiunto metodo importAsBatch al controller ITSaleScraperController
+- 19:15 - Implementata logica di mappatura delle categorie in base al tipo di prodotto
+- 19:15 - Ottimizzato il trasferimento delle specifiche prodotto dal fornitore ITSale al sistema interno
+- 19:15 - Sostituito il pulsante "Import All Products" con un form POST per l'importazione
+- 19:15 - Eseguiti php artisan config:clear, cache:clear, view:clear, route:clear e optimize 
+
+## 03/06/2024
+
+- 12:30 - Risolto errore "Undefined variable $listSlug" in show-list.blade.php
+- 12:30 - Aggiunto parametro $listSlug a compact() nel metodo showList del controller ITSaleScraperController
+- 12:30 - Semplificato codice nella vista per usare direttamente $listSlug invece di rigenerarlo
+- 12:30 - Eseguiti php artisan config:clear, cache:clear, view:clear, route:clear e optimize
+
+- 14:00 - Risolto problema "No products found in the list" nell'importazione batch ITSale
+- 14:00 - Aggiunto supporto per diversi selettori di prodotti (.product-list-item, tr.product-row, .product)
+- 14:00 - Implementata estrazione prodotti dalle tabelle HTML come fallback
+- 14:00 - Migliorata gestione dei campi mancanti nei prodotti con valori predefiniti
+- 14:00 - Aggiunti campi obbligatori mancanti (name, slug, batch_number, description, status, condition)
+- 14:00 - Aggiunto logging esteso per debug dell'importazione batch
+- 14:00 - Eseguiti php artisan config:clear, cache:clear, view:clear, route:clear e optimize 
+
+- 15:00 - Risolto errore SQL nell'importazione batch ITSale: "table products has no column named name"
+- 15:00 - Creata migrazione add_missing_columns_to_products_table per aggiungere colonne mancanti
+- 15:00 - Aggiunte colonne: name, slug, batch_number, description, status, condition
+- 15:00 - Aggiornato model Product con nuovi campi fillable
+- 15:00 - Eseguiti php artisan migrate e comandi di pulizia cache 
+
+- 16:00 - Risolto errore "View [admin.batches.show] not found" creando la vista mancante
+- 16:00 - Implementata vista dettagliata per i batch con informazioni batch e tabella prodotti
+- 16:00 - Risolto errore "Unable to cast value to a decimal" nella vista products/index.blade.php
+- 16:00 - Modificato il formato del prezzo con controllo null e cast esplicito a float
+- 16:00 - Eseguiti php artisan config:clear, cache:clear, view:clear, route:clear e optimize 
+
+- 16:30 - Risolto errore "Unsupported operand types: string * int" nella vista batches/show.blade.php
+- 16:30 - Corretto il cast dei tipi nell'operazione di moltiplicazione unit_price * quantity
+- 16:30 - Modificato il calcolo del totale con cast esplicito: (float)unit_price * (int)quantity
+- 16:30 - Eseguiti php artisan config:clear, cache:clear, view:clear, route:clear e optimize 
+
+- 17:00 - Implementato fix robusto per errore "Unable to cast value to a decimal" in tutte le viste
+- 17:00 - Aggiunto blocco try-catch per gestire in sicurezza i valori di prezzo nulli o non validi
+- 17:00 - Migliorata gestione dei prezzi in admin/products/index.blade.php con controlli multipli
+- 17:00 - Corretto il formato dei prezzi in products/show.blade.php con gestione eccezioni
+- 17:00 - Aggiornato admin/categories/show.blade.php con gestione sicura dei prezzi
+- 17:00 - Eseguiti php artisan config:clear, cache:clear, view:clear, route:clear e optimize 
+
+- 21:30 - Implementata soluzione definitiva per errori di formattazione prezzi con custom Blade directive
+- 21:30 - Creata directive @formatPrice in AppServiceProvider per gestire in modo centralizzato il formato dei prezzi
+- 21:30 - Aggiunto blocco try-catch per gestire eccezioni e valori nulli/non validi con fallback a €0.00
+- 21:30 - Aggiornate tutte le viste per utilizzare la nuova directive @formatPrice
+- 21:30 - Aggiornati admin/products/index.blade.php, admin/categories/show.blade.php, products/show.blade.php
+- 21:30 - Aggiornati admin/batches/index.blade.php, admin/batches/show.blade.php con la directive @formatPrice
+- 21:30 - Aggiornati products/reservations.blade.php e admin/itsale/index.blade.php con la directive @formatPrice
+- 21:30 - Eseguiti php artisan config:clear, cache:clear, view:clear, route:clear e optimize
+
+- 22:00 - Risolti errori "View [admin.products.show] not found" e "View [admin.products.edit] not found"
+- 22:00 - Creata vista admin.products.show con visualizzazione completa dei dettagli prodotto
+- 22:00 - Implementata sezione immagini con galleria e anteprima principale
+- 22:00 - Aggiunta sezione informazioni prodotto con categorie, prezzi e stato
+- 22:00 - Implementata sezione specifiche tecniche con CPU, RAM, storage, ecc.
+- 22:00 - Aggiunta sezione batch correlati con tabella di riepilogo
+- 22:00 - Creata vista admin.products.edit con form completo per la modifica del prodotto
+- 22:00 - Implementato form con campi per informazioni base, prezzo, disponibilità e specifiche tecniche
+- 22:00 - Aggiunti menu di selezione per stato, condizione e grado visivo
+- 22:00 - Eseguiti php artisan config:clear, cache:clear, view:clear, route:clear e optimize
+
+- 22:15 - Risolto errore "Unable to cast value to a decimal" nel form di modifica prodotto
+- 22:15 - Modificato l'input del prezzo per utilizzare il cast esplicito a float del valore del prodotto
+- 22:15 - Aggiunto (float) al valore del prezzo per garantire che sia un numero valido per l'input
+- 22:15 - Eseguiti php artisan config:clear, cache:clear, view:clear, route:clear e optimize
+
+- 22:30 - Migliorata gestione dei prezzi nell'importazione prodotti da ITSale
+- 22:30 - Modificato il controller ITSaleScraperController per convertire esplicitamente i prezzi in float
+- 22:30 - Aggiunto cast esplicito (float) ai prezzi dei prodotti e ai prezzi delle unità nei batch
+- 22:30 - Risolto problema alla radice per garantire che i prezzi siano numerici fin dall'importazione
+- 22:30 - Eseguiti php artisan config:clear, cache:clear, view:clear, route:clear e optimize 
+
+## 05/06/2024
+
+- 16:05 - Redesign completo del sito web in stile Return Trading mantenendo la struttura esistente
+- 16:05 - Cambiato colore primario da #1a2a36 a #0f2b46 per un look più moderno simile a Return Trading
+- 16:05 - Modificato layout della navbar per renderla più semplice e professionale
+- 16:05 - Implementato hero section più minimalista con sfondo bianco invece del gradiente blu
+- 16:05 - Aggiornato footer con sezione "We do" e stile conforme a Return Trading
+- 16:05 - Aggiunto pulsante WhatsApp fisso in basso a destra per contatti immediati
+- 16:05 - Migliorata UI delle card con hover effect e ombre più sottili
+- 16:05 - Implementato sistema di sezioni e titoli più coerente con classi .section-title e .section-subtitle
+- 16:05 - Rinominato "Batches" in "Available stock" in tutti i pulsanti e link
+- 16:05 - Aggiunta call-to-action finale con due pulsanti per disponibilità stock e contatti
+- 16:05 - Eseguiti php artisan config:clear, cache:clear, view:clear, route:clear, optimize
+
+## 06/06/2024
+
+- 09:45 - Risolto errore di sintassi "unexpected token catch" in ITSaleScraperController.php
+- 09:45 - Corretto blocco try-catch nella funzione di importazione batch per il parsing dei prodotti ITSale
+- 09:45 - Aggiunta parentesi graffa mancante prima del catch per gestire correttamente le eccezioni
+- 09:45 - Eseguiti php artisan config:clear, cache:clear, view:clear, route:clear e optimize
+
+- 11:30 - Migliorato sistema di recupero prodotti dalle liste ITSale con HP Elite 12 inch
+- 11:30 - Implementato nuovo metodo di parsing con supporto per selettori alternativi
+- 11:30 - Aggiunta funzione processItemData per standardizzare i dati dei prodotti
+- 11:30 - Migliorato logging con analisi della struttura HTML per debug
+- 11:30 - Modificata vista show-list per mostrare messaggio chiaro quando non ci sono prodotti
+- 11:30 - Aggiunto pulsante "Refresh Data" per forzare l'aggiornamento dei dati senza cache
+- 11:30 - Aggiunti controlli e logging per meglio diagnosticare problemi di parsing
+- 11:30 - Eseguiti php artisan config:clear, cache:clear, view:clear, route:clear e optimize 
+
+- 14:45 - Creata vista admin.batches.edit per la modifica dei batch
+- 14:45 - Implementato form completo con campi per nome, riferimento, descrizione, stato e disponibilità
+- 14:45 - Aggiunta gestione della relazione many-to-many con i prodotti
+- 14:45 - Implementate funzionalità JavaScript per calcolo dinamico dei totali e gestione righe prodotti
+- 14:45 - Aggiunto supporto per l'aggiunta e rimozione di prodotti dal batch
+- 14:45 - Gestiti correttamente i prezzi con cast esplicito a float
+- 14:45 - Eseguiti php artisan config:clear, cache:clear, view:clear, route:clear e optimize 
+
+- 18:15 - Invertiti colori della navbar: sfondo blu scuro (#0f2b46) con testo bianco per un look più professionale
+- 18:15 - Applicato filtro brightness(0) invert(1) al logo nella navbar per renderlo bianco su sfondo scuro
+- 18:15 - Semplificato drasticamente il footer riducendo le sezioni da 4 a 3 colonne
+- 18:15 - Rimosso blocco "We do" e ridotto il testo descrittivo dell'azienda
+- 18:15 - Ridotto il numero di link nel footer mantenendo solo quelli essenziali
+- 18:15 - Accorciato il testo dei link nel footer (Terms and Conditions → Terms)
+- 18:15 - Eseguiti php artisan config:clear, cache:clear, view:clear, route:clear, optimize 
+
+- 19:30 - Riorganizzato menu di navigazione: nascoste voci "Categories" e "Products"
+- 19:30 - Rinominato "Batches" in "Available Stock" in tutto il sito 
+- 19:30 - Aggiunta nuova voce "Sold Stock" nel menu principale con filtro status=sold
+- 19:30 - Modificato layout filtri nella pagina batches/index mettendoli tutti su una riga
+- 19:30 - Cambiato titolo della pagina da "Available Batches" a "Available Stock"
+- 19:30 - Eseguiti php artisan config:clear, cache:clear, view:clear, route:clear, optimize 
