@@ -28,11 +28,13 @@ class AppServiceProvider extends ServiceProvider
         Blade::directive('formatPrice', function ($expression) {
             return "<?php 
                 try {
-                    \$priceValue = '€0.00';
-                    if (isset({$expression}) && {$expression} !== '' && {$expression} !== null) {
-                        \$priceValue = '€' . number_format((float) {$expression}, 2, '.', ',');
+                    // Evaluate the expression first, then check if it's valid
+                    \$priceValue = {$expression};
+                    if (\$priceValue !== null && \$priceValue !== '') {
+                        echo '€' . number_format((float) \$priceValue, 2, '.', ',');
+                    } else {
+                        echo '€0.00';
                     }
-                    echo \$priceValue;
                 } catch (\\Exception \$e) {
                     echo '€0.00';
                 }

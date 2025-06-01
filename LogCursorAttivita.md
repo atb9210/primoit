@@ -276,6 +276,15 @@
 - 22:30 - Risolto problema alla radice per garantire che i prezzi siano numerici fin dall'importazione
 - 22:30 - Eseguiti php artisan config:clear, cache:clear, view:clear, route:clear e optimize 
 
+## 04/06/2024
+
+- 10:45 - Ridisegnata completamente la vista pubblica dei batch (batches/show.blade.php) per renderla simile allo stile ITSale scraper
+- 10:45 - Implementate card di riepilogo (Status, Cost, Quantity, Availability) in stile dashboard ITSale
+- 10:45 - Aggiunta visualizzazione immagini prodotti con layout coerente all'interfaccia admin
+- 10:45 - Migliorata presentazione delle specifiche tecniche con maggiore leggibilità e organizzazione
+- 10:45 - Implementato sistema di tab per visualizzazione organizzata dei contenuti
+- 10:45 - Eseguiti php artisan config:clear, cache:clear, view:clear, route:clear e optimize
+
 ## 05/06/2024
 
 - 16:05 - Redesign completo del sito web in stile Return Trading mantenendo la struttura esistente
@@ -328,3 +337,105 @@
 - 19:30 - Modificato layout filtri nella pagina batches/index mettendoli tutti su una riga
 - 19:30 - Cambiato titolo della pagina da "Available Batches" a "Available Stock"
 - 19:30 - Eseguiti php artisan config:clear, cache:clear, view:clear, route:clear, optimize 
+
+## 07/06/2024
+
+- 19:15 - Effettuato commit e push delle modifiche al design e alla struttura del sito
+- 19:15 - Completato il redesign in stile Return Trading con navbar scura e footer semplificato
+- 19:15 - Riorganizzato il menu principale con voci "Available Stock" e "Sold Stock"
+- 19:15 - Ottimizzato il layout dei filtri nella pagina batches con design in-line
+- 19:15 - Implementato pulsante WhatsApp fisso per contatti diretti
+- 19:15 - Eseguiti php artisan config:clear, cache:clear, view:clear, route:clear, optimize 
+
+- 20:30 - Risolto errore "Cannot use isset() on the result of an expression" in batches/show.blade.php
+- 20:30 - Sostituito isset($batch->total_price) con $batch->total_price !== null per verificare correttamente valori null
+- 20:30 - Migliorata condizione per il calcolo del prezzo medio per evitare divisione per zero
+- 20:30 - Aggiunta verifica $batch->total_price !== null prima di calcolare il prezzo medio per unità
+- 20:30 - Eseguiti php artisan view:clear, config:clear, cache:clear, route:clear, optimize 
+
+## 08/06/2024
+
+- 10:45 - Ridisegnata completamente la vista pubblica dei batch (batches/show.blade.php) per renderla simile allo stile ITSale scraper
+- 10:45 - Implementate card di riepilogo (Status, Cost, Quantity, Availability) in stile dashboard ITSale
+- 10:45 - Aggiunta visualizzazione immagini prodotti con layout coerente all'interfaccia admin
+- 10:45 - Migliorata presentazione delle specifiche tecniche con maggiore leggibilità e organizzazione
+- 10:45 - Implementato sistema di tab per visualizzazione organizzata dei contenuti
+- 10:45 - Eseguiti php artisan config:clear, cache:clear, view:clear, route:clear e optimize
+
+## 09/06/2024
+
+- 16:05 - Redesign completo del sito web in stile Return Trading mantenendo la struttura esistente
+- 16:05 - Cambiato colore primario da #1a2a36 a #0f2b46 per un look più moderno simile a Return Trading
+- 16:05 - Modificato layout della navbar per renderla più semplice e professionale
+- 16:05 - Implementato hero section più minimalista con sfondo bianco invece del gradiente blu
+- 16:05 - Aggiornato footer con sezione "We do" e stile conforme a Return Trading
+- 16:05 - Aggiunto pulsante WhatsApp fisso in basso a destra per contatti immediati
+- 16:05 - Migliorata UI delle card con hover effect e ombre più sottili
+- 16:05 - Implementato sistema di sezioni e titoli più coerente con classi .section-title e .section-subtitle
+- 16:05 - Rinominato "Batches" in "Available stock" in tutti i pulsanti e link
+- 16:05 - Aggiunta call-to-action finale con due pulsanti per disponibilità stock e contatti
+- 16:05 - Eseguiti php artisan config:clear, cache:clear, view:clear, route:clear, optimize
+
+## 10/06/2024
+
+- 09:45 - Risolto errore di sintassi "unexpected token catch" in ITSaleScraperController.php
+- 09:45 - Corretto blocco try-catch nella funzione di importazione batch per il parsing dei prodotti ITSale
+- 09:45 - Aggiunta parentesi graffa mancante prima del catch per gestire correttamente le eccezioni
+- 09:45 - Eseguiti php artisan config:clear, cache:clear, view:clear, route:clear e optimize
+
+- 11:30 - Migliorato sistema di recupero prodotti dalle liste ITSale con HP Elite 12 inch
+- 11:30 - Implementato nuovo metodo di parsing con supporto per selettori alternativi
+- 11:30 - Aggiunta funzione processItemData per standardizzare i dati dei prodotti
+- 11:30 - Migliorato logging con analisi della struttura HTML per debug
+- 11:30 - Modificata vista show-list per mostrare messaggio chiaro quando non ci sono prodotti
+- 11:30 - Aggiunto pulsante "Refresh Data" per forzare l'aggiornamento dei dati senza cache
+- 11:30 - Aggiunti controlli e logging per meglio diagnosticare problemi di parsing
+- 11:30 - Eseguiti php artisan config:clear, cache:clear, view:clear, route:clear e optimize 
+
+- 14:45 - Creata vista admin.batches.edit per la modifica dei batch
+- 14:45 - Implementato form completo con campi per nome, riferimento, descrizione, stato e disponibilità
+- 14:45 - Aggiunta gestione della relazione many-to-many con i prodotti
+- 14:45 - Implementate funzionalità JavaScript per calcolo dinamico dei totali e gestione righe prodotti
+- 14:45 - Aggiunto supporto per l'aggiunta e rimozione di prodotti dal batch
+- 14:45 - Gestiti correttamente i prezzi con cast esplicito a float
+- 14:45 - Eseguiti php artisan config:clear, cache:clear, view:clear, route:clear e optimize 
+
+- 18:15 - Invertiti colori della navbar: sfondo blu scuro (#0f2b46) con testo bianco per un look più professionale
+- 18:15 - Applicato filtro brightness(0) invert(1) al logo nella navbar per renderlo bianco su sfondo scuro
+- 18:15 - Semplificato drasticamente il footer riducendo le sezioni da 4 a 3 colonne
+- 18:15 - Rimosso blocco "We do" e ridotto il testo descrittivo dell'azienda
+- 18:15 - Ridotto il numero di link nel footer mantenendo solo quelli essenziali
+- 18:15 - Accorciato il testo dei link nel footer (Terms and Conditions → Terms)
+- 18:15 - Eseguiti php artisan config:clear, cache:clear, view:clear, route:clear, optimize 
+
+- 19:30 - Riorganizzato menu di navigazione: nascoste voci "Categories" e "Products"
+- 19:30 - Rinominato "Batches" in "Available Stock" in tutto il sito 
+- 19:30 - Aggiunta nuova voce "Sold Stock" nel menu principale con filtro status=sold
+- 19:30 - Modificato layout filtri nella pagina batches/index mettendoli tutti su una riga
+- 19:30 - Cambiato titolo della pagina da "Available Batches" a "Available Stock"
+- 19:30 - Eseguiti php artisan config:clear, cache:clear, view:clear, route:clear, optimize 
+
+## 11/06/2024
+
+- 19:15 - Effettuato commit e push delle modifiche al design e alla struttura del sito
+- 19:15 - Completato il redesign in stile Return Trading con navbar scura e footer semplificato
+- 19:15 - Riorganizzato il menu principale con voci "Available Stock" e "Sold Stock"
+- 19:15 - Ottimizzato il layout dei filtri nella pagina batches con design in-line
+- 19:15 - Implementato pulsante WhatsApp fisso per contatti diretti
+- 19:15 - Eseguiti php artisan config:clear, cache:clear, view:clear, route:clear, optimize 
+
+- 20:30 - Risolto errore "Cannot use isset() on the result of an expression" in batches/show.blade.php
+- 20:30 - Sostituito isset($batch->total_price) con $batch->total_price !== null per verificare correttamente valori null
+- 20:30 - Migliorata condizione per il calcolo del prezzo medio per evitare divisione per zero
+- 20:30 - Aggiunta verifica $batch->total_price !== null prima di calcolare il prezzo medio per unità
+- 20:30 - Eseguiti php artisan view:clear, config:clear, cache:clear, route:clear, optimize 
+
+## 13/06/2024
+
+- 10:30 - Migliorato il design della pagina pubblica dei batch (batches/show.blade.php)
+- 10:30 - Ristrutturato il layout per contenere tutto all'interno di un'unica scheda bianca, in stile ITSale scraper
+- 10:30 - Implementato sistema di tab più moderno con tab "Products" e "Description"
+- 10:30 - Modificati i summary cards con sfondo grigio chiaro per miglior contrasto visivo
+- 10:30 - Organizzati i blocchi di contenuto con sezioni separate da bordi sottili
+- 10:30 - Aggiunto JavaScript per la navigazione tra i tab con effetti visivi migliorati
+- 10:30 - Eseguiti php artisan config:clear, cache:clear, view:clear, route:clear, optimize
