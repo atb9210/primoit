@@ -147,41 +147,23 @@
                         <table class="min-w-full bg-white border border-gray-300 rounded-lg overflow-hidden">
                             <thead>
                                 <tr class="bg-gray-100 text-gray-700">
-                                    <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">ID</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Name</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Reference Code</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Status</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Total Price</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Total Quantity</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Actions</th>
+                                    <th class="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider">ID</th>
+                                    <th class="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider">Name</th>
+                                    <th class="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider">Ref Code</th>
+                                    <th class="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider">Status</th>
+                                    <th class="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider">Price</th>
+                                    <th class="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider">Qty</th>
+                                    <th class="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider">Actions</th>
                                 </tr>
                             </thead>
-                            <tbody class="divide-y divide-gray-300">
+                            <tbody class="divide-y divide-gray-200">
                                 @forelse ($batches as $batch)
                                     <tr class="hover:bg-gray-50 transition-colors">
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $batch->id }}</td>
-                                        <td class="px-6 py-4 text-sm text-gray-900">
-                                            <div class="flex items-center">
-                                                @if(is_array($batch->images) && isset($batch->images['default']))
-                                                    <div class="flex-shrink-0 h-10 w-10 mr-3">
-                                                        <img class="h-10 w-10 rounded-md object-cover" src="{{ asset('storage/' . $batch->images['default']) }}" alt="{{ $batch->name }}">
-                                                    </div>
-                                                @else
-                                                    <div class="flex-shrink-0 h-10 w-10 mr-3 bg-gray-200 rounded-md flex items-center justify-center">
-                                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                                        </svg>
-                                                    </div>
-                                                @endif
-                                                <div>
-                                                    <div class="text-sm font-medium text-gray-900">{{ $batch->name }}</div>
-                                                    <div class="text-xs text-gray-500">{{ $batch->product_manufacturer }} {{ $batch->product_model }}</div>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $batch->reference_code }}</td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
+                                        <td class="px-4 py-2 text-xs text-gray-500">{{ $batch->id }}</td>
+                                        <td class="px-4 py-2 text-xs font-medium text-gray-900">{{ $batch->name }}</td>
+                                        <td class="px-4 py-2 text-xs text-gray-500">{{ $batch->reference_code }}</td>
+                                        <td class="px-4 py-2">
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs 
                                                 @if($batch->status === 'active') bg-green-100 text-green-800
                                                 @elseif($batch->status === 'reserved') bg-yellow-100 text-yellow-800
                                                 @elseif($batch->status === 'sold') bg-blue-100 text-blue-800
@@ -189,40 +171,36 @@
                                                 {{ ucfirst($batch->status) }}
                                             </span>
                                         </td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">@formatPrice($batch->total_price)</td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $batch->total_quantity }}</td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                            <div class="flex space-x-2">
-                                                <a href="{{ route('admin.batches.show', $batch) }}" class="inline-flex items-center px-2 py-1 bg-blue-100 border border-blue-300 rounded text-xs text-blue-700 hover:bg-blue-200">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <td class="px-4 py-2 text-xs font-medium text-gray-900">@formatPrice($batch->total_price)</td>
+                                        <td class="px-4 py-2 text-xs text-gray-500">{{ $batch->total_quantity }}</td>
+                                        <td class="px-4 py-2">
+                                            <div class="flex space-x-1">
+                                                <a href="{{ route('admin.batches.show', $batch) }}" class="inline-flex items-center px-1.5 py-0.5 bg-blue-100 border border-blue-300 rounded text-xs text-blue-700 hover:bg-blue-200">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                                                     </svg>
-                                                    View
                                                 </a>
                                                 
-                                                <a href="{{ route('admin.batches.edit', $batch) }}" class="inline-flex items-center px-2 py-1 bg-indigo-100 border border-indigo-300 rounded text-xs text-indigo-700 hover:bg-indigo-200">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <a href="{{ route('admin.batches.edit', $batch) }}" class="inline-flex items-center px-1.5 py-0.5 bg-indigo-100 border border-indigo-300 rounded text-xs text-indigo-700 hover:bg-indigo-200">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                                                     </svg>
-                                                    Edit
                                                 </a>
                                                 
-                                                <a href="{{ route('admin.batches.manage-products', $batch) }}" class="inline-flex items-center px-2 py-1 bg-green-100 border border-green-300 rounded text-xs text-green-700 hover:bg-green-200">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <a href="{{ route('admin.batches.manage-products', $batch) }}" class="inline-flex items-center px-1.5 py-0.5 bg-green-100 border border-green-300 rounded text-xs text-green-700 hover:bg-green-200">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                                                     </svg>
-                                                    Products
                                                 </a>
                                                 
                                                 <form action="{{ route('admin.batches.destroy', $batch) }}" method="POST" class="inline" onsubmit="return confirm('Are you sure you want to delete this batch?');">
                                                     @csrf
                                                     @method('DELETE')
-                                                    <button type="submit" class="inline-flex items-center px-2 py-1 bg-red-100 border border-red-300 rounded text-xs font-medium text-red-700 hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
-                                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <button type="submit" class="inline-flex items-center px-1.5 py-0.5 bg-red-100 border border-red-300 rounded text-xs text-red-700 hover:bg-red-200 focus:outline-none focus:ring-1 focus:ring-red-500">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                                         </svg>
-                                                        Delete
                                                     </button>
                                                 </form>
                                             </div>
@@ -230,15 +208,14 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="7" class="px-6 py-8 whitespace-nowrap text-sm text-gray-500 text-center">
+                                        <td colspan="7" class="px-4 py-6 text-sm text-gray-500 text-center">
                                             <div class="flex flex-col items-center">
-                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-gray-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-gray-400 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
                                                 </svg>
-                                                <p class="text-lg font-medium text-gray-900 mb-1">No batches found</p>
-                                                <p class="text-gray-500 mb-4">Get started by creating your first batch</p>
-                                                <a href="{{ route('admin.batches.create') }}" class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-500 active:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <p class="text-sm font-medium text-gray-900 mb-1">No batches found</p>
+                                                <a href="{{ route('admin.batches.create') }}" class="inline-flex items-center px-3 py-1 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-500 active:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                                                     </svg>
                                                     Create New Batch

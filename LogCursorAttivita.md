@@ -492,3 +492,9 @@
 - 03/06/2024 17:10 - Migliorata la scheda Total Value nella vista admin/batches/index.blade.php mostrando anche il numero totale di unità
 - 03/06/2024 17:10 - Aggiunto conteggio totale unità sotto il valore totale dei batch per migliorare la visualizzazione delle statistiche
 - 03/06/2024 17:10 - Eseguiti php artisan view:clear, cache:clear e optimize
+
+- 04/06/2024 12:05 - Ottimizzata la vista admin/batches/index.blade.php con design minimale e funzionale
+- 04/06/2024 12:05 - Rimosse immagini dei batch dalla tabella per un'interfaccia più compatta
+- 04/06/2024 12:05 - Ridotte dimensioni di padding e font per visualizzare più dati nello stesso spazio
+- 04/06/2024 12:05 - Semplificati i pulsanti di azione rimuovendo il testo e lasciando solo le icone
+- 04/06/2024 12:05 - Eseguiti php artisan config:clear, cache:clear, view:clear, route:clear e optimize
