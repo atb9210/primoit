@@ -225,4 +225,39 @@ class Batch extends Model
     {
         return $query->where('product_manufacturer', $manufacturer);
     }
+
+    /**
+     * Genera un codice di riferimento univoco per il batch in formato codice a barre
+     * Il formato è: PIT-YYYYMMDD-XXXX dove XXXX è un numero progressivo
+     */
+    public static function generateReferenceCode($sourceType = null, $categoryId = null)
+    {
+        $prefix = 'PIT'; // PrimoIT
+        $date = now()->format('Ymd');
+        
+        // Genera un numero progressivo di 4 cifre basato sui batch esistenti
+        $lastBatch = self::orderBy('id', 'desc')->first();
+        $counter = $lastBatch ? ($lastBatch->id + 1) : 1;
+        $counterPadded = str_pad($counter, 4, '0', STR_PAD_LEFT);
+        
+        // Crea il codice base
+        $code = "{$prefix}-{$date}-{$counterPadded}";
+        
+        // Aggiungi opzionalmente un prefisso basato sul tipo (interno/esterno)
+        if ($sourceType) {
+            $typePrefix = $sourceType === 'internal' ? 'I' : 'E';
+            $code = "{$typePrefix}-{$code}";
+        }
+        
+        // Aggiungi opzionalmente un suffisso basato sulla categoria
+        if ($categoryId) {
+            $category = Category::find($categoryId);
+            if ($category) {
+                $categoryCode = substr(strtoupper(preg_replace('/[^a-zA-Z0-9]/', '', $category->name)), 0, 2);
+                $code = "{$code}-{$categoryCode}";
+            }
+        }
+        
+        return $code;
+    }
 }

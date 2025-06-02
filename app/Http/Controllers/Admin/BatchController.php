@@ -118,7 +118,7 @@ class BatchController extends Controller
         // Crea il batch con tutti i campi
         $batch = Batch::create([
             'name' => $validated['name'],
-            'reference_code' => $validated['reference_code'] ?? Str::slug($validated['name'] . '-' . now()->format('YmdHis')),
+            'reference_code' => $validated['reference_code'] ?? Batch::generateReferenceCode($validated['source_type'] ?? 'internal', $validated['category_id']),
             'description' => $validated['description'],
             'category_id' => $validated['category_id'],
             'product_manufacturer' => $validated['product_manufacturer'],
