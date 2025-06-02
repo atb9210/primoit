@@ -504,9 +504,3 @@
 - 04/06/2024 12:30 - Implementato feedback visivo per batch esterne con sfondo azzurro per distinguerle visivamente
 - 04/06/2024 12:30 - Aggiunta badge con indicatore External/Internal colorato per facile identificazione
 - 04/06/2024 12:30 - Eseguiti php artisan config:clear, cache:clear, view:clear, route:clear e optimize
-
-- 04/06/2024 13:05 - Implementato sistema di generazione automatica di codici a barre per i batch
-- 04/06/2024 13:05 - Creato metodo generateReferenceCode nel modello Batch per generare codici univoci
-- 04/06/2024 13:05 - Formato codice a barre: [I/E]-PIT-YYYYMMDD-XXXX-CC (tipo, prefisso, data, progressivo, categoria)
-- 04/06/2024 13:05 - Aggiornato controller BatchController per utilizzare il nuovo sistema di generazione codici
-- 04/06/2024 13:05 - Eseguiti php artisan config:clear, cache:clear, view:clear, route:clear e optimize
