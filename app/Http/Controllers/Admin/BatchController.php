@@ -157,6 +157,14 @@ class BatchController extends Controller
     }
 
     /**
+     * Generate a printable label for the batch.
+     */
+    public function printLabel(Batch $batch)
+    {
+        return view('admin.batches.label', compact('batch'));
+    }
+
+    /**
      * Show the form for editing the specified batch.
      */
     public function edit(Batch $batch)

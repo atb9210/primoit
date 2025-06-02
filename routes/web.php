@@ -101,6 +101,7 @@ Route::middleware(['auth', 'verified', \App\Http\Middleware\AdminMiddleware::cla
     Route::get('batches/{batch}/manage-products', [AdminBatchController::class, 'manageProducts'])->name('batches.manage-products');
     Route::post('batches/{batch}/add-product', [AdminBatchController::class, 'addProduct'])->name('batches.add-product');
     Route::delete('batches/{batch}/remove-product/{index}', [AdminBatchController::class, 'removeProduct'])->name('batches.remove-product');
+    Route::get('batches/{batch}/print-label', [AdminBatchController::class, 'printLabel'])->name('batches.print-label');
     
     // Categories
     Route::resource('categories', AdminCategoryController::class);

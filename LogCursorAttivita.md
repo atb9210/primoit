@@ -504,3 +504,21 @@
 - 04/06/2024 12:30 - Implementato feedback visivo per batch esterne con sfondo azzurro per distinguerle visivamente
 - 04/06/2024 12:30 - Aggiunta badge con indicatore External/Internal colorato per facile identificazione
 - 04/06/2024 12:30 - Eseguiti php artisan config:clear, cache:clear, view:clear, route:clear e optimize
+
+- 04/06/2024 13:00 - Completata ottimizzazione dell'interfaccia tabellare per i batch con design minimal e funzionale
+- 04/06/2024 13:00 - Implementata distinzione visiva tra batch interne ed esterne con feedback cromatico
+- 04/06/2024 13:00 - Finalizzato commit di tutte le modifiche al repository GitHub
+- 04/06/2024 13:00 - Chiusura attività giornaliera
+
+## 04/11/2024
+
+- 11:15 - Implementata funzionalità di etichette per i batch con layout ottimizzato per formato 4x6 pollici
+- 11:15 - Creato metodo printLabel nel BatchController per generare etichette per i batch
+- 11:15 - Aggiunta rotta admin/batches/{batch}/print-label per accedere alla vista etichetta
+- 11:15 - Creata vista label.blade.php con layout responsive e dimensioni ottimizzate
+- 11:15 - Installato pacchetto simplesoftwareio/simple-qrcode per generazione QR code
+- 11:15 - Aggiunto bottone "Print Label" nella pagina di dettaglio batch
+- 11:15 - Integrato QR code nell'etichetta che punta alla pagina di dettaglio del batch
+- 11:15 - Aggiunto bottone di stampa con funzionalità window.print() per stampare l'etichetta
+- 11:15 - Ottimizzato il CSS per la stampa con media queries per rimuovere elementi non necessari
+- 11:15 - Eseguiti php artisan config:clear, cache:clear, view:clear, route:clear e optimize
