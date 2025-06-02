@@ -150,6 +150,8 @@
                                     <th class="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider">ID</th>
                                     <th class="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider">Name</th>
                                     <th class="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider">Ref Code</th>
+                                    <th class="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider">Type</th>
+                                    <th class="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider">Supplier</th>
                                     <th class="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider">Status</th>
                                     <th class="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider">Price</th>
                                     <th class="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider">Qty</th>
@@ -158,10 +160,32 @@
                             </thead>
                             <tbody class="divide-y divide-gray-200">
                                 @forelse ($batches as $batch)
-                                    <tr class="hover:bg-gray-50 transition-colors">
+                                    <tr class="hover:bg-gray-50 transition-colors {{ $batch->source_type === 'external' ? 'bg-blue-50' : '' }}">
                                         <td class="px-4 py-2 text-xs text-gray-500">{{ $batch->id }}</td>
                                         <td class="px-4 py-2 text-xs font-medium text-gray-900">{{ $batch->name }}</td>
                                         <td class="px-4 py-2 text-xs text-gray-500">{{ $batch->reference_code }}</td>
+                                        <td class="px-4 py-2 text-xs text-gray-500">
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs 
+                                                @if($batch->source_type === 'external') bg-blue-100 text-blue-800
+                                                @else bg-green-100 text-green-800 @endif">
+                                                {{ $batch->source_type === 'external' ? 'External' : 'Internal' }}
+                                            </span>
+                                        </td>
+                                        <td class="px-4 py-2 text-xs text-gray-500">
+                                            @if($batch->supplier)
+                                                <div class="flex items-center">
+                                                    @php
+                                                        $supplier = \App\Models\ThirdPartySupplier::where('name', $batch->supplier)->first();
+                                                    @endphp
+                                                    @if($supplier && $supplier->logo)
+                                                        <img src="{{ asset('storage/' . $supplier->logo) }}" alt="{{ $batch->supplier }}" class="h-4 w-4 mr-1 object-contain">
+                                                    @endif
+                                                    <span>{{ $batch->supplier }}</span>
+                                                </div>
+                                            @else
+                                                <span class="text-gray-400">-</span>
+                                            @endif
+                                        </td>
                                         <td class="px-4 py-2">
                                             <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs 
                                                 @if($batch->status === 'active') bg-green-100 text-green-800
@@ -208,7 +232,7 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="7" class="px-4 py-6 text-sm text-gray-500 text-center">
+                                        <td colspan="9" class="px-4 py-6 text-sm text-gray-500 text-center">
                                             <div class="flex flex-col items-center">
                                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-gray-400 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />

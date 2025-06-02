@@ -498,3 +498,9 @@
 - 04/06/2024 12:05 - Ridotte dimensioni di padding e font per visualizzare più dati nello stesso spazio
 - 04/06/2024 12:05 - Semplificati i pulsanti di azione rimuovendo il testo e lasciando solo le icone
 - 04/06/2024 12:05 - Eseguiti php artisan config:clear, cache:clear, view:clear, route:clear e optimize
+
+- 04/06/2024 12:30 - Aggiunta distinzione visiva tra batch interne/esterne nella vista batches/index.blade.php
+- 04/06/2024 12:30 - Aggiunta colonna supplier con logo fornitore nella tabella dei batch
+- 04/06/2024 12:30 - Implementato feedback visivo per batch esterne con sfondo azzurro per distinguerle visivamente
+- 04/06/2024 12:30 - Aggiunta badge con indicatore External/Internal colorato per facile identificazione
+- 04/06/2024 12:30 - Eseguiti php artisan config:clear, cache:clear, view:clear, route:clear e optimize
