@@ -1,11 +1,11 @@
 <?php
 
+use App\Http\Controllers\Admin\BatchController;
 use App\Http\Controllers\Admin\BatchController as AdminBatchController;
 use App\Http\Controllers\Admin\CategoryController as AdminCategoryController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\InquiryController as AdminInquiryController;
 use App\Http\Controllers\Admin\OrderController as AdminOrderController;
-use App\Http\Controllers\Admin\ProductController as AdminProductController;
 use App\Http\Controllers\Admin\ThirdPartySupplierController as AdminThirdPartySupplierController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\Auth\RegisterController;
@@ -19,7 +19,6 @@ use App\Http\Controllers\Auth\PasswordResetLinkController;
 use App\Http\Controllers\Auth\NewPasswordController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\InquiryController;
-use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Admin\ITSaleScraperController as AdminITSaleScraperController;
 use App\Http\Controllers\Admin\ITSaleScraperController as ITSaleScraperController;
@@ -54,29 +53,20 @@ Route::get('/batches/{batch}', [App\Http\Controllers\BatchesController::class, '
 Route::get('/categories', [App\Http\Controllers\CategoriesController::class, 'index'])->name('categories.index');
 Route::get('/categories/{category}', [App\Http\Controllers\CategoriesController::class, 'show'])->name('categories.show');
 
-// Product routes
-Route::get('/products', [ProductController::class, 'index'])->name('products.index');
-Route::get('/products/{product:slug}', [ProductController::class, 'show'])->name('products.show');
-Route::post('/products/{product}/inquiry', [InquiryController::class, 'storeProductInquiry'])->name('products.inquiry');
-
 // Authentication routes
 Route::middleware('guest')->group(function () {
-    // Login
+    Route::get('register-b2b', [RegisterController::class, 'showRegistrationForm'])->name('register.b2b');
+    Route::post('register-b2b', [RegisterController::class, 'register']);
+    
     Route::get('login', [AuthenticatedSessionController::class, 'create'])->name('login');
     Route::post('login', [AuthenticatedSessionController::class, 'store']);
     
-    // Password Reset
     Route::get('forgot-password', [PasswordResetLinkController::class, 'create'])->name('password.request');
     Route::post('forgot-password', [PasswordResetLinkController::class, 'store'])->name('password.email');
     Route::get('reset-password/{token}', [NewPasswordController::class, 'create'])->name('password.reset');
     Route::post('reset-password', [NewPasswordController::class, 'store'])->name('password.store');
-    
-    // Custom Registration
-    Route::get('/register-b2b', [RegisterController::class, '__invoke'])->name('register.b2b');
-    Route::post('/register-b2b', [RegisterController::class, 'store'])->name('register.b2b.store');
 });
 
-// Auth routes that require authentication
 Route::middleware('auth')->group(function () {
     // Logout
     Route::post('logout', [AuthenticatedSessionController::class, 'destroy'])->name('logout');
@@ -97,10 +87,6 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
-    
-    // Customer routes
-    Route::post('/available-stock/{product}/reserve', [ProductController::class, 'reserve'])->name('products.reserve');
-    Route::get('/my-reservations', [ProductController::class, 'myReservations'])->name('my-reservations');
 });
 
 // Admin routes
@@ -108,15 +94,13 @@ Route::middleware(['auth', 'verified', \App\Http\Middleware\AdminMiddleware::cla
     // Dashboard
     Route::get('/', [AdminDashboardController::class, 'index'])->name('dashboard');
     
-    // Products
-    Route::resource('products', AdminProductController::class);
-    Route::post('products/{product}/images', [AdminProductController::class, 'uploadImage'])->name('products.images.store');
-    Route::delete('products/{product}/images/{image}', [AdminProductController::class, 'deleteImage'])->name('products.images.destroy');
-    Route::post('products/{product}/specifications', [AdminProductController::class, 'addSpecification'])->name('products.specifications.store');
-    Route::delete('products/{product}/specifications/{specification}', [AdminProductController::class, 'deleteSpecification'])->name('products.specifications.destroy');
-    
     // Batches
     Route::resource('batches', AdminBatchController::class);
+    
+    // Batch product management routes
+    Route::get('batches/{batch}/manage-products', [AdminBatchController::class, 'manageProducts'])->name('batches.manage-products');
+    Route::post('batches/{batch}/add-product', [AdminBatchController::class, 'addProduct'])->name('batches.add-product');
+    Route::delete('batches/{batch}/remove-product/{index}', [AdminBatchController::class, 'removeProduct'])->name('batches.remove-product');
     
     // Categories
     Route::resource('categories', AdminCategoryController::class);
@@ -125,25 +109,18 @@ Route::middleware(['auth', 'verified', \App\Http\Middleware\AdminMiddleware::cla
     Route::resource('suppliers', AdminThirdPartySupplierController::class);
     Route::get('suppliers/{supplier}/configure', [AdminThirdPartySupplierController::class, 'configureCredentials'])->name('suppliers.configure');
     Route::post('suppliers/{supplier}/configure', [AdminThirdPartySupplierController::class, 'updateCredentials'])->name('suppliers.update-credentials');
-    Route::get('suppliers/{supplier}/itsale-scraper', [AdminThirdPartySupplierController::class, 'showItsaleScraper'])->name('suppliers.itsale-scraper');
     
-    // ITSale Scraper Routes
-    Route::get('/itsale/{supplier}', [ITSaleScraperController::class, 'index'])->name('itsale.index');
-    Route::get('/itsale/{supplier}/{listSlug}', [ITSaleScraperController::class, 'showList'])->name('itsale.show-list');
-    Route::post('/itsale/{supplier}/{listSlug}/import', [ITSaleScraperController::class, 'importAsBatch'])->name('itsale.import-batch');
+    // ITSale Scraper
+    Route::get('itsale/scraper/{supplier?}', [AdminITSaleScraperController::class, 'index'])->name('itsale.scraper');
+    Route::get('itsale/scraper/{supplier?}/{listSlug}', [AdminITSaleScraperController::class, 'showList'])->name('itsale.scraper.show-list');
+    Route::post('itsale/scraper/{supplier?}/{listSlug}/import-batch', [AdminITSaleScraperController::class, 'importAsBatch'])->name('itsale.scraper.import-batch');
     
     // Orders
     Route::resource('orders', AdminOrderController::class);
-    Route::patch('orders/{order}/status', [AdminOrderController::class, 'updateStatus'])->name('orders.status');
     
     // Inquiries
-    Route::resource('inquiries', AdminInquiryController::class)->except(['create', 'store']);
-    Route::patch('inquiries/{inquiry}/status', [AdminInquiryController::class, 'updateStatus'])->name('inquiries.status');
+    Route::resource('inquiries', AdminInquiryController::class);
     
     // Users
     Route::resource('users', AdminUserController::class);
-    Route::patch('users/{user}/approve', [AdminUserController::class, 'approve'])->name('users.approve');
 });
-
-// Default Breeze redirect
-Route::redirect('/dashboard', '/');

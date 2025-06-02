@@ -27,7 +27,7 @@
 
             <!-- Main Content Container -->
             <div class="bg-white rounded-lg shadow-md overflow-hidden mb-8">
-                <!-- Batch Header -->
+            <!-- Batch Header -->
                 <div class="p-6 border-b border-gray-200">
                     <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between">
                         <div class="mb-4 lg:mb-0">
@@ -68,9 +68,9 @@
                             <a href="{{ route('contact') }}?subject=Inquiry about {{ urlencode($batch->name) }}" class="inline-flex justify-center items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 transition">
                                 Contact About This Batch
                             </a>
-                        </div>
                     </div>
                 </div>
+            </div>
 
                 <!-- Batch Summary Cards -->
                 <div class="p-6 border-b border-gray-200">
@@ -86,8 +86,8 @@
                                     @else bg-gray-100 text-gray-800 @endif mr-2">
                                     {{ ucfirst($batch->status ?? 'Available') }}
                                 </span>
-                            </div>
-                        </div>
+                    </div>
+                </div>
 
                         <!-- Price -->
                         <div class="bg-gray-50 p-4 rounded-lg">
@@ -116,7 +116,7 @@
                                 {{ $batch->products->count() ?? $batch->total_quantity ?? 'N/A' }}
                                 <span class="text-sm text-gray-500 ml-1">units</span>
                             </div>
-                        </div>
+                                </div>
 
                         <!-- Availability -->
                         <div class="bg-gray-50 p-4 rounded-lg">
@@ -127,12 +127,12 @@
                                 @else
                                     Available immediately
                                 @endif
-                            </div>
-                            @if($batch->available_until)
+                                </div>
+                                @if($batch->available_until)
                                 <div class="text-md font-medium text-gray-700 mt-1">
                                     Until: {{ $batch->available_until->format('d/m/Y') }}
                                 </div>
-                            @endif
+                                @endif
                         </div>
                     </div>
                 </div>
@@ -152,8 +152,8 @@
                             </svg>
                             Browse Other Batches
                         </a>
-                    </div>
                 </div>
+            </div>
 
                 <!-- Tabs Navigation -->
                 <div class="px-6 pt-6">
@@ -179,9 +179,9 @@
                     <div class="block" id="products" role="tabpanel" aria-labelledby="products-tab">
                         <div class="overflow-x-auto">
                             @if($batch->products && $batch->products->count() > 0)
-                                <table class="min-w-full divide-y divide-gray-200">
-                                    <thead class="bg-gray-50">
-                                        <tr>
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <thead class="bg-gray-50">
+                                    <tr>
                                             <th scope="col" class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Image</th>
                                             <th scope="col" class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Product</th>
                                             <th scope="col" class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Specifications</th>
@@ -189,9 +189,9 @@
                                             <th scope="col" class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quantity</th>
                                             <th scope="col" class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Unit Price</th>
                                             <th scope="col" class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody class="bg-white divide-y divide-gray-200">
+                                    </tr>
+                                </thead>
+                                <tbody class="bg-white divide-y divide-gray-200">
                                         @foreach($batch->products as $index => $product)
                                             <tr class="{{ $index % 2 == 0 ? 'bg-white' : 'bg-gray-50' }} hover:bg-blue-50">
                                                 <td class="px-3 py-4 whitespace-nowrap">
@@ -204,27 +204,27 @@
                                                     </div>
                                                 </td>
                                                 <td class="px-3 py-4">
-                                                    <div class="text-sm font-medium text-gray-900">{{ $product->producer }} {{ $product->model }}</div>
-                                                    <div class="text-sm text-gray-500">{{ $product->type }}</div>
-                                                    @if(isset($product->name))
-                                                        <div class="text-xs text-gray-500 mt-1">{{ $product->name }}</div>
-                                                    @endif
-                                                </td>
+                                                <div class="text-sm font-medium text-gray-900">{{ $product->producer }} {{ $product->model }}</div>
+                                                <div class="text-sm text-gray-500">{{ $product->type }}</div>
+                                                @if(isset($product->name))
+                                                    <div class="text-xs text-gray-500 mt-1">{{ $product->name }}</div>
+                                                @endif
+                                            </td>
                                                 <td class="px-3 py-4">
-                                                    <div class="text-sm text-gray-900">
+                                                <div class="text-sm text-gray-900">
                                                         <ul class="list-none text-xs space-y-1">
-                                                            @if($product->cpu)
+                                                        @if($product->cpu)
                                                                 <li><span class="font-medium">CPU:</span> {{ $product->cpu }}</li>
-                                                            @endif
-                                                            @if($product->ram)
+                                                        @endif
+                                                        @if($product->ram)
                                                                 <li><span class="font-medium">RAM:</span> {{ $product->ram }}</li>
-                                                            @endif
-                                                            @if($product->drive)
+                                                        @endif
+                                                        @if($product->drive)
                                                                 <li><span class="font-medium">Storage:</span> {{ $product->drive }}</li>
-                                                            @endif
-                                                        </ul>
-                                                    </div>
-                                                </td>
+                                                        @endif
+                                                    </ul>
+                                                </div>
+                                            </td>
                                                 <td class="px-3 py-4 whitespace-nowrap">
                                                     @if($product->screen_size)
                                                         <div class="text-sm text-gray-900">{{ $product->screen_size }}</div>
@@ -233,26 +233,26 @@
                                                     @endif
                                                 </td>
                                                 <td class="px-3 py-4 whitespace-nowrap text-sm text-gray-900 font-medium">
-                                                    {{ $product->pivot->quantity }}
-                                                </td>
+                                                {{ $product->pivot->quantity }}
+                                            </td>
                                                 <td class="px-3 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                    @formatPrice($product->pivot->unit_price)
-                                                </td>
+                                                @formatPrice($product->pivot->unit_price)
+                                            </td>
                                                 <td class="px-3 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                                    @php
-                                                        $total = (float)$product->pivot->unit_price * (int)$product->pivot->quantity;
-                                                    @endphp
-                                                    @formatPrice($total)
-                                                </td>
-                                            </tr>
-                                        @endforeach
-                                    </tbody>
-                                </table>
-                            @else
-                                <!-- Example Products (for demo) -->
-                                <table class="min-w-full divide-y divide-gray-200">
-                                    <thead class="bg-gray-50">
-                                        <tr>
+                                                @php
+                                                    $total = (float)$product->pivot->unit_price * (int)$product->pivot->quantity;
+                                                @endphp
+                                                @formatPrice($total)
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                    @else
+                        <!-- Example Products (for demo) -->
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <thead class="bg-gray-50">
+                                    <tr>
                                             <th scope="col" class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Image</th>
                                             <th scope="col" class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Product</th>
                                             <th scope="col" class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Specifications</th>
@@ -260,9 +260,9 @@
                                             <th scope="col" class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quantity</th>
                                             <th scope="col" class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Unit Price</th>
                                             <th scope="col" class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody class="bg-white divide-y divide-gray-200">
+                                    </tr>
+                                </thead>
+                                <tbody class="bg-white divide-y divide-gray-200">
                                         <tr class="bg-white hover:bg-blue-50">
                                             <td class="px-3 py-4 whitespace-nowrap">
                                                 <div class="flex-shrink-0 h-20 w-20 rounded-md overflow-hidden">
@@ -273,65 +273,65 @@
                                                 <div class="text-sm font-medium text-gray-900">DELL LATITUDE 7390</div>
                                                 <div class="text-sm text-gray-500">LAPTOP</div>
                                                 <div class="text-xs text-gray-500 mt-1">LATITUDE 7390</div>
-                                            </td>
+                                        </td>
                                             <td class="px-3 py-4">
-                                                <div class="text-sm text-gray-900">
+                                            <div class="text-sm text-gray-900">
                                                     <ul class="list-none text-xs space-y-1">
                                                         <li><span class="font-medium">CPU:</span> INTEL CORE I5 8350U 1,7 GHz</li>
                                                         <li><span class="font-medium">RAM:</span> 8 GB</li>
                                                         <li><span class="font-medium">Storage:</span> 256 GB NVME</li>
-                                                    </ul>
-                                                </div>
-                                            </td>
+                                                </ul>
+                                            </div>
+                                        </td>
                                             <td class="px-3 py-4 whitespace-nowrap">
                                                 <div class="text-sm text-gray-900">13,3'' (1920x1080)</div>
                                             </td>
                                             <td class="px-3 py-4 whitespace-nowrap text-sm text-gray-900 font-medium">
                                                 1
-                                            </td>
+                                        </td>
                                             <td class="px-3 py-4 whitespace-nowrap text-sm text-gray-900">
                                                 €0.00
-                                            </td>
+                                        </td>
                                             <td class="px-3 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                                                 €0.00
-                                            </td>
-                                        </tr>
+                                        </td>
+                                    </tr>
                                         <!-- More example rows for the demo -->
                                         <tr class="bg-gray-50 hover:bg-blue-50">
                                             <td class="px-3 py-4 whitespace-nowrap">
                                                 <div class="flex-shrink-0 h-20 w-20 rounded-md overflow-hidden">
                                                     <div class="h-full w-full flex items-center justify-center bg-gray-200 text-gray-500">No Image</div>
-                                                </div>
-                                            </td>
+                                            </div>
+                                        </td>
                                             <td class="px-3 py-4">
                                                 <div class="text-sm font-medium text-gray-900">DELL PRECISION 5530</div>
                                                 <div class="text-sm text-gray-500">LAPTOP</div>
                                                 <div class="text-xs text-gray-500 mt-1">PRECISION 5530</div>
-                                            </td>
+                                        </td>
                                             <td class="px-3 py-4">
-                                                <div class="text-sm text-gray-900">
+                                            <div class="text-sm text-gray-900">
                                                     <ul class="list-none text-xs space-y-1">
                                                         <li><span class="font-medium">CPU:</span> INTEL CORE I5 8400H 2,5 GHz</li>
                                                         <li><span class="font-medium">RAM:</span> 32 GB</li>
                                                         <li><span class="font-medium">Storage:</span> 512 GB NVME</li>
-                                                    </ul>
-                                                </div>
-                                            </td>
+                                                </ul>
+                                            </div>
+                                        </td>
                                             <td class="px-3 py-4 whitespace-nowrap">
                                                 <div class="text-sm text-gray-900">15,6'' (1920x1080)</div>
                                             </td>
                                             <td class="px-3 py-4 whitespace-nowrap text-sm text-gray-900 font-medium">
                                                 1
-                                            </td>
+                                        </td>
                                             <td class="px-3 py-4 whitespace-nowrap text-sm text-gray-900">
                                                 €0.00
-                                            </td>
+                                        </td>
                                             <td class="px-3 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                                                 €0.00
-                                            </td>
-                                        </tr>
-                                    </tbody>
-                                </table>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
                             @endif
                         </div>
                     </div>
@@ -344,7 +344,7 @@
                             @else
                                 <p>This batch contains premium quality IT hardware, carefully refurbished and tested to ensure optimal performance. Perfect for businesses looking to upgrade their IT infrastructure at a competitive price.</p>
                                 <p>All items in this batch come with our standard warranty and technical support.</p>
-                            @endif
+                    @endif
                         </div>
                     </div>
                 </div>

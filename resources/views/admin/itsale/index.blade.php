@@ -178,7 +178,7 @@
                                                     <td class="px-2 py-4 text-sm text-gray-500 text-right font-medium">{{ $list['average_price'] }}</td>
                                                     <td class="px-2 py-4 text-sm text-gray-500 text-right font-medium">{{ $list['price'] }}</td>
                                                     <td class="py-4 pl-2 pr-4 sm:pr-6 text-center">
-                                                        <a href="{{ route('admin.itsale.show-list', ['supplier' => $supplier, 'listSlug' => strtolower(trim(preg_replace('/[^a-zA-Z0-9]+/', '-', $list['name']), '-'))]) }}" class="inline-flex items-center px-3 py-1.5 bg-indigo-600 border border-transparent rounded-md font-medium text-xs text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                                                        <a href="{{ route('admin.itsale.scraper.show-list', ['supplier' => $supplier, 'listSlug' => strtolower(trim(preg_replace('/[^a-zA-Z0-9]+/', '-', $list['name']), '-'))]) }}" class="inline-flex items-center px-3 py-1.5 bg-indigo-600 border border-transparent rounded-md font-medium text-xs text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
                                                             Open
                                                         </a>
                                                     </td>
@@ -233,7 +233,7 @@
                                                     <td class="px-2 py-4 text-sm text-gray-500 text-right font-medium">{{ $list['average_price'] }}</td>
                                                     <td class="px-2 py-4 text-sm text-gray-500 text-right font-medium">{{ $list['price'] }}</td>
                                                     <td class="py-4 pl-2 pr-4 sm:pr-6 text-center">
-                                                        <a href="{{ route('admin.itsale.show-list', ['supplier' => $supplier, 'listSlug' => strtolower(trim(preg_replace('/[^a-zA-Z0-9]+/', '-', $list['name']), '-'))]) }}" class="inline-flex items-center px-3 py-1.5 bg-indigo-600 border border-transparent rounded-md font-medium text-xs text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                                                        <a href="{{ route('admin.itsale.scraper.show-list', ['supplier' => $supplier, 'listSlug' => strtolower(trim(preg_replace('/[^a-zA-Z0-9]+/', '-', $list['name']), '-'))]) }}" class="inline-flex items-center px-3 py-1.5 bg-indigo-600 border border-transparent rounded-md font-medium text-xs text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
                                                             Open
                                                         </a>
                                                     </td>

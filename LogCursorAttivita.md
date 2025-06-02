@@ -439,3 +439,211 @@
 - 10:30 - Organizzati i blocchi di contenuto con sezioni separate da bordi sottili
 - 10:30 - Aggiunto JavaScript per la navigazione tra i tab con effetti visivi migliorati
 - 10:30 - Eseguiti php artisan config:clear, cache:clear, view:clear, route:clear, optimize
+
+- 11:45 - Implementata nuova architettura basata solo su batch con attributi dinamici
+- 11:45 - Creata migrazione add_product_attributes_to_batches_table per aggiungere campi specifici per tipo di prodotto
+- 11:45 - Aggiunti campi per attributi generici (cpu, ram, storage) e specifici per tipo (hdd_capacity, camera, ecc.)
+- 11:45 - Aggiornato modello Batch con nuovi fillable e cast per attributi serializzati
+- 11:45 - Implementate funzioni helper getTypeSpecificAttributes() e getProductTypes() nel modello
+- 11:45 - Aggiornato BatchController per utilizzare la nuova struttura senza dipendenze da Product
+- 11:45 - Implementato caricamento e gestione immagini per batch tramite campo JSON
+- 11:45 - Eseguita migrazione database per applicare i cambiamenti
+- 11:45 - Eseguiti php artisan config:clear, cache:clear, view:clear, route:clear, optimize
+
+## 14/06/2024
+
+- 15:25 - Creata vista admin.batches.create.blade.php per la nuova architettura batch con attributi dinamici
+- 15:25 - Implementato form di creazione con campi per informazioni base del batch (nome, reference_code, descrizione)
+- 15:25 - Aggiunti campi per attributi del prodotto (tipo, produttore, modello)
+- 15:25 - Implementati campi specifici per ogni tipo di prodotto (laptop, smartphone, storage)
+- 15:25 - Aggiunto JavaScript per mostrare/nascondere campi basati sul tipo di prodotto
+- 15:25 - Implementato upload multiplo di immagini per i batch
+- 15:25 - Eseguiti php artisan config:clear, cache:clear, view:clear, route:clear, optimize
+
+- 17:20 - Riorganizzata vista admin.batches.create.blade.php su richiesta del cliente
+- 17:20 - Rinominata sezione "Product Information" in "Batch Parameters"
+- 17:20 - Implementato sistema di parametri dinamici con possibilità di aggiungere/rimuovere parametri
+- 17:20 - Aggiunto supporto per suggerimenti di parametri in base al tipo di prodotto
+- 17:20 - Modificato controller per gestire i parametri dinamici nella tabella JSON
+- 17:20 - Implementato meccanismo per salvare e recuperare coppie chiave-valore dinamiche
+- 17:20 - Eseguiti php artisan config:clear, cache:clear, view:clear, route:clear, optimize
+
+- 19:10 - Spostata la sezione immagini nella parte superiore del form di creazione batch
+- 19:10 - Aggiunta funzionalità per selezionare un'immagine default da visualizzare per prima
+- 19:10 - Implementata interfaccia di anteprima delle immagini con selezione dell'immagine principale
+- 19:10 - Aggiunta funzionalità drag-and-drop per il caricamento delle immagini
+- 19:10 - Migliorata gestione delle immagini esistenti nella vista di modifica
+- 19:10 - Modificato il controller per memorizzare e gestire l'immagine default del batch
+- 19:10 - Eseguiti php artisan config:clear, cache:clear, view:clear, route:clear, optimize
+
+- 19:55 - Spostati i campi Product Type, Quantity e Unit Price nella sezione Batch Information
+- 19:55 - Eseguiti php artisan config:clear, cache:clear, view:clear, route:clear, optimize
+
+- 20:15 - Riorganizzato layout form batch: spostata sezione "Images" al posto di "Status & Availability"
+- 20:15 - Messi su un'unica riga i campi "Status", "Available From" e "Available Until" sotto "Product Type"
+- 20:15 - Eseguiti php artisan config:clear, cache:clear, view:clear, route:clear, optimize
+
+- 20:35 - Modificata sezione "Batch Parameters" per visualizzare parametri come etichette JSON
+- 20:35 - Separati parametri obbligatori (non rimovibili) da quelli dinamici aggiuntivi
+- 20:35 - Implementato design più intuitivo per i parametri dinamici con input nascosti
+- 20:35 - Eseguiti php artisan config:clear, cache:clear, view:clear, route:clear, optimize
+
+- 20:55 - Convertiti parametri dinamici in etichette (tag) singole con stile a pillola
+- 20:55 - Implementato nuovo sistema di inserimento parametri tramite casella di testo e tasto Enter
+- 20:55 - Aggiornato JavaScript per supportare il nuovo formato di parametri come tag
+- 20:55 - Eseguiti php artisan config:clear, cache:clear, view:clear, route:clear, optimize
+
+- 21:40 - Modificata sezione "Required Parameters" per visualizzare Manufacturer, Model e Condition Grade come tag non rimovibili
+- 21:40 - Implementato sistema di modali per la modifica dei parametri obbligatori
+- 21:40 - Aggiunto JavaScript per gestire i parametri come tag con l'aggiornamento dei campi nascosti
+- 21:40 - Migliorata l'esperienza utente per l'inserimento dei parametri obbligatori e addizionali
+- 21:40 - Eseguiti php artisan config:clear, cache:clear, view:clear, route:clear, optimize
+
+- 22:00 - Riorganizzato layout dei parametri richiesti: messi su un'unica riga invece che in colonna
+- 22:00 - Spostata sezione "Additional Parameters" sopra la sezione "Notes" per migliore organizzazione del form
+- 22:00 - Rimossi label superflui per i parametri richiesti, mantenendo solo i tag con icone di modifica
+- 22:00 - Eseguiti php artisan config:clear, cache:clear, view:clear, route:clear, optimize
+
+- 22:15 - Rimossa l'editabilità dei parametri richiesti (Manufacturer, Model, Grade)
+- 22:15 - Semplificati i tag dei parametri richiesti mostrando solo le etichette fisse
+- 22:15 - Rimossi i modali e il JavaScript relativi alla modifica dei parametri richiesti
+- 22:15 - Mantenuto il template per i parametri dinamici aggiuntivi
+- 22:15 - Eseguiti php artisan config:clear, cache:clear, view:clear, route:clear, optimize
+
+- 22:30 - Rinominata la sezione "Batch Parameters" in "Product Batch Parameters" per maggiore chiarezza
+- 22:30 - Aggiunti nuovi parametri richiesti: Price, Quantity e Tech Grade
+- 22:30 - Aggiornati i tag per includere i nuovi parametri richiesti
+- 22:30 - Aggiunti campi nascosti per i nuovi parametri con valori predefiniti
+- 22:30 - Eseguiti php artisan config:clear, cache:clear, view:clear, route:clear, optimize
+
+- 22:45 - Spostata la sezione "Notes" sotto la sezione "Images" per migliorare l'organizzazione del form
+- 22:45 - Aggiunta nuova sezione "Add Product to Batch" con form dinamico per l'aggiunta di prodotti
+- 22:45 - Implementato sistema di aggiunta prodotti con parametri richiesti (Manufacturer, Model, Grade, Price, Quantity, Tech Grade)
+- 22:45 - Aggiunto supporto per parametri dinamici anche nei singoli prodotti
+- 22:45 - Implementata funzionalità JavaScript per gestire l'aggiunta/rimozione di prodotti e parametri
+- 22:45 - Visualizzazione dei prodotti aggiunti come card con rimozione dinamica
+- 22:45 - Eseguiti php artisan config:clear, cache:clear, view:clear, route:clear, optimize
+
+- 23:00 - Migliorato il sistema di aggiunta parametri nella sezione "Add Product to Batch"
+- 23:00 - Modificata l'interfaccia per permettere l'inserimento sia del nome che del valore del parametro
+- 23:00 - Aggiunto pulsante dedicato per l'aggiunta di parametri al prodotto
+- 23:00 - Migliorato il formato di visualizzazione dei parametri nei prodotti, mostrando sia il nome che il valore
+- 23:00 - Aggiornato il JavaScript per gestire correttamente i parametri con nome e valore
+- 23:00 - Eseguiti php artisan config:clear, cache:clear, view:clear, route:clear, optimize
+
+- 23:15 - Implementato sistema automatico per mostrare i parametri batch come campi di input nel form di aggiunta prodotto
+- 23:15 - Modificato il form "Add Product to Batch" per includere campi di input per i parametri batch (es. RAM)
+- 23:15 - Migliorata gestione dei parametri: ora i parametri batch vengono convertiti in input fields nel form di aggiunta prodotto
+- 23:15 - Aggiunto sistema di sincronizzazione per aggiornare i campi del form di aggiunta prodotto quando vengono aggiunti/rimossi parametri batch
+- 23:15 - Ottimizzato il salvataggio del prodotto per includere sia i parametri batch che i parametri personalizzati
+- 23:15 - Eseguiti php artisan config:clear, cache:clear, view:clear, route:clear, optimize
+
+- 23:35 - Rimossa sezione parametri personalizzati dal form di aggiunta prodotto al batch
+- 23:35 - Mantenuti solo i campi generati automaticamente dai parametri batch già creati
+- 23:35 - Rimossi gli input "Parameter name" e "Parameter value" e il pulsante di aggiunta
+- 23:35 - Rimosso il template product-param-tag-template non più necessario
+- 23:35 - Semplificato il codice JavaScript per utilizzare solo i parametri batch
+- 23:35 - Eseguiti php artisan config:clear, cache:clear, view:clear, route:clear, optimize
+
+- 23:55 - Sostituito campo "Product Type" con "Category" nel form di creazione batch
+- 23:55 - Aggiunto pulsante "Configure Parameters" su ogni scheda categoria nell'elenco categorie
+- 23:55 - Creata interfaccia per la configurazione dei parametri suggeriti per ogni categoria
+- 23:55 - Modificato il controller CategoryController per gestire il salvataggio dei parametri categoria
+- 23:55 - Modificato il modello Batch per includere la relazione con la categoria
+- 23:55 - Aggiornato il controller BatchController per utilizzare le categorie invece dei tipi di prodotto
+- 23:55 - Aggiornata la funzione updateSuggestedParams() per caricare i parametri suggeriti dalla categoria selezionata
+- 23:55 - Eseguiti php artisan config:clear, cache:clear, view:clear, route:clear, optimize
+
+## {{ date('d/m/Y') }}
+
+- {{ date('H:i') }} - Migliorata la gestione delle immagini per i singoli prodotti nei batch
+- {{ date('H:i') }} - Implementato sistema di anteprima e selezione dell'immagine predefinita durante il caricamento
+- {{ date('H:i') }} - Aggiunto supporto per selezionare quale immagine del prodotto utilizzare come predefinita
+- {{ date('H:i') }} - Migliorato il modal di visualizzazione immagini con navigazione, zoom e pan
+- {{ date('H:i') }} - Aggiunta funzionalità di navigazione tra le immagini con pulsanti e miniature cliccabili
+- {{ date('H:i') }} - Implementata funzionalità di zoom e pan per esaminare i dettagli delle immagini
+- {{ date('H:i') }} - Eseguiti php artisan config:clear, cache:clear, view:clear, route:clear, optimize
+- {{ date('H:i') }} - Corretto il modal di visualizzazione delle immagini dei prodotti
+- {{ date('H:i') }} - Sistemato il problema delle immagini tagliate o distorte nel modal
+- {{ date('H:i') }} - Migliorato il comportamento di zoom e pan delle immagini con movimento naturale
+- {{ date('H:i') }} - Aggiunto overlay informativo temporaneo per indicare la possibilità di spostare l'immagine
+- {{ date('H:i') }} - Implementato un sistema più robusto per il ritorno allo stato normale dopo lo zoom
+- {{ date('H:i') }} - Eseguiti php artisan config:clear, cache:clear, view:clear, route:clear, optimize
+- {{ date('H:i') }} - Aggiunto campo condizionale "Problems" per i prodotti con tech grade Working* o Not Working
+- {{ date('H:i') }} - Implementata visualizzazione dinamica del campo in base alla selezione del Tech Grade
+- {{ date('H:i') }} - Aggiornato il controller per salvare le informazioni sui problemi del prodotto
+- {{ date('H:i') }} - Aggiunta nuova colonna alla tabella dei prodotti per visualizzare i problemi
+- {{ date('H:i') }} - Eseguiti php artisan config:clear, cache:clear, view:clear, route:clear, optimize
+- {{ date('H:i') }} - Migliorata la visualizzazione della tabella dei prodotti sostituendo "N/A" con "-" per Grade e Problems
+- {{ date('H:i') }} - Eseguiti php artisan config:clear, cache:clear, view:clear, route:clear, optimize
+- {{ date('H:i') }} - Aggiunta sezione "Batch Source" al form di creazione e modifica batch
+- {{ date('H:i') }} - Implementato campo per selezionare il tipo di batch (interno, esterno, importato)
+- {{ date('H:i') }} - Aggiunto campo per specificare il fornitore dello stock
+- {{ date('H:i') }} - Aggiunto campo per referenze esterne (numero ordine, fattura, link)
+- {{ date('H:i') }} - Creata migrazione per aggiungere i nuovi campi alla tabella batches
+- {{ date('H:i') }} - Aggiornato il modello Batch e il controller per gestire i nuovi campi
+- {{ date('H:i') }} - Eseguiti php artisan config:clear, cache:clear, view:clear, route:clear, optimize
+- {{ date('H:i') }} - Ottimizzata la sezione "Batch Source" con campi per dati finanziari e origini
+- {{ date('H:i') }} - Rimosso tipo "imported" da source_type e lasciati solo "internal" ed "external"
+- {{ date('H:i') }} - Convertito campo supplier da input text a dropdown con opzioni predefinite (ITSale, Foxway, Ecorefurb)
+- {{ date('H:i') }} - Implementato toggle automatico del campo supplier in base al tipo di source
+- {{ date('H:i') }} - Aggiunti campi per batch_cost, shipping_cost e tax_amount 
+- {{ date('H:i') }} - Implementato calcolo automatico del total_cost in base agli altri costi
+- {{ date('H:i') }} - Creata migrazione per aggiungere i nuovi campi finanziari alla tabella batches
+- {{ date('H:i') }} - Aggiornato il modello e il controller per supportare i nuovi campi
+- {{ date('H:i') }} - Eseguiti php artisan config:clear, cache:clear, view:clear, route:clear, optimize
+- {{ date('H:i') }} - Corretto errore "Route [admin.suppliers.itsale-scraper] not defined"
+- {{ date('H:i') }} - Aggiornato il link allo scraper nella vista dei fornitori per utilizzare la rotta corretta
+- {{ date('H:i') }} - Eseguiti php artisan config:clear, cache:clear, view:clear, route:clear, optimize
+
+## 05/06/2024
+
+- 10:45 - Risolto errore "Route [admin.itsale.show-list] not defined" nelle viste ITSale
+- 10:45 - Aggiornato i link nelle viste index.blade.php e show-list.blade.php per usare le rotte corrette (admin.itsale.scraper.*)
+- 10:45 - Eseguiti php artisan config:clear, cache:clear, view:clear, route:clear e optimize
+
+## 02/06/2025
+
+- 04:48 - Implementato form di mappatura campi per importazione batch da ITSale
+- 04:48 - Creato metodo showImportForm in ITSaleScraperController per gestire il form di mappatura
+- 04:48 - Creata vista import-form.blade.php con campi batch e tabella di mappatura parametri
+- 04:48 - Implementato JavaScript per gestione dinamica dei parametri e calcolo totale costi
+- 04:48 - Eseguiti php artisan config:clear, cache:clear, view:clear, route:clear e optimize
+
+## 02/06/2025
+
+- 05:00 - Ottimizzato form di mappatura campi per importazione batch da ITSale
+- 14:45 - Corretto l'estrazione dei valori di grading, risolto problema di ridondanza tra tech_grade e functionality e migliorato l'estrazione del testo di problems per includere solo il contenuto dopo "Problems:"
+- 05:00 - Eseguiti php artisan config:clear, cache:clear, view:clear, route:clear e optimize
+
+## 02/06/2025
+
+- 05:09 - Ottimizzato ulteriormente il form di mappatura per l'importazione batch da ITSale
+- 05:09 - Aggiunto supporto per processare automaticamente i parametri "Not mapped" come parametri custom
+- 05:09 - Aggiunta gestione automatica della quantità (1 se non specificata)
+- 05:09 - Integrato supporto per includere automaticamente i valori di grading nei parametri aggiuntivi
+- 05:09 - Eseguiti php artisan config:clear, cache:clear, view:clear, route:clear e optimize
+
+## 02/06/2025
+
+- 05:15 - Migliorato il sistema di rilevamento grading per ITSale.pl
+- 05:15 - Aggiunto supporto per l'inserimento manuale di valori di grading (Visual Grade, Tech Grade, Problems)
+- 05:15 - Estesa la ricerca delle informazioni di grading in tutti i campi delle specifiche
+- 05:15 - Implementati valori predefiniti per visual_grade e tech_grade se non rilevati
+- 05:15 - Aggiunto supporto per parametro 'functionality' come sinonimo di tech_grade
+- 05:15 - Eseguiti php artisan config:clear, cache:clear, view:clear, route:clear e optimize
+
+## 02/06/2025
+
+- 05:19 - Migliorato il riconoscimento del formato standard ITSale "Grade A Visual grade: A Functionality: Working Security mark: Problems: [problemi]"
+- 05:19 - Aggiunte opzioni esplicite per visual_grade, tech_grade e problems nel menu di mappatura
+- 05:19 - Ottimizzato il parsing del testo per estrarre correttamente i problemi dopo "Problems:"
+- 05:19 - Aggiunto aggiornamento automatico dei campi di override manuale con i valori rilevati
+- 05:19 - Migliorati i pattern regex per limitare l'estrazione ai valori significativi
+- 05:19 - Eseguiti php artisan config:clear, cache:clear, view:clear, route:clear e optimize
+
+## 02/06/2025
+
+- 05:22 - Aggiunte voci di mappatura aggiuntive per prodotti ITSale: keyboard, COA e Camera/Webcam
+- 05:22 - Completato il form di mappatura per importazione batch da ITSale
+- 05:22 - Eseguiti php artisan config:clear, cache:clear, view:clear, route:clear e optimize

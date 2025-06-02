@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\Category;
-use App\Models\Product;
 use Illuminate\Http\Request;
 
 class CategoriesController extends Controller
@@ -13,18 +12,18 @@ class CategoriesController extends Controller
      */
     public function index()
     {
-        $categories = Category::withCount('products')->orderBy('name')->get();
+        $categories = Category::withCount('batches')->orderBy('name')->get();
         
         return view('categories.index', compact('categories'));
     }
 
     /**
-     * Display the specified category with its products.
+     * Display the specified category with its batches.
      */
     public function show(Category $category)
     {
-        // Load the category with its products
-        $category->load(['products' => function($query) {
+        // Load the category with its batches
+        $category->load(['batches' => function($query) {
             $query->where('status', 'active')
                   ->orderBy('created_at', 'desc');
         }]);

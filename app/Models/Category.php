@@ -52,10 +52,10 @@ class Category extends Model
     }
 
     /**
-     * Get the products for the category.
+     * Get the batches for the category.
      */
-    public function products(): HasMany
+    public function batches(): HasMany
     {
-        return $this->hasMany(Product::class);
+        return $this->hasMany(Batch::class);
     }
 }

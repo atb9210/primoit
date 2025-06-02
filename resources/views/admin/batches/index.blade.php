@@ -56,6 +56,7 @@
                                             <div class="flex space-x-2">
                                                 <a href="{{ route('admin.batches.show', $batch) }}" class="text-blue-600 hover:text-blue-900">View</a>
                                                 <a href="{{ route('admin.batches.edit', $batch) }}" class="text-indigo-600 hover:text-indigo-900">Edit</a>
+                                                <a href="{{ route('admin.batches.manage-products', $batch) }}" class="text-green-600 hover:text-green-900">Manage Products</a>
                                                 <form action="{{ route('admin.batches.destroy', $batch) }}" method="POST" class="inline" onsubmit="return confirm('Are you sure you want to delete this batch?');">
                                                     @csrf
                                                     @method('DELETE')

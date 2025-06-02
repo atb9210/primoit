@@ -5,7 +5,7 @@
                 {{ $listDetails['name'] }}
             </h2>
             <div class="flex space-x-2">
-                <a href="{{ route('admin.itsale.index', $supplier) }}" class="inline-flex items-center px-4 py-2 bg-gray-100 border border-gray-300 rounded-md font-semibold text-xs text-gray-700 uppercase tracking-widest hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition ease-in-out duration-150">
+                <a href="{{ route('admin.itsale.scraper', $supplier) }}" class="inline-flex items-center px-4 py-2 bg-gray-100 border border-gray-300 rounded-md font-semibold text-xs text-gray-700 uppercase tracking-widest hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition ease-in-out duration-150">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                     </svg>
@@ -52,6 +52,162 @@
                         </div>
                         <div class="ml-3">
                             <p class="text-sm">{{ session('error') }}</p>
+                        </div>
+                    </div>
+                </div>
+            @endif
+
+            <!-- Import Summary (if available) -->
+            @if (session('import_summary'))
+                <div class="mb-6 bg-white rounded-lg shadow-sm overflow-hidden">
+                    <div class="p-6">
+                        <h3 class="text-lg font-bold text-gray-900 mb-4">Import Summary</h3>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                            <!-- Batch Information -->
+                            <div class="bg-gray-50 p-4 rounded-lg">
+                                <h4 class="text-base font-semibold text-gray-900 mb-2">Batch Information</h4>
+                                <dl class="space-y-2">
+                                    <div class="flex justify-between">
+                                        <dt class="text-sm font-medium text-gray-500">Name:</dt>
+                                        <dd class="text-sm text-gray-900">{{ session('import_summary')['batch_info']['name'] }}</dd>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <dt class="text-sm font-medium text-gray-500">Reference:</dt>
+                                        <dd class="text-sm text-gray-900">{{ session('import_summary')['batch_info']['reference'] }}</dd>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <dt class="text-sm font-medium text-gray-500">Status:</dt>
+                                        <dd class="text-sm text-gray-900">{{ session('import_summary')['batch_info']['status'] }}</dd>
+                                    </div>
+                                </dl>
+                            </div>
+                            
+                            <!-- Source Information -->
+                            <div class="bg-gray-50 p-4 rounded-lg">
+                                <h4 class="text-base font-semibold text-gray-900 mb-2">Source Information</h4>
+                                <dl class="space-y-2">
+                                    <div class="flex justify-between">
+                                        <dt class="text-sm font-medium text-gray-500">Type:</dt>
+                                        <dd class="text-sm text-gray-900">{{ session('import_summary')['source_info']['type'] }}</dd>
+                                    </div>
+                                    @if(session('import_summary')['source_info']['supplier'])
+                                    <div class="flex justify-between">
+                                        <dt class="text-sm font-medium text-gray-500">Supplier:</dt>
+                                        <dd class="text-sm text-gray-900">{{ session('import_summary')['source_info']['supplier'] }}</dd>
+                                    </div>
+                                    @endif
+                                    <div class="flex justify-between">
+                                        <dt class="text-sm font-medium text-gray-500">Reference:</dt>
+                                        <dd class="text-sm text-gray-900 truncate">{{ session('import_summary')['source_info']['external_reference'] }}</dd>
+                                    </div>
+                                </dl>
+                            </div>
+                            
+                            <!-- Cost Information -->
+                            <div class="bg-gray-50 p-4 rounded-lg">
+                                <h4 class="text-base font-semibold text-gray-900 mb-2">Costs</h4>
+                                <dl class="space-y-2">
+                                    <div class="flex justify-between">
+                                        <dt class="text-sm font-medium text-gray-500">Batch Cost:</dt>
+                                        <dd class="text-sm text-gray-900">€{{ number_format(session('import_summary')['costs']['batch_cost'], 2) }}</dd>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <dt class="text-sm font-medium text-gray-500">Shipping:</dt>
+                                        <dd class="text-sm text-gray-900">€{{ number_format(session('import_summary')['costs']['shipping_cost'], 2) }}</dd>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <dt class="text-sm font-medium text-gray-500">Tax:</dt>
+                                        <dd class="text-sm text-gray-900">€{{ number_format(session('import_summary')['costs']['tax_amount'], 2) }}</dd>
+                                    </div>
+                                    <div class="flex justify-between font-bold">
+                                        <dt class="text-sm text-gray-700">Total:</dt>
+                                        <dd class="text-sm text-gray-900">€{{ number_format(session('import_summary')['costs']['total_cost'], 2) }}</dd>
+                                    </div>
+                                </dl>
+                            </div>
+                        </div>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <!-- Field Mapping -->
+                            <div class="bg-gray-50 p-4 rounded-lg">
+                                <h4 class="text-base font-semibold text-gray-900 mb-2">Field Mapping</h4>
+                                @if(count(session('import_summary')['field_mapping']) > 0)
+                                    <div class="overflow-hidden shadow-sm border border-gray-200 rounded-lg">
+                                        <table class="min-w-full divide-y divide-gray-200">
+                                            <thead class="bg-gray-100">
+                                                <tr>
+                                                    <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ITSale Field</th>
+                                                    <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">System Parameter</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody class="bg-white divide-y divide-gray-200">
+                                                @foreach(session('import_summary')['field_mapping'] as $field => $param)
+                                                    <tr>
+                                                        <td class="px-3 py-2 whitespace-nowrap text-xs font-medium text-gray-900">{{ $field }}</td>
+                                                        <td class="px-3 py-2 whitespace-nowrap text-xs text-gray-500">{{ $param }}</td>
+                                                    </tr>
+                                                @endforeach
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                @else
+                                    <p class="text-sm text-gray-500">No fields mapped.</p>
+                                @endif
+                            </div>
+                            
+                            <!-- Grade Information & Additional Parameters -->
+                            <div class="grid grid-rows-2 gap-4">
+                                <div class="bg-gray-50 p-4 rounded-lg">
+                                    <h4 class="text-base font-semibold text-gray-900 mb-2">Grade Information</h4>
+                                    <div class="grid grid-cols-3 gap-4">
+                                        <div>
+                                            <p class="text-xs font-medium text-gray-700">Visual Grade</p>
+                                            <p class="text-sm text-gray-900">{{ session('import_summary')['grading_info']['visual_grade'] ?: 'Not detected' }}</p>
+                                        </div>
+                                        <div>
+                                            <p class="text-xs font-medium text-gray-700">Tech Grade</p>
+                                            <p class="text-sm text-gray-900">{{ session('import_summary')['grading_info']['tech_grade'] ?: 'Not detected' }}</p>
+                                        </div>
+                                        <div>
+                                            <p class="text-xs font-medium text-gray-700">Problems</p>
+                                            <p class="text-sm text-gray-900">{{ session('import_summary')['grading_info']['problems'] ?: 'None' }}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="bg-gray-50 p-4 rounded-lg">
+                                    <h4 class="text-base font-semibold text-gray-900 mb-2">Additional Parameters</h4>
+                                    @if(count(session('import_summary')['additional_params']) > 0)
+                                        <div class="overflow-hidden shadow-sm border border-gray-200 rounded-lg">
+                                            <table class="min-w-full divide-y divide-gray-200">
+                                                <thead class="bg-gray-100">
+                                                    <tr>
+                                                        <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Parameter</th>
+                                                        <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Value</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody class="bg-white divide-y divide-gray-200">
+                                                    @foreach(session('import_summary')['additional_params'] as $param => $value)
+                                                        <tr>
+                                                            <td class="px-3 py-2 whitespace-nowrap text-xs font-medium text-gray-900">{{ $param }}</td>
+                                                            <td class="px-3 py-2 whitespace-nowrap text-xs text-gray-500">{{ $value }}</td>
+                                                        </tr>
+                                                    @endforeach
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    @else
+                                        <p class="text-sm text-gray-500">No additional parameters.</p>
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-6 flex justify-end">
+                            <button onclick="document.getElementById('import-summary').classList.add('hidden')" class="inline-flex items-center px-4 py-2 bg-gray-100 border border-gray-300 rounded-md font-semibold text-xs text-gray-700 uppercase tracking-widest hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition ease-in-out duration-150">
+                                Hide Summary
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -182,7 +338,7 @@
                             </svg>
                             Make Offer
                         </button>
-                        <form action="{{ route('admin.itsale.import-batch', ['supplier' => $supplier, 'listSlug' => $listSlug]) }}" method="POST">
+                        <form action="{{ route('admin.itsale.scraper.import-batch', ['supplier' => $supplier, 'listSlug' => $listSlug]) }}" method="POST">
                             @csrf
                             <button type="submit" class="inline-flex justify-center items-center px-6 py-2 bg-green-600 border border-transparent rounded-md font-semibold text-sm text-white uppercase tracking-widest hover:bg-green-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition ease-in-out duration-150">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -409,7 +565,7 @@
                                             Try visiting the list directly on ITSale.pl to see if products are available.
                                         </p>
                                         <div class="flex space-x-4">
-                                            <a href="{{ route('admin.itsale.show-list', ['supplier' => $supplier, 'listSlug' => $listSlug, 'refresh' => true]) }}" 
+                                            <a href="{{ route('admin.itsale.scraper.show-list', ['supplier' => $supplier, 'listSlug' => $listSlug, 'refresh' => true]) }}" 
                                                class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition ease-in-out duration-150">
                                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />

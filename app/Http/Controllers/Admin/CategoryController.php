@@ -92,9 +92,10 @@ class CategoryController extends Controller
     /**
      * Show the form for editing the specified category.
      */
-    public function edit(Category $category)
+    public function edit(Category $category, Request $request)
     {
-        return view('admin.categories.edit', compact('category'));
+        $configureParams = $request->query('configure') === 'params';
+        return view('admin.categories.edit', compact('category', 'configureParams'));
     }
 
     /**
@@ -111,6 +112,30 @@ class CategoryController extends Controller
             'attributes_json' => 'nullable|string',
         ]);
         
+        // Process attributes
+        $attributes = $category->attributes ?? [];
+        
+        // Check if we're updating parameters
+        if ($request->has('parameters')) {
+            $parameters = array_filter($request->input('parameters', []), function($value) {
+                return !empty(trim($value));
+            });
+            
+            // Save parameters to attributes
+            $attributes['parameters'] = array_values($parameters);
+            
+            // If this is a parameters update, don't update other fields
+            if ($request->query('configure') === 'params') {
+                $category->attributes = $attributes;
+                $category->save();
+                
+                return redirect()->route('admin.categories.index')
+                    ->with('success', 'Category parameters updated successfully.');
+            }
+        }
+        
+        // Continue with normal update if not a parameters update
+        
         // Generate slug from name
         $validated['slug'] = Str::slug($validated['name']);
         
@@ -125,8 +150,8 @@ class CategoryController extends Controller
             $validated['icon_image'] = $path;
         }
         
-        // Process attributes
-        $attributes = $request->input('attributes', []);
+        // Add form attributes
+        $formAttributes = $request->input('attributes', []);
         
         // Add additional JSON attributes if provided
         if (!empty($validated['attributes_json'])) {
@@ -139,6 +164,9 @@ class CategoryController extends Controller
                 // If JSON parsing fails, continue without the additional attributes
             }
         }
+        
+        // Merge form attributes
+        $attributes = array_merge($attributes, $formAttributes);
         
         // Convert portable attribute to boolean if it exists
         if (isset($attributes['portable'])) {

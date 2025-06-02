@@ -20,8 +20,12 @@
                 <a href="{{ route('categories.show', $category) }}" class="group">
                     <div class="bg-white rounded-lg shadow-md overflow-hidden transition transform group-hover:shadow-lg">
                         <div class="h-48 bg-gray-100 flex items-center justify-center">
-                            @if($category->image)
-                                <img src="{{ asset($category->image) }}" alt="{{ $category->name }}" class="h-full w-full object-cover">
+                            @if($category->icon_image)
+                                <img src="{{ asset('storage/' . $category->icon_image) }}" alt="{{ $category->name }}" class="h-full w-full object-contain">
+                            @elseif($category->icon_svg)
+                                <div class="h-full w-full flex items-center justify-center bg-gray-50">
+                                    {!! $category->icon_svg !!}
+                                </div>
                             @else
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-20 w-20 text-gray-400 group-hover:text-blue-600 transition" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
@@ -32,7 +36,7 @@
                             <h3 class="text-lg font-semibold text-gray-900 group-hover:text-blue-600 transition">{{ $category->name }}</h3>
                             <p class="text-gray-600 mt-2">{{ $category->description ?? 'Browse products in this category' }}</p>
                             <div class="flex justify-between items-center mt-4">
-                                <span class="text-sm text-gray-500">{{ $category->products_count ?? 0 }} products</span>
+                                <span class="text-sm text-gray-500">{{ $category->batches_count ?? $category->batches->count() ?? 0 }} batches</span>
                                 <span class="text-blue-600 text-sm font-medium group-hover:underline">View Category</span>
                             </div>
                         </div>
@@ -123,4 +127,3 @@
             </div>
         </div>
     </div>
-</x-public-layout> 

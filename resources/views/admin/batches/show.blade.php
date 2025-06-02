@@ -17,6 +17,12 @@
                     </svg>
                     {{ __('Edit Batch') }}
                 </a>
+                <a href="{{ route('admin.batches.manage-products', $batch) }}" class="inline-flex items-center px-4 py-2 bg-green-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-green-500 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition ease-in-out duration-150">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                    </svg>
+                    {{ __('Manage Products') }}
+                </a>
             </div>
         </div>
     </x-slot>
@@ -60,12 +66,15 @@
                             </p>
                         </div>
                         <div class="bg-gray-50 p-4 rounded-lg">
-                            <p class="text-sm text-gray-500">Total Quantity</p>
-                            <p class="text-lg font-medium text-gray-900">{{ $batch->total_quantity }}</p>
+                            <p class="text-sm text-gray-500">Quantity</p>
+                            <p class="text-lg font-medium text-gray-900">{{ $batch->unit_quantity }} units</p>
                         </div>
                         <div class="bg-gray-50 p-4 rounded-lg">
-                            <p class="text-sm text-gray-500">Total Price</p>
-                            <p class="text-lg font-medium text-gray-900">@formatPrice($batch->total_price)</p>
+                            <p class="text-sm text-gray-500">Price</p>
+                            <p class="text-lg font-medium text-gray-900">
+                                @formatPrice($batch->total_price) (Total)<br>
+                                <span class="text-sm">@formatPrice($batch->unit_price) / unit</span>
+                            </p>
                         </div>
                     </div>
 
@@ -89,76 +98,88 @@
                 </div>
             </div>
 
-            <!-- Products in this batch -->
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
+            <!-- Products -->
+            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg mb-6">
                 <div class="p-6">
-                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Products in this Batch ({{ $batch->products->count() }})</h3>
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Products</h3>
+                    
+                    @if(is_array($batch->products) && count($batch->products) > 0)
                     <div class="overflow-x-auto">
-                        <table class="min-w-full divide-y divide-gray-200">
-                            <thead class="bg-gray-50">
+                            <table class="min-w-full bg-white border border-gray-300">
+                                <thead>
                                 <tr>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Product</th>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Specifications</th>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quantity</th>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Unit Price</th>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody class="bg-white divide-y divide-gray-200">
-                                @forelse($batch->products as $product)
+                                        <th class="px-4 py-2 bg-gray-100 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Manufacturer</th>
+                                        <th class="px-4 py-2 bg-gray-100 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Model</th>
+                                        <th class="px-4 py-2 bg-gray-100 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Grade</th>
+                                        <th class="px-4 py-2 bg-gray-100 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Tech Grade</th>
+                                        <th class="px-4 py-2 bg-gray-100 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Price</th>
+                                        <th class="px-4 py-2 bg-gray-100 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Quantity</th>
+                                        
+                                        @if(is_array($batch->specifications))
+                                            @foreach($batch->specifications as $key => $value)
+                                                <th class="px-4 py-2 bg-gray-100 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">{{ ucfirst(str_replace('_', ' ', $key)) }}</th>
+                                            @endforeach
+                                                    @endif
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-gray-300">
+                                    @foreach($batch->products as $product)
                                     <tr>
-                                        <td class="px-6 py-4 whitespace-nowrap">
-                                            <div class="text-sm font-medium text-gray-900">{{ $product->producer }} {{ $product->model }}</div>
-                                            <div class="text-sm text-gray-500">{{ $product->type }}</div>
-                                            @if(isset($product->name))
-                                                <div class="text-xs text-gray-500 mt-1">{{ $product->name }}</div>
+                                            <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900">{{ $product['manufacturer'] }}</td>
+                                            <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900">{{ $product['model'] }}</td>
+                                            <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900">{{ $product['grade'] ?? 'N/A' }}</td>
+                                            <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900">{{ $product['tech_grade'] ?? 'N/A' }}</td>
+                                            <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900">@formatPrice($product['price'])</td>
+                                            <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900">{{ $product['quantity'] }}</td>
+                                            
+                                            @if(is_array($batch->specifications))
+                                                @foreach($batch->specifications as $key => $value)
+                                                    <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
+                                                        @if(isset($product['parameters']) && is_array($product['parameters']) && isset($product['parameters'][$key]))
+                                                            {{ $product['parameters'][$key] }}
+                                                        @else
+                                                            <span class="text-gray-400">-</span>
+                                                        @endif
+                                                    </td>
+                                                @endforeach
                                             @endif
-                                        </td>
-                                        <td class="px-6 py-4">
-                                            <div class="text-sm text-gray-900">
-                                                <ul class="list-disc list-inside text-xs">
-                                                    @if($product->cpu)
-                                                        <li>CPU: {{ $product->cpu }}</li>
-                                                    @endif
-                                                    @if($product->ram)
-                                                        <li>RAM: {{ $product->ram }}</li>
-                                                    @endif
-                                                    @if($product->drive)
-                                                        <li>Storage: {{ $product->drive }}</li>
-                                                    @endif
-                                                    @if($product->screen_size)
-                                                        <li>Screen: {{ $product->screen_size }}</li>
-                                                    @endif
-                                                </ul>
-                                            </div>
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                            {{ $product->pivot->quantity }}
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                            @formatPrice($product->pivot->unit_price)
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                            @php
-                                                $total = (float)$product->pivot->unit_price * (int)$product->pivot->quantity;
-                                            @endphp
-                                            @formatPrice($total)
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                            <a href="{{ route('admin.products.show', $product) }}" class="text-indigo-600 hover:text-indigo-900">View</a>
-                                        </td>
                                     </tr>
-                                @empty
-                                    <tr>
-                                        <td colspan="6" class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">No products in this batch.</td>
-                                    </tr>
-                                @endforelse
+                                    @endforeach
                             </tbody>
                         </table>
                     </div>
+                    @else
+                        <div class="bg-gray-50 p-4 rounded-lg text-center">
+                            <p class="text-gray-500">No products in this batch.</p>
+                        </div>
+                    @endif
+                    
+                    @if($batch->notes)
+                        <div class="mt-6">
+                            <h4 class="text-md font-semibold text-gray-800 mb-3">Notes</h4>
+                            <div class="bg-gray-50 p-4 rounded-lg">
+                                <p class="text-md text-gray-900">{{ $batch->notes }}</p>
+                            </div>
+                        </div>
+                    @endif
                 </div>
             </div>
+            
+            <!-- Images -->
+            @if(is_array($batch->images) && count($batch->images) > 0)
+                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg mb-6">
+                    <div class="p-6">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4">Images</h3>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                            @foreach($batch->images as $image)
+                                <div class="bg-gray-100 rounded-lg overflow-hidden">
+                                    <img src="{{ asset('storage/' . $image) }}" alt="Product Image" class="w-full h-48 object-cover">
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                </div>
+            @endif
         </div>
     </div>
 </x-admin-layout> 

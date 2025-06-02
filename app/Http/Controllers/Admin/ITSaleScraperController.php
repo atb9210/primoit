@@ -14,8 +14,19 @@ class ITSaleScraperController extends Controller
     /**
      * Display the ITSale.pl scraper interface with all lists.
      */
-    public function index(ThirdPartySupplier $supplier)
+    public function index(ThirdPartySupplier $supplier = null)
     {
+        // Se non viene passato un fornitore, cerchiamo quello di ITSale.pl
+        if (!$supplier) {
+            $supplier = ThirdPartySupplier::where('name', 'ITSale.pl')->first();
+            
+            // Se non troviamo un fornitore ITSale.pl nel database
+            if (!$supplier) {
+                return redirect()->route('admin.suppliers.index')
+                    ->with('error', 'ITSale.pl supplier not found in the database. Please set up the supplier first.');
+            }
+        }
+        
         // Check if this is actually ITSale.pl supplier
         if ($supplier->slug !== 'itsale-pl') {
             return redirect()->route('admin.suppliers.index')
@@ -263,8 +274,19 @@ class ITSaleScraperController extends Controller
     /**
      * Display details of a specific list from ITSale.pl.
      */
-    public function showList(ThirdPartySupplier $supplier, $listSlug)
+    public function showList(ThirdPartySupplier $supplier = null, $listSlug)
     {
+        // Se non viene passato un fornitore, cerchiamo quello di ITSale.pl
+        if (!$supplier) {
+            $supplier = ThirdPartySupplier::where('name', 'ITSale.pl')->first();
+            
+            // Se non troviamo un fornitore ITSale.pl nel database
+            if (!$supplier) {
+                return redirect()->route('admin.suppliers.index')
+                    ->with('error', 'ITSale.pl supplier not found in the database. Please set up the supplier first.');
+            }
+        }
+        
         // Check if this is actually ITSale.pl supplier
         if ($supplier->slug !== 'itsale-pl') {
             return redirect()->route('admin.suppliers.index')
@@ -797,10 +819,21 @@ class ITSaleScraperController extends Controller
 }
 
     /**
-     * Import a list from ITSale.pl as a batch with associated products.
+     * Display the import form for mapping fields.
      */
-    public function importAsBatch(Request $request, ThirdPartySupplier $supplier, $listSlug)
+    public function showImportForm(Request $request, ThirdPartySupplier $supplier = null, $listSlug)
     {
+        // Se non viene passato un fornitore, cerchiamo quello di ITSale.pl
+        if (!$supplier) {
+            $supplier = ThirdPartySupplier::where('name', 'ITSale.pl')->first();
+            
+            // Se non troviamo un fornitore ITSale.pl nel database
+            if (!$supplier) {
+                return redirect()->route('admin.suppliers.index')
+                    ->with('error', 'ITSale.pl supplier not found in the database. Please set up the supplier first.');
+            }
+        }
+        
         // Check if this is actually ITSale.pl supplier
         if ($supplier->slug !== 'itsale-pl') {
             return redirect()->route('admin.suppliers.index')
@@ -812,7 +845,7 @@ class ITSaleScraperController extends Controller
             $response = Http::timeout(60)->get('https://itsale.pl/list');
             
             if (!$response->successful()) {
-                return redirect()->route('admin.itsale.show-list', ['supplier' => $supplier, 'listSlug' => $listSlug])
+                return redirect()->route('admin.itsale.scraper.show-list', ['supplier' => $supplier, 'listSlug' => $listSlug])
                     ->with('error', 'Failed to fetch list details from ITSale.pl');
             }
             
@@ -867,13 +900,13 @@ class ITSaleScraperController extends Controller
                         }
                     }
                 } catch (\Exception $e) {
-                    Log::error('Error extracting list data for import: ' . $e->getMessage());
+                    Log::error('Error extracting list data for import form: ' . $e->getMessage());
                 }
             });
             
             // Se non abbiamo trovato la lista, ritorniamo un errore
             if (!isset($lists[$listSlug])) {
-                return redirect()->route('admin.itsale.show-list', ['supplier' => $supplier, 'listSlug' => $listSlug])
+                return redirect()->route('admin.itsale.scraper.show-list', ['supplier' => $supplier, 'listSlug' => $listSlug])
                     ->with('error', 'List not found in ITSale.pl data');
             }
             
@@ -884,7 +917,7 @@ class ITSaleScraperController extends Controller
             $productsResponse = Http::timeout(60)->get($productsUrl);
             
             if (!$productsResponse->successful()) {
-                return redirect()->route('admin.itsale.show-list', ['supplier' => $supplier, 'listSlug' => $listSlug])
+                return redirect()->route('admin.itsale.scraper.show-list', ['supplier' => $supplier, 'listSlug' => $listSlug])
                     ->with('error', 'Failed to fetch products data from ITSale.pl');
             }
             
@@ -896,29 +929,29 @@ class ITSaleScraperController extends Controller
             $productRows = $productsCrawler->filter('.product-list-item');
             
             // Debug info
-            Log::info('Dell list import - Found ' . $productRows->count() . ' product rows using .product-list-item selector');
+            Log::info('Import form - Found ' . $productRows->count() . ' product rows using .product-list-item selector');
             
             // Try alternative selectors if no products found
             if ($productRows->count() == 0) {
-                Log::info('Dell list import - Trying alternative selector: tr.product-row');
+                Log::info('Import form - Trying alternative selector: tr.product-row');
                 $productRows = $productsCrawler->filter('tr.product-row');
-                Log::info('Dell list import - Found ' . $productRows->count() . ' product rows using tr.product-row selector');
+                Log::info('Import form - Found ' . $productRows->count() . ' product rows using tr.product-row selector');
                 
                 if ($productRows->count() == 0) {
-                    Log::info('Dell list import - Trying another selector: .product');
+                    Log::info('Import form - Trying another selector: .product');
                     $productRows = $productsCrawler->filter('.product');
-                    Log::info('Dell list import - Found ' . $productRows->count() . ' product rows using .product selector');
+                    Log::info('Import form - Found ' . $productRows->count() . ' product rows using .product selector');
                     
                     // If still no products, try processing tables directly
                     if ($productRows->count() == 0) {
-                        Log::info('Dell list import - Trying to process tables directly');
+                        Log::info('Import form - Trying to process tables directly');
                         $tables = $productsCrawler->filter('table');
-                        Log::info('Dell list import - Found ' . $tables->count() . ' tables in the page');
+                        Log::info('Import form - Found ' . $tables->count() . ' tables in the page');
                         
                         if ($tables->count() > 0) {
                             // Process the first table with data
                             $tableRows = $tables->first()->filter('tr');
-                            Log::info('Dell list import - Found ' . $tableRows->count() . ' rows in the first table');
+                            Log::info('Import form - Found ' . $tableRows->count() . ' rows in the first table');
                             
                             // Extract headers
                             $headers = [];
@@ -927,7 +960,7 @@ class ITSaleScraperController extends Controller
                                 $headers[] = trim($th->text());
                             });
                             
-                            Log::info('Dell list import - Table headers: ' . json_encode($headers));
+                            Log::info('Import form - Table headers: ' . json_encode($headers));
                             
                             // Process data rows
                             $tableRows->slice(1)->each(function (Crawler $row, $i) use (&$products, $headers) {
@@ -994,9 +1027,7 @@ class ITSaleScraperController extends Controller
                 }
             }
             
-            // Save the HTML structure for debugging
-            file_put_contents(storage_path('logs/itsale_debug_structure.html'), $productsHtml);
-            
+            // Collect products from standard layout
             $productRows->each(function (Crawler $row, $i) use (&$products) {
                 try {
                     // Modello/Nome prodotto
@@ -1063,127 +1094,598 @@ class ITSaleScraperController extends Controller
                     
                     $products[] = $productData;
                 } catch (\Exception $e) {
-                    Log::error('Error extracting product data for import: ' . $e->getMessage());
+                    Log::error('Error extracting product data for import form: ' . $e->getMessage());
                 }
             });
             
-            // Log how many products were found
-            Log::info('Dell list import - Extracted ' . count($products) . ' products from the page');
-            
             // Se non abbiamo trovato prodotti, ritorniamo un errore
             if (empty($products)) {
-                return redirect()->route('admin.itsale.show-list', ['supplier' => $supplier, 'listSlug' => $listSlug])
+                return redirect()->route('admin.itsale.scraper.show-list', ['supplier' => $supplier, 'listSlug' => $listSlug])
                     ->with('error', 'No products found in the list');
             }
             
-            // Ora creiamo il batch e i prodotti nel nostro sistema
+            // Ottieni l'elenco delle categorie per il dropdown
+            $categories = \App\Models\Category::all();
             
-            // 1. Crea un nuovo batch
-            $totalQuantity = array_sum(array_column($products, 'quantity'));
-            $cleanPrice = preg_replace('/[^0-9.,]/', '', $listDetails['total_price']);
-            $cleanPrice = str_replace(',', '.', $cleanPrice);
+            // Ottieni i parametri predefiniti per ogni categoria
+            $categoryParameters = [];
+            foreach ($categories as $category) {
+                $categoryParameters[$category->id] = $category->attributes ?? [];
+            }
+
+            // Estraiamo tutti i possibili campi dai prodotti per il mapping
+            $allFields = [];
+            $sampleValues = [];
             
-            $batch = new \App\Models\Batch();
-            $batch->name = $listDetails['name'];
-            $batch->reference_code = 'ITSALE-' . strtoupper($listSlug);
-            $batch->description = $listDetails['description'];
-            $batch->total_price = (float)$cleanPrice;
-            $batch->total_quantity = $totalQuantity;
-            $batch->status = 'active';
-            $batch->available_from = now();
-            $batch->save();
-            
-            // 2. Importa i prodotti e collegali al batch
-            $importedProducts = 0;
-            
-            foreach ($products as $productData) {
-                // Cerca una categoria appropriata (puoi migliorare questa logica)
-                $categoryId = 1; // Default category ID
-                
-                // Cerca di mappare la categoria in base al tipo di prodotto
-                $productType = strtolower($productData['type'] ?? '');
-                
-                if (strpos($productType, 'laptop') !== false || strpos($productType, 'notebook') !== false) {
-                    $categoryName = 'Laptops';
-                } elseif (strpos($productType, 'phone') !== false || strpos($productType, 'smartphone') !== false) {
-                    $categoryName = 'Smartphones';
-                } elseif (strpos($productType, 'tablet') !== false) {
-                    $categoryName = 'Tablets';
-                } elseif (strpos($productType, 'desktop') !== false || strpos($productType, 'pc') !== false) {
-                    $categoryName = 'Desktops';
-                } elseif (strpos($productType, 'monitor') !== false || strpos($productType, 'display') !== false) {
-                    $categoryName = 'Monitors';
-                } elseif (strpos($productType, 'printer') !== false) {
-                    $categoryName = 'Printers';
-                } elseif (strpos($productType, 'server') !== false) {
-                    $categoryName = 'Servers';
-                } else {
-                    $categoryName = 'Other';
-                }
-                
-                // Cerca la categoria nel database
-                $category = \App\Models\Category::where('name', 'like', '%' . $categoryName . '%')->first();
-                if ($category) {
-                    $categoryId = $category->id;
-                }
-                
-                // Crea il prodotto
-                $product = new \App\Models\Product();
-                $product->name = $productData['name'] ?? 'Unknown Product';
-                $product->slug = \Illuminate\Support\Str::slug($productData['name'] ?? 'unknown-product') . '-' . uniqid();
-                $product->batch_number = 'ITSALE-' . strtoupper($listSlug) . '-' . uniqid();
-                $product->description = 'Imported from ITSale.pl list: ' . $listDetails['name'];
-                $product->type = $productData['type'] ?? 'Unknown';
-                $product->producer = $productData['producer'] ?? 'Unknown';
-                $product->model = $productData['model'] ?? $productData['name'] ?? 'Unknown Model';
-                $product->cpu = $productData['cpu'] ?? '';
-                $product->ram = $productData['ram'] ?? '';
-                $product->drive = $productData['drive'] ?? '';
-                $product->operating_system = $productData['operating_system'] ?? '';
-                $product->gpu = $productData['gpu'] ?? '';
-                $product->color = $productData['color'] ?? '';
-                $product->screen_size = $productData['screen_size'] ?? '';
-                $product->lcd_quality = null;
-                $product->battery = $productData['battery'] ?? '';
-                $product->visual_grade = $productData['visual_grade'] ?? '';
-                $product->info = json_encode($productData['specs'] ?? []);
-                $product->price = (float)($productData['price'] ?? 0);
-                $product->quantity = $productData['quantity'] ?? 1;
-                $product->status = 'available';
-                $product->condition = 'used';
-                $product->category_id = $categoryId;
-                $product->save();
-                
-                // Aggiungi specifiche aggiuntive
-                foreach ($productData['specs'] as $key => $value) {
-                    if (!in_array($key, ['Type', 'Model', 'Brand', 'Producer', 'CPU', 'Processor', 'RAM', 'Memory', 
-                                         'HDD', 'SSD', 'Storage', 'OS', 'Operating System', 'GPU', 'Graphics', 
-                                         'Color', 'Screen Size', 'Display', 'Visual Grade', 'Cosmetic', 
-                                         'Tech Grade', 'Technical', 'Battery', 'Quantity'])) {
-                        $product->specifications()->create([
-                            'key' => $key,
-                            'value' => $value
-                        ]);
+            // Raccogli tutti i campi disponibili dai prodotti
+            foreach ($products as $product) {
+                foreach ($product as $key => $value) {
+                    if ($key !== 'specs' && !in_array($key, $allFields)) {
+                        $allFields[] = $key;
+                        $sampleValues[$key] = $value;
                     }
                 }
                 
-                // Collega il prodotto al batch
-                $batch->products()->attach($product->id, [
-                    'quantity' => $productData['quantity'],
-                    'unit_price' => (float)($productData['price'] ?? 0)
-                ]);
-                
-                $importedProducts++;
+                // Raccogli anche i campi nelle specifiche
+                if (isset($product['specs']) && is_array($product['specs'])) {
+                    foreach ($product['specs'] as $key => $value) {
+                        $specKey = 'spec_' . $key;
+                        if (!in_array($specKey, $allFields)) {
+                            $allFields[] = $specKey;
+                            $sampleValues[$specKey] = $value;
+                        }
+                    }
+                }
             }
             
-            return redirect()->route('admin.batches.show', $batch)
-                ->with('success', "Successfully imported batch '{$batch->name}' with {$importedProducts} products from ITSale.pl");
+            // Ordina i campi alfabeticamente
+            sort($allFields);
+            
+            // Suggerimenti di mapping predefiniti
+            $defaultMappings = [
+                'name' => 'name',
+                'model' => 'model',
+                'producer' => 'manufacturer',
+                'visual_grade' => 'visual_grade',
+                'tech_grade' => 'tech_grade',
+                'price' => 'price',
+                'quantity' => 'quantity',
+                'cpu' => 'cpu',
+                'ram' => 'ram',
+                'drive' => 'storage',
+                'operating_system' => 'os',
+                'gpu' => 'gpu',
+                'screen_size' => 'screen_size',
+                'battery' => 'battery',
+                'color' => 'color'
+            ];
+            
+            // Prendi il primo prodotto come esempio
+            $sampleProduct = !empty($products) ? $products[0] : null;
+            
+            return view('admin.itsale.import-form', compact(
+                'supplier', 
+                'listSlug', 
+                'listDetails', 
+                'products', 
+                'sampleProduct',
+                'allFields', 
+                'sampleValues',
+                'defaultMappings',
+                'categories',
+                'categoryParameters'
+            ));
             
         } catch (\Exception $e) {
-            Log::error('Exception while importing ITSale.pl list: ' . $e->getMessage());
-            return redirect()->route('admin.itsale.show-list', ['supplier' => $supplier, 'listSlug' => $listSlug])
-                ->with('error', 'An error occurred during import: ' . $e->getMessage());
+            Log::error('Exception while preparing import form: ' . $e->getMessage());
+            return redirect()->route('admin.itsale.scraper.show-list', ['supplier' => $supplier, 'listSlug' => $listSlug])
+                ->with('error', 'An error occurred while preparing the import form: ' . $e->getMessage());
         }
+    }
+    
+    /**
+     * Import a list as a batch.
+     */
+    public function importAsBatch(Request $request, ThirdPartySupplier $supplier = null, $listSlug)
+    {
+        // Verifica se è la richiesta iniziale o il submit del form di mappatura
+        if (!$request->has('confirm_import')) {
+            // Se è la richiesta iniziale, mostra il form di mappatura
+            return $this->showImportForm($request, $supplier, $listSlug);
+        }
+        
+        // Validazione dei dati di input
+        $validatedData = $request->validate([
+            'batch_name' => 'required|string|max:255',
+            'batch_reference' => 'required|string|max:255',
+            'batch_description' => 'nullable|string',
+            'batch_status' => 'required|string|in:active,pending,sold,reserved',
+            'category_id' => 'required|exists:categories,id',
+            'source_type' => 'required|string|in:internal,external',
+            'supplier' => 'nullable|string',
+            'external_reference' => 'nullable|string',
+            'batch_cost' => 'required|numeric|min:0',
+            'shipping_cost' => 'nullable|numeric|min:0',
+            'tax_amount' => 'nullable|numeric|min:0',
+            'total_cost' => 'required|numeric|min:0',
+            'spec_fields' => 'required|array',
+            'spec_params' => 'required|array',
+            'spec_custom_params' => 'nullable|array',
+            'additional_param_names' => 'nullable|array',
+            'additional_param_values' => 'nullable|array',
+            'extracted_visual_grade' => 'nullable|string',
+            'extracted_tech_grade' => 'nullable|string',
+            'extracted_problems' => 'nullable|string',
+            'manual_visual_grade' => 'nullable|string',
+            'manual_tech_grade' => 'nullable|string',
+            'manual_problems' => 'nullable|string',
+        ]);
+        
+        // Log dei dati ricevuti per debug
+        Log::info('Import data received:', [
+            'batch_info' => [
+                'name' => $request->batch_name,
+                'reference' => $request->batch_reference,
+                'status' => $request->batch_status,
+                'category_id' => $request->category_id,
+            ],
+            'source_info' => [
+                'type' => $request->source_type,
+                'supplier' => $request->supplier,
+                'reference' => $request->external_reference,
+            ],
+            'costs' => [
+                'batch_cost' => $request->batch_cost,
+                'shipping_cost' => $request->shipping_cost,
+                'tax_amount' => $request->tax_amount,
+                'total_cost' => $request->total_cost,
+            ],
+            'extracted_grade_info' => [
+                'visual_grade' => $request->extracted_visual_grade,
+                'tech_grade' => $request->extracted_tech_grade,
+                'problems' => $request->extracted_problems,
+            ],
+            'manual_grade_info' => [
+                'visual_grade' => $request->manual_visual_grade,
+                'tech_grade' => $request->manual_tech_grade,
+                'problems' => $request->manual_problems,
+            ],
+            'mapping_count' => [
+                'spec_fields' => count($request->spec_fields),
+                'spec_params' => count($request->spec_params),
+            ],
+            'additional_params_count' => $request->additional_param_names ? count($request->additional_param_names) : 0,
+        ]);
+        
+        // Costruisci il mapping dei campi
+        $fieldMapping = [];
+        foreach ($request->spec_fields as $index => $field) {
+            $param = $request->spec_params[$index] ?? null;
+            
+            // Se è un parametro personalizzato, usa il valore specificato
+            if ($param === 'custom' && isset($request->spec_custom_params[$index])) {
+                $customParamName = $request->spec_custom_params[$index];
+                if (!empty($customParamName)) {
+                    $fieldMapping[$field] = $customParamName;
+                }
+            } 
+            // Se non è vuoto e non è il parametro speciale per il grading, aggiungi al mapping
+            elseif (!empty($param) && $param !== '_grade_special') {
+                $fieldMapping[$field] = $param;
+            }
+        }
+        
+        // Raccogli parametri aggiuntivi
+        $additionalParams = [];
+        if ($request->additional_param_names && $request->additional_param_values) {
+            foreach ($request->additional_param_names as $index => $name) {
+                if (!empty($name) && isset($request->additional_param_values[$index])) {
+                    $additionalParams[$name] = $request->additional_param_values[$index];
+                }
+            }
+        }
+        
+        // Verifica se il parametro quantity è presente
+        $hasQuantity = false;
+        foreach ($fieldMapping as $field => $param) {
+            if ($param === 'quantity') {
+                $hasQuantity = true;
+                break;
+            }
+        }
+        
+        // Se quantity non è presente nel mapping, aggiungi come parametro aggiuntivo
+        if (!$hasQuantity && !isset($additionalParams['quantity'])) {
+            $additionalParams['quantity'] = '1';
+        }
+        
+        // Determina i valori finali di grading, dando priorità ai valori manuali
+        $finalGradeInfo = [
+            'visual_grade' => !empty($request->manual_visual_grade) ? $request->manual_visual_grade : $request->extracted_visual_grade,
+            'tech_grade' => !empty($request->manual_tech_grade) ? $request->manual_tech_grade : $request->extracted_tech_grade,
+            'problems' => !empty($request->manual_problems) ? $request->manual_problems : $request->extracted_problems,
+        ];
+        
+        // Aggiungi parametri di grading ai parametri aggiuntivi se disponibili
+        if (!empty($finalGradeInfo['visual_grade'])) {
+            $additionalParams['visual_grade'] = $finalGradeInfo['visual_grade'];
+        }
+        
+        if (!empty($finalGradeInfo['tech_grade'])) {
+            $additionalParams['tech_grade'] = $finalGradeInfo['tech_grade'];
+        }
+        
+        if (!empty($finalGradeInfo['problems'])) {
+            $additionalParams['problems'] = $finalGradeInfo['problems'];
+        }
+        
+        // Assicurati che ci sia almeno un valore di default per visual_grade e tech_grade se non specificati
+        if (empty($additionalParams['visual_grade'])) {
+            $additionalParams['visual_grade'] = 'B'; // Valore predefinito comune
+        }
+        
+        if (empty($additionalParams['tech_grade'])) {
+            $additionalParams['tech_grade'] = 'Working'; // Valore predefinito comune
+        }
+        
+        // Costruisci la risposta con un riepilogo delle impostazioni di importazione
+        $importSummary = [
+            'batch_info' => [
+                'name' => $request->batch_name,
+                'reference' => $request->batch_reference,
+                'description' => $request->batch_description,
+                'status' => $request->batch_status,
+                'category_id' => $request->category_id,
+            ],
+            'source_info' => [
+                'type' => $request->source_type,
+                'supplier' => $request->source_type === 'external' ? $request->supplier : null,
+                'external_reference' => $request->external_reference,
+            ],
+            'costs' => [
+                'batch_cost' => (float)$request->batch_cost,
+                'shipping_cost' => (float)$request->shipping_cost,
+                'tax_amount' => (float)$request->tax_amount,
+                'total_cost' => (float)$request->total_cost,
+            ],
+            'field_mapping' => $fieldMapping,
+            'additional_params' => $additionalParams,
+            'grading_info' => $finalGradeInfo,
+        ];
+        
+        // Ora implementiamo la creazione effettiva del batch con i prodotti
+        try {
+            // Ottieni i prodotti dalla lista ITSale
+            $productsFromITSale = $this->getProductsFromITSaleList($listSlug);
+            
+            if (empty($productsFromITSale)) {
+                return redirect()->route('admin.itsale.scraper.show-list', ['supplier' => $supplier, 'listSlug' => $listSlug])
+                    ->with('error', 'Non sono stati trovati prodotti nella lista da importare.');
+            }
+            
+            // Crea un nuovo batch
+            $batch = new \App\Models\Batch();
+            $batch->name = $request->batch_name;
+            $batch->slug = \Illuminate\Support\Str::slug($request->batch_name);
+            $batch->reference_code = $request->batch_reference;
+            $batch->description = $request->batch_description;
+            $batch->status = $request->batch_status;
+            $batch->category_id = $request->category_id;
+            $batch->source_type = $request->source_type;
+            $batch->supplier = $request->source_type === 'external' ? $request->supplier : null;
+            $batch->external_reference = $request->external_reference;
+            $batch->batch_cost = (float)$request->batch_cost;
+            $batch->shipping_cost = (float)$request->shipping_cost;
+            $batch->tax_amount = (float)$request->tax_amount;
+            $batch->total_cost = (float)$request->total_cost;
+            
+            // Ottieni la categoria selezionata
+            $category = \App\Models\Category::find($request->category_id);
+            
+            // Determina il tipo di prodotto in base alla categoria
+            $batch->product_type = $category->name ?? 'laptop';
+            $batch->product_manufacturer = 'Dell'; // Default per questo batch specifico
+            $batch->product_model = 'Laptop 8th Gen'; // Default per questo batch specifico
+            
+            // Calcola unità totali e prezzo unitario medio
+            $totalUnits = 0;
+            foreach ($productsFromITSale as $product) {
+                $quantity = 1; // Default quantity
+                
+                // Controlla se c'è un parametro di quantità mappato
+                foreach ($fieldMapping as $field => $param) {
+                    if ($param === 'quantity' && isset($product['specs'][$field])) {
+                        $quantity = (int)preg_replace('/[^0-9]/', '', $product['specs'][$field]);
+                        if ($quantity < 1) $quantity = 1;
+                        break;
+                    }
+                }
+                
+                // Aggiunge la quantità dal parametro aggiuntivo se presente
+                if (isset($additionalParams['quantity']) && !$hasQuantity) {
+                    $quantity = (int)$additionalParams['quantity'];
+                    if ($quantity < 1) $quantity = 1;
+                }
+                
+                $totalUnits += $quantity;
+            }
+            
+            $batch->total_units = $totalUnits;
+            $batch->unit_quantity = $totalUnits;
+            $batch->unit_price = $totalUnits > 0 ? $batch->total_cost / $totalUnits : 0;
+            $batch->total_price = (float)$request->total_cost;
+            
+            // Prepara l'array di prodotti per salvare nel batch
+            $batchProducts = [];
+            
+            foreach ($productsFromITSale as $index => $product) {
+                $productData = [];
+                
+                // Mappatura campi dalle specifiche ITSale ai campi del prodotto
+                foreach ($fieldMapping as $field => $param) {
+                    if (isset($product['specs'][$field])) {
+                        $productData[$param] = $product['specs'][$field];
+                    }
+                }
+                
+                // Aggiungi parametri aggiuntivi
+                foreach ($additionalParams as $paramName => $paramValue) {
+                    $productData[$paramName] = $paramValue;
+                }
+                
+                // Assicurati che ci siano i campi obbligatori
+                if (!isset($productData['name']) && isset($product['model'])) {
+                    $productData['name'] = $product['model'];
+                } elseif (!isset($productData['name']) && isset($product['name'])) {
+                    $productData['name'] = $product['name'];
+                } elseif (!isset($productData['name'])) {
+                    // Crea un nome di default
+                    $productData['name'] = $category->name . ' - Prodotto ' . ($index + 1);
+                }
+                
+                // Genera lo slug dal nome
+                $productData['slug'] = \Illuminate\Support\Str::slug($productData['name']);
+                
+                // Determina la quantità
+                $quantity = 1; // Default
+                if (isset($productData['quantity'])) {
+                    $quantity = (int)preg_replace('/[^0-9]/', '', $productData['quantity']);
+                    if ($quantity < 1) $quantity = 1;
+                }
+                
+                $productData['quantity'] = $quantity;
+                $productData['unit_price'] = $batch->unit_price;
+                
+                // Assicurati che il prezzo totale sia calcolato correttamente
+                $productData['price'] = $quantity * $batch->unit_price;
+                
+                // Aggiungi il prodotto all'array dei prodotti del batch
+                $batchProducts[] = $productData;
+            }
+            
+            // Salva l'array dei prodotti nel batch
+            $batch->products = $batchProducts;
+            
+            // Salva il batch
+            $batch->save();
+            
+            Log::info('Batch creato con successo:', [
+                'batch_id' => $batch->id, 
+                'name' => $batch->name, 
+                'total_units' => $batch->total_units,
+                'products_count' => count($batchProducts)
+            ]);
+            
+            return redirect()->route('admin.batches.show', $batch->id)
+                ->with('success', 'Batch importato con successo! Sono stati importati ' . count($batchProducts) . ' prodotti.');
+                
+        } catch (\Exception $e) {
+            Log::error('Errore durante l\'importazione del batch:', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return redirect()->route('admin.itsale.scraper.show-list', ['supplier' => $supplier, 'listSlug' => $listSlug])
+                ->with('error', 'Si è verificato un errore durante l\'importazione: ' . $e->getMessage())
+                ->with('import_summary', $importSummary);
+        }
+    }
+    
+    /**
+     * Ottiene i prodotti da una lista ITSale
+     */
+    private function getProductsFromITSaleList($listSlug)
+    {
+        // Recupera i prodotti dalla lista ITSale
+        $productsUrl = "https://itsale.pl/list/{$listSlug}";
+        $productsResponse = Http::timeout(60)->get($productsUrl);
+        
+        if (!$productsResponse->successful()) {
+            Log::error('Errore durante il recupero dei prodotti da ITSale:', [
+                'status' => $productsResponse->status(),
+                'url' => $productsUrl
+            ]);
+            return [];
+        }
+        
+        $productsHtml = $productsResponse->body();
+        $productsCrawler = new Crawler($productsHtml);
+        
+        // Estrai i prodotti dalla pagina
+        $products = [];
+        $productRows = $productsCrawler->filter('.product-list-item');
+        
+        // Debug info
+        Log::info('Trovati ' . $productRows->count() . ' prodotti usando il selettore .product-list-item');
+        
+        // Try alternative selectors if no products found
+        if ($productRows->count() == 0) {
+            Log::info('Provo selettore alternativo: tr.product-row');
+            $productRows = $productsCrawler->filter('tr.product-row');
+            Log::info('Trovati ' . $productRows->count() . ' prodotti usando il selettore tr.product-row');
+            
+            if ($productRows->count() == 0) {
+                Log::info('Provo un altro selettore: .product');
+                $productRows = $productsCrawler->filter('.product');
+                Log::info('Trovati ' . $productRows->count() . ' prodotti usando il selettore .product');
+                
+                // If still no products, try processing tables directly
+                if ($productRows->count() == 0) {
+                    Log::info('Provo a processare le tabelle direttamente');
+                    $tables = $productsCrawler->filter('table');
+                    Log::info('Trovate ' . $tables->count() . ' tabelle nella pagina');
+                    
+                    if ($tables->count() > 0) {
+                        // Process the first table with data
+                        $tableRows = $tables->first()->filter('tr');
+                        Log::info('Trovate ' . $tableRows->count() . ' righe nella prima tabella');
+                        
+                        // Extract headers
+                        $headers = [];
+                        $headerRow = $tableRows->first();
+                        $headerRow->filter('th')->each(function (Crawler $th) use (&$headers) {
+                            $headers[] = trim($th->text());
+                        });
+                        
+                        Log::info('Headers della tabella: ' . json_encode($headers));
+                        
+                        // Process data rows
+                        $tableRows->slice(1)->each(function (Crawler $row, $i) use (&$products, $headers) {
+                            try {
+                                $cells = $row->filter('td');
+                                if ($cells->count() == 0) {
+                                    return; // Skip if no cells (might be a header or empty row)
+                                }
+                                
+                                $productData = [
+                                    'name' => 'Dell Laptop ' . ($i + 1),
+                                    'specs' => [],
+                                    'quantity' => 1,
+                                    'price' => '0.00'
+                                ];
+                                
+                                // Extract data from cells using headers as keys
+                                for ($j = 0; $j < min($cells->count(), count($headers)); $j++) {
+                                    $key = $headers[$j];
+                                    $value = trim($cells->eq($j)->text());
+                                    
+                                    $productData['specs'][$key] = $value;
+                                    
+                                    // Map common fields to standardized properties
+                                    if (stripos($key, 'model') !== false) {
+                                        $productData['model'] = $value;
+                                        $productData['name'] = $value;
+                                    } elseif (stripos($key, 'type') !== false) {
+                                        $productData['type'] = $value;
+                                    } elseif (stripos($key, 'brand') !== false || stripos($key, 'producer') !== false) {
+                                        $productData['producer'] = $value;
+                                    } elseif (stripos($key, 'cpu') !== false || stripos($key, 'processor') !== false) {
+                                        $productData['cpu'] = $value;
+                                    } elseif (stripos($key, 'ram') !== false || stripos($key, 'memory') !== false) {
+                                        $productData['ram'] = $value;
+                                    } elseif (stripos($key, 'hdd') !== false || stripos($key, 'ssd') !== false || stripos($key, 'drive') !== false || stripos($key, 'storage') !== false) {
+                                        $productData['drive'] = $value;
+                                    } elseif (stripos($key, 'os') !== false || stripos($key, 'operating') !== false) {
+                                        $productData['operating_system'] = $value;
+                                    } elseif (stripos($key, 'price') !== false) {
+                                        $productData['price'] = preg_replace('/[^0-9,.]/', '', $value);
+                                        $productData['price'] = str_replace(',', '.', $productData['price']);
+                                        $productData['price'] = (float)$productData['price'];
+                                    } elseif (stripos($key, 'screen') !== false || stripos($key, 'display') !== false) {
+                                        $productData['screen_size'] = $value;
+                                    } elseif (stripos($key, 'grade') !== false && stripos($key, 'visual') !== false) {
+                                        $productData['visual_grade'] = $value;
+                                    } elseif (stripos($key, 'grade') !== false && stripos($key, 'tech') !== false) {
+                                        $productData['tech_grade'] = $value;
+                                    } elseif (stripos($key, 'battery') !== false) {
+                                        $productData['battery'] = $value;
+                                    } elseif (stripos($key, 'quantity') !== false) {
+                                        $productData['quantity'] = (int)preg_replace('/[^0-9]/', '', $value);
+                                    }
+                                }
+                                
+                                $products[] = $productData;
+        } catch (\Exception $e) {
+                                Log::error('Errore durante l\'estrazione dei dati della riga della tabella: ' . $e->getMessage());
+                            }
+                        });
+                    }
+                }
+            }
+        }
+        
+        // Collect products from standard layout
+        $productRows->each(function (Crawler $row, $i) use (&$products) {
+            try {
+                // Modello/Nome prodotto
+                $nameNode = $row->filter('.product-title');
+                $name = $nameNode->count() > 0 ? trim($nameNode->text()) : 'Unknown Product ' . ($i + 1);
+                
+                // Dettagli prodotto (specifiche)
+                $specs = [];
+                $specNodes = $row->filter('.product-property');
+                $specNodes->each(function (Crawler $specNode) use (&$specs) {
+                    $label = $specNode->filter('.property-name');
+                    $value = $specNode->filter('.property-value');
+                    
+                    if ($label->count() > 0 && $value->count() > 0) {
+                        $labelText = trim($label->text());
+                        $valueText = trim($value->text());
+                        
+                        // Rimuovi i due punti dal label se presenti
+                        $labelText = rtrim($labelText, ':');
+                        
+                        $specs[$labelText] = $valueText;
+                    }
+                });
+                
+                // Estrai prezzo unitario
+                $priceNode = $row->filter('.price');
+                $price = '';
+                if ($priceNode->count() > 0) {
+                    $price = trim($priceNode->text());
+                    // Estrai solo i numeri dal prezzo
+                    $price = preg_replace('/[^0-9,.]/', '', $price);
+                    // Converti virgole in punti
+                    $price = str_replace(',', '.', $price);
+                    // Converti esplicitamente in float
+                    $price = (float)$price;
+                }
+                
+                // Estrai quantità
+                $quantity = 1; // Default
+                if (isset($specs['Quantity'])) {
+                    $quantity = (int)preg_replace('/[^0-9]/', '', $specs['Quantity']);
+                }
+                
+                // Mappa i valori delle specifiche alle proprietà del prodotto
+                $productData = [
+                    'name' => $name,
+                    'type' => isset($specs['Type']) ? $specs['Type'] : null,
+                    'model' => isset($specs['Model']) ? $specs['Model'] : $name,
+                    'producer' => isset($specs['Brand']) ? $specs['Brand'] : (isset($specs['Producer']) ? $specs['Producer'] : null),
+                    'cpu' => isset($specs['CPU']) ? $specs['CPU'] : (isset($specs['Processor']) ? $specs['Processor'] : null),
+                    'ram' => isset($specs['RAM']) ? $specs['RAM'] : (isset($specs['Memory']) ? $specs['Memory'] : null),
+                    'drive' => isset($specs['HDD']) ? $specs['HDD'] : (isset($specs['SSD']) ? $specs['SSD'] : (isset($specs['Storage']) ? $specs['Storage'] : null)),
+                    'operating_system' => isset($specs['OS']) ? $specs['OS'] : (isset($specs['Operating System']) ? $specs['Operating System'] : null),
+                    'gpu' => isset($specs['GPU']) ? $specs['GPU'] : (isset($specs['Graphics']) ? $specs['Graphics'] : null),
+                    'color' => isset($specs['Color']) ? $specs['Color'] : null,
+                    'screen_size' => isset($specs['Screen Size']) ? $specs['Screen Size'] : (isset($specs['Display']) ? $specs['Display'] : null),
+                    'visual_grade' => isset($specs['Visual Grade']) ? $specs['Visual Grade'] : (isset($specs['Cosmetic']) ? $specs['Cosmetic'] : null),
+                    'tech_grade' => isset($specs['Tech Grade']) ? $specs['Tech Grade'] : (isset($specs['Technical']) ? $specs['Technical'] : null),
+                    'battery' => isset($specs['Battery']) ? $specs['Battery'] : null,
+                    'price' => $price,
+                    'quantity' => $quantity,
+                    'specs' => $specs, // Manteniamo tutte le specifiche originali
+                ];
+                
+                $products[] = $productData;
+            } catch (\Exception $e) {
+                Log::error('Errore durante l\'estrazione dei dati del prodotto: ' . $e->getMessage());
+            }
+        });
+        
+        return $products;
     }
 
     /**

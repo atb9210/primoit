@@ -48,11 +48,11 @@
                     </div>
                     
                     <div class="mb-8">
-                        <h2 class="text-lg font-semibold mb-2">Products in this Category ({{ $category->products->count() }})</h2>
-                        @if($category->products->isEmpty())
+                        <h2 class="text-lg font-semibold mb-2">Batches in this Category ({{ $category->batches->count() }})</h2>
+                        @if($category->batches->isEmpty())
                             <div class="bg-gray-50 p-4 rounded text-center">
-                                <p class="text-gray-500">No products in this category yet.</p>
-                                <a href="{{ route('admin.products.create') }}" class="mt-2 inline-block text-blue-600 hover:text-blue-800">Add a product</a>
+                                <p class="text-gray-500">No batches in this category yet.</p>
+                                <a href="{{ route('admin.batches.create') }}" class="mt-2 inline-block text-blue-600 hover:text-blue-800">Add a batch</a>
                             </div>
                         @else
                             <div class="overflow-x-auto">
@@ -61,25 +61,30 @@
                                         <tr>
                                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
                                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Quantity</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Price</th>
                                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody class="bg-white divide-y divide-gray-200">
-                                        @foreach($category->products as $product)
+                                        @foreach($category->batches as $batch)
                                             <tr>
                                                 <td class="px-6 py-4 whitespace-nowrap">
-                                                    <div class="text-sm font-medium text-gray-900">{{ $product->producer }} {{ $product->model }}</div>
-                                                    <div class="text-sm text-gray-500">{{ $product->type }}</div>
+                                                    <div class="text-sm font-medium text-gray-900">{{ $batch->name }}</div>
+                                                    <div class="text-sm text-gray-500">{{ $batch->reference_code }}</div>
                                                 </td>
                                                 <td class="px-6 py-4 whitespace-nowrap">
-                                                    <div class="text-sm text-gray-500">{{ ucfirst($product->status) }}</div>
+                                                    <div class="text-sm text-gray-500">{{ ucfirst($batch->status) }}</div>
                                                 </td>
                                                 <td class="px-6 py-4 whitespace-nowrap">
-                                                    <div class="text-sm text-gray-500">@formatPrice($product->price)</div>
+                                                    <div class="text-sm text-gray-500">{{ $batch->total_quantity }}</div>
+                                                </td>
+                                                <td class="px-6 py-4 whitespace-nowrap">
+                                                    <div class="text-sm text-gray-500">@formatPrice($batch->total_price)</div>
                                                 </td>
                                                 <td class="px-6 py-4 whitespace-nowrap text-sm">
-                                                    <a href="{{ route('admin.products.edit', $product) }}" class="text-blue-600 hover:text-blue-900">Edit</a>
+                                                    <a href="{{ route('admin.batches.edit', $batch) }}" class="text-blue-600 hover:text-blue-900 mr-2">Edit</a>
+                                                    <a href="{{ route('admin.batches.show', $batch) }}" class="text-green-600 hover:text-green-900">View</a>
                                                 </td>
                                             </tr>
                                         @endforeach
@@ -92,4 +97,3 @@
             </div>
         </div>
     </div>
-</x-admin-layout> 
