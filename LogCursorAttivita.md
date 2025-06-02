@@ -488,3 +488,7 @@
 - 03/06/2024 16:45 - Migliorato design della tabella con immagini di anteprima, dettagli prodotto e azioni con icone
 - 03/06/2024 16:45 - Aggiunti filtri per status e categoria e campo di ricerca per un'esperienza utente migliore
 - 03/06/2024 16:45 - Eseguiti php artisan config:clear, cache:clear, view:clear, route:clear e optimize
+
+- 03/06/2024 17:10 - Migliorata la scheda Total Value nella vista admin/batches/index.blade.php mostrando anche il numero totale di unità
+- 03/06/2024 17:10 - Aggiunto conteggio totale unità sotto il valore totale dei batch per migliorare la visualizzazione delle statistiche
+- 03/06/2024 17:10 - Eseguiti php artisan view:clear, cache:clear e optimize

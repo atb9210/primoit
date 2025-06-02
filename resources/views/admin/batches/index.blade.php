@@ -99,8 +99,9 @@
                                 </svg>
                             </div>
                             <div>
-                                <p class="text-sm text-gray-600">Total Value</p>
+                                <p class="text-sm text-gray-600">Total Value / Quantity</p>
                                 <p class="text-2xl font-semibold text-gray-800">@formatPrice($batches->sum('total_price'))</p>
+                                <p class="text-xs text-gray-500">{{ $batches->sum('total_quantity') }} units</p>
                             </div>
                         </div>
                     </div>
