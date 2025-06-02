@@ -483,9 +483,8 @@
 - 03/06/2024 16:15 - Eseguito App\Models\Batch::truncate() tramite tinker
 - 03/06/2024 16:15 - Commit e push delle modifiche al repository GitHub
 - 03/06/2024 16:15 - Commit message: "Eliminati tutti i batch dal database per ripartire da zero"
-- 03/06/2024 16:30 - Ottimizzata completamente la vista admin/batches/index.blade.php
-- 03/06/2024 16:30 - Implementata visualizzazione a card con icone, statistiche e filtri rapidi
-- 03/06/2024 16:30 - Migliorate le informazioni mostrate per ogni batch con campi utili e tag colorati
-- 03/06/2024 16:30 - Aggiunto supporto per filtri di stato (active, reserved, sold) e sorgente (internal, external)
-- 03/06/2024 16:30 - Migliorato il controller BatchController per supportare i nuovi filtri
-- 03/06/2024 16:30 - Eseguiti php artisan config:clear, cache:clear, view:clear, route:clear, optimize
+- 03/06/2024 16:45 - Ottimizzata la vista admin/batches/index.blade.php con un design più moderno e intuitivo
+- 03/06/2024 16:45 - Aggiunta sezione di statistiche con riepilogo totale batch, batch attivi, riservati e valore totale
+- 03/06/2024 16:45 - Migliorato design della tabella con immagini di anteprima, dettagli prodotto e azioni con icone
+- 03/06/2024 16:45 - Aggiunti filtri per status e categoria e campo di ricerca per un'esperienza utente migliore
+- 03/06/2024 16:45 - Eseguiti php artisan config:clear, cache:clear, view:clear, route:clear e optimize
