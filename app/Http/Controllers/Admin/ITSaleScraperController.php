@@ -1221,61 +1221,33 @@ class ITSaleScraperController extends Controller
             'manual_problems' => 'nullable|string',
         ]);
         
-        // Log dei dati ricevuti per debug
-        Log::info('Import data received:', [
-            'batch_info' => [
-                'name' => $request->batch_name,
-                'reference' => $request->batch_reference,
-                'status' => $request->batch_status,
-                'category_id' => $request->category_id,
-            ],
-            'source_info' => [
-                'type' => $request->source_type,
-                'supplier' => $request->supplier,
-                'reference' => $request->external_reference,
-            ],
-            'costs' => [
-                'batch_cost' => $request->batch_cost,
-                'shipping_cost' => $request->shipping_cost,
-                'tax_amount' => $request->tax_amount,
-                'total_cost' => $request->total_cost,
-            ],
-            'extracted_grade_info' => [
-                'visual_grade' => $request->extracted_visual_grade,
-                'tech_grade' => $request->extracted_tech_grade,
-                'problems' => $request->extracted_problems,
-            ],
-            'manual_grade_info' => [
-                'visual_grade' => $request->manual_visual_grade,
-                'tech_grade' => $request->manual_tech_grade,
-                'problems' => $request->manual_problems,
-            ],
-            'mapping_count' => [
-                'spec_fields' => count($request->spec_fields),
-                'spec_params' => count($request->spec_params),
-            ],
-            'additional_params_count' => $request->additional_param_names ? count($request->additional_param_names) : 0,
-        ]);
-        
-        // Costruisci il mapping dei campi
-        $fieldMapping = [];
-        foreach ($request->spec_fields as $index => $field) {
-            $param = $request->spec_params[$index] ?? null;
+        try {
+            // Recupera prodotti dalla lista ITSale
+            $productsFromITSale = $this->getProductsFromITSaleList($listSlug);
             
-            // Se è un parametro personalizzato, usa il valore specificato
-            if ($param === 'custom' && isset($request->spec_custom_params[$index])) {
-                $customParamName = $request->spec_custom_params[$index];
-                if (!empty($customParamName)) {
-                    $fieldMapping[$field] = $customParamName;
-                }
-            } 
-            // Se non è vuoto e non è il parametro speciale per il grading, aggiungi al mapping
-            elseif (!empty($param) && $param !== '_grade_special') {
+            if (empty($productsFromITSale)) {
+                return redirect()->route('admin.itsale.scraper.show-list', ['supplier' => $supplier, 'listSlug' => $listSlug])
+                    ->with('error', 'Non sono stati trovati prodotti nella lista da importare.');
+            }
+            
+            // Costruisci mapping dei campi
+        $fieldMapping = [];
+            $specFields = $request->spec_fields;
+            $specParams = $request->spec_params;
+            $specCustomParams = $request->spec_custom_params ?? [];
+            
+            foreach ($specFields as $index => $field) {
+                $param = $specParams[$index];
+                
+                // Se è un parametro custom, usa il valore inserito dall'utente
+                if ($param === 'custom' && isset($specCustomParams[$index]) && !empty($specCustomParams[$index])) {
+                    $fieldMapping[$field] = $specCustomParams[$index];
+                } elseif (!empty($param) && $param !== '_grade_special') {
                 $fieldMapping[$field] = $param;
             }
         }
         
-        // Raccogli parametri aggiuntivi
+            // Aggiungi parametri aggiuntivi
         $additionalParams = [];
         if ($request->additional_param_names && $request->additional_param_values) {
             foreach ($request->additional_param_names as $index => $name) {
@@ -1285,83 +1257,24 @@ class ITSaleScraperController extends Controller
             }
         }
         
-        // Verifica se il parametro quantity è presente
-        $hasQuantity = false;
-        foreach ($fieldMapping as $field => $param) {
-            if ($param === 'quantity') {
-                $hasQuantity = true;
-                break;
-            }
-        }
-        
-        // Se quantity non è presente nel mapping, aggiungi come parametro aggiuntivo
-        if (!$hasQuantity && !isset($additionalParams['quantity'])) {
-            $additionalParams['quantity'] = '1';
-        }
-        
-        // Determina i valori finali di grading, dando priorità ai valori manuali
-        $finalGradeInfo = [
-            'visual_grade' => !empty($request->manual_visual_grade) ? $request->manual_visual_grade : $request->extracted_visual_grade,
-            'tech_grade' => !empty($request->manual_tech_grade) ? $request->manual_tech_grade : $request->extracted_tech_grade,
-            'problems' => !empty($request->manual_problems) ? $request->manual_problems : $request->extracted_problems,
-        ];
-        
-        // Aggiungi parametri di grading ai parametri aggiuntivi se disponibili
-        if (!empty($finalGradeInfo['visual_grade'])) {
-            $additionalParams['visual_grade'] = $finalGradeInfo['visual_grade'];
-        }
-        
-        if (!empty($finalGradeInfo['tech_grade'])) {
-            $additionalParams['tech_grade'] = $finalGradeInfo['tech_grade'];
-        }
-        
-        if (!empty($finalGradeInfo['problems'])) {
-            $additionalParams['problems'] = $finalGradeInfo['problems'];
-        }
-        
-        // Assicurati che ci sia almeno un valore di default per visual_grade e tech_grade se non specificati
-        if (empty($additionalParams['visual_grade'])) {
-            $additionalParams['visual_grade'] = 'B'; // Valore predefinito comune
-        }
-        
-        if (empty($additionalParams['tech_grade'])) {
-            $additionalParams['tech_grade'] = 'Working'; // Valore predefinito comune
-        }
-        
-        // Costruisci la risposta con un riepilogo delle impostazioni di importazione
-        $importSummary = [
-            'batch_info' => [
-                'name' => $request->batch_name,
-                'reference' => $request->batch_reference,
-                'description' => $request->batch_description,
-                'status' => $request->batch_status,
-                'category_id' => $request->category_id,
-            ],
-            'source_info' => [
-                'type' => $request->source_type,
-                'supplier' => $request->source_type === 'external' ? $request->supplier : null,
-                'external_reference' => $request->external_reference,
-            ],
-            'costs' => [
-                'batch_cost' => (float)$request->batch_cost,
-                'shipping_cost' => (float)$request->shipping_cost,
-                'tax_amount' => (float)$request->tax_amount,
-                'total_cost' => (float)$request->total_cost,
-            ],
-            'field_mapping' => $fieldMapping,
-            'additional_params' => $additionalParams,
-            'grading_info' => $finalGradeInfo,
-        ];
-        
-        // Ora implementiamo la creazione effettiva del batch con i prodotti
-        try {
-            // Ottieni i prodotti dalla lista ITSale
-            $productsFromITSale = $this->getProductsFromITSaleList($listSlug);
+            // Gestisci le informazioni di grading
+            $finalGradeInfo = [];
             
-            if (empty($productsFromITSale)) {
-                return redirect()->route('admin.itsale.scraper.show-list', ['supplier' => $supplier, 'listSlug' => $listSlug])
-                    ->with('error', 'Non sono stati trovati prodotti nella lista da importare.');
-            }
+            // Priorità: 1. Override manuale, 2. Estratto automaticamente
+            $finalGradeInfo['visual_grade'] = !empty($request->manual_visual_grade) 
+                ? $request->manual_visual_grade 
+                : $request->extracted_visual_grade;
+                
+            $finalGradeInfo['tech_grade'] = !empty($request->manual_tech_grade) 
+                ? $request->manual_tech_grade 
+                : $request->extracted_tech_grade;
+                
+            $finalGradeInfo['problems'] = !empty($request->manual_problems) 
+                ? $request->manual_problems 
+                : $request->extracted_problems;
+            
+            // Ottieni la categoria selezionata
+            $category = \App\Models\Category::find($request->category_id);
             
             // Crea un nuovo batch
             $batch = new \App\Models\Batch();
@@ -1371,110 +1284,466 @@ class ITSaleScraperController extends Controller
             $batch->description = $request->batch_description;
             $batch->status = $request->batch_status;
             $batch->category_id = $request->category_id;
+            $batch->product_type = $category->name ?? 'laptop';
+            
+            // Imposta informazioni di origine
             $batch->source_type = $request->source_type;
             $batch->supplier = $request->source_type === 'external' ? $request->supplier : null;
-            $batch->external_reference = $request->external_reference;
+            $batch->source_reference = $request->external_reference;
+            
+            // Imposta informazioni finanziarie
             $batch->batch_cost = (float)$request->batch_cost;
-            $batch->shipping_cost = (float)$request->shipping_cost;
-            $batch->tax_amount = (float)$request->tax_amount;
+            $batch->shipping_cost = (float)($request->shipping_cost ?? 0);
+            $batch->tax_amount = (float)($request->tax_amount ?? 0);
             $batch->total_cost = (float)$request->total_cost;
             
-            // Ottieni la categoria selezionata
-            $category = \App\Models\Category::find($request->category_id);
-            
-            // Determina il tipo di prodotto in base alla categoria
-            $batch->product_type = $category->name ?? 'laptop';
-            $batch->product_manufacturer = 'Dell'; // Default per questo batch specifico
-            $batch->product_model = 'Laptop 8th Gen'; // Default per questo batch specifico
-            
-            // Calcola unità totali e prezzo unitario medio
+            // Prepara l'array di prodotti da salvare nel batch
+            $batchProducts = [];
             $totalUnits = 0;
-            foreach ($productsFromITSale as $product) {
-                $quantity = 1; // Default quantity
-                
-                // Controlla se c'è un parametro di quantità mappato
-                foreach ($fieldMapping as $field => $param) {
-                    if ($param === 'quantity' && isset($product['specs'][$field])) {
-                        $quantity = (int)preg_replace('/[^0-9]/', '', $product['specs'][$field]);
-                        if ($quantity < 1) $quantity = 1;
-                        break;
-                    }
-                }
-                
-                // Aggiunge la quantità dal parametro aggiuntivo se presente
-                if (isset($additionalParams['quantity']) && !$hasQuantity) {
-                    $quantity = (int)$additionalParams['quantity'];
-                    if ($quantity < 1) $quantity = 1;
-                }
-                
-                $totalUnits += $quantity;
+            
+            // Log del field mapping per debug
+            Log::info('Field Mapping Configuration:', [
+                'mappings' => $fieldMapping
+            ]);
+            
+            // Log dei primi prodotti disponibili
+            if (!empty($productsFromITSale)) {
+                Log::info('Primo prodotto disponibile per importazione:', [
+                    'product' => $productsFromITSale[0]
+                ]);
             }
             
-            $batch->total_units = $totalUnits;
-            $batch->unit_quantity = $totalUnits;
-            $batch->unit_price = $totalUnits > 0 ? $batch->total_cost / $totalUnits : 0;
-            $batch->total_price = (float)$request->total_cost;
-            
-            // Prepara l'array di prodotti per salvare nel batch
-            $batchProducts = [];
-            
             foreach ($productsFromITSale as $index => $product) {
+                // Log dettagliato dei campi importanti per il debug
+                Log::info('Importazione prodotto #' . ($index + 1), [
+                    'specs_visual_grade' => isset($product['specs']['Visual grade']) ? $product['specs']['Visual grade'] : 'non presente',
+                    'specs_lcd_quality' => isset($product['specs']['LCD Quality']) ? $product['specs']['LCD Quality'] : 'non presente',
+                    'grade_field' => isset($product['grade']) ? $product['grade'] : 'non presente',
+                    'visual_grade_field' => isset($product['visual_grade']) ? $product['visual_grade'] : 'non presente'
+                ]);
+                
                 $productData = [];
                 
-                // Mappatura campi dalle specifiche ITSale ai campi del prodotto
-                foreach ($fieldMapping as $field => $param) {
-                    if (isset($product['specs'][$field])) {
-                        $productData[$param] = $product['specs'][$field];
+                // Mappatura campi dalle specifiche ITSale ai parametri del prodotto
+        foreach ($fieldMapping as $field => $param) {
+                    // Se il campo è vuoto o un valore speciale, ignoralo
+                    if (empty($param) || $param === '_grade_special') {
+                        continue;
+                    }
+                    
+                    $fieldValue = null;
+                    
+                    // Verifica prima in specs e poi nella radice dell'oggetto product
+                    if (isset($product['specs']) && isset($product['specs'][$field])) {
+                        $fieldValue = $product['specs'][$field];
+                    } elseif (isset($product[$field])) {
+                        $fieldValue = $product[$field];
+                    }
+                    
+                    // Se abbiamo trovato un valore, assegnalo al parametro corrispondente
+                    if ($fieldValue !== null) {
+                        // Converti alcuni tipi di dati se necessario
+                        if (in_array($param, ['price', 'unit_price'])) {
+                            // Converti prezzo in float
+                            $fieldValue = (float)preg_replace('/[^0-9.,]/', '', $fieldValue);
+                        } elseif (in_array($param, ['quantity'])) {
+                            // Converti quantità in intero
+                            $fieldValue = (int)preg_replace('/[^0-9]/', '', $fieldValue);
+                            if ($fieldValue < 1) $fieldValue = 1;
+                        }
+                        
+                        $productData[$param] = $fieldValue;
                     }
                 }
                 
-                // Aggiungi parametri aggiuntivi
+                // Log di debug per verificare che i dati vengano correttamente mappati
+                if ($index == 0) {
+                    Log::info('Mappatura del primo prodotto:', [
+                        'field_mapping' => $fieldMapping,
+                        'product_specs' => isset($product['specs']) ? json_encode($product['specs']) : 'Nessuna specifica',
+                        'product_data_after_mapping' => $productData
+                    ]);
+                }
+                
+                // Aggiungi parametri aggiuntivi a ciascun prodotto
                 foreach ($additionalParams as $paramName => $paramValue) {
                     $productData[$paramName] = $paramValue;
                 }
                 
-                // Assicurati che ci siano i campi obbligatori
+                // INIZIO GESTIONE SPECIALE CAMPI GRADING
+                // Estrai i campi di grading direttamente dai dati originali
+                
+                // 1. Gestione del Visual Grade
+                $visualGrade = '';
+                
+                // Cerca in diverse posizioni nel formato originale
+        if (!empty($finalGradeInfo['visual_grade'])) {
+                    $visualGrade = $finalGradeInfo['visual_grade'];
+                } elseif (isset($product['visual_grade'])) {
+                    $visualGrade = $product['visual_grade'];
+                } elseif (isset($product['specs']) && isset($product['specs']['Visual grade'])) {
+                    $visualGrade = $product['specs']['Visual grade'];
+                } elseif (isset($product['grade'])) {
+                    // Prova a estrarre dal campo grade
+                    if (preg_match('/Grade\s+([A-Z][\-\+]?)/i', $product['grade'], $matches)) {
+                        // Non assegniamo visual_grade qui perché vogliamo mantenere separati i campi
+                    } elseif (preg_match('/Visual\s+grade:\s*([A-Z][\-\+]?)/i', $product['grade'], $matches)) {
+                        $visualGrade = $matches[1];
+                    }
+                }
+                
+                // Se abbiamo trovato un visual grade, assegnalo a visual_grade
+                if (!empty($visualGrade)) {
+                    $productData['visual_grade'] = $visualGrade;
+                }
+                
+                // 2. Gestione del Grade (separato da visual_grade)
+                $grade = '';
+                
+                // Cerca in diverse posizioni nel formato originale, dando priorità a "Grade X" nella stringa Visual grade
+                if (isset($product['specs']) && isset($product['specs']['Visual grade']) && !empty($product['specs']['Visual grade'])) {
+                    $visualGradeString = $product['specs']['Visual grade'];
+                    
+                    // Estrazione prioritaria del Grade dalla stringa "Grade X Visual grade: X"
+                    if (preg_match('/Grade\s+([A-Z][\-\+]?)/i', $visualGradeString, $matches)) {
+                        $grade = $matches[1];
+                        Log::info('Grade estratto da Visual grade string pattern "Grade X": ' . $grade);
+                    }
+                }
+                
+                // Se non è stato trovato un grade nella stringa Visual grade, cerca in altre posizioni
+                if (empty($grade)) {
+                    if (isset($product['grade']) && !empty($product['grade'])) {
+                        // Se è un singolo carattere, usalo direttamente
+                        if (preg_match('/^[A-Z][\-\+]?$/i', trim($product['grade']))) {
+                            $grade = strtoupper(trim($product['grade']));
+                        }
+                        // Altrimenti prova a estrarre da un pattern "Grade X"
+                        elseif (preg_match('/Grade\s+([A-Z][\-\+]?)/i', $product['grade'], $matches)) {
+                            $grade = $matches[1];
+                        }
+                    } elseif (isset($product['specs']) && isset($product['specs']['Grade']) && !empty($product['specs']['Grade'])) {
+                        // Estrai dal campo Grade nelle specifiche
+                        if (preg_match('/^[A-Z][\-\+]?$/i', trim($product['specs']['Grade']))) {
+                            $grade = strtoupper(trim($product['specs']['Grade']));
+                        } elseif (preg_match('/Grade\s+([A-Z][\-\+]?)/i', $product['specs']['Grade'], $matches)) {
+                            $grade = $matches[1];
+                        }
+                    }
+                }
+                
+                // Se abbiamo trovato un grade, assegnalo a grade
+                if (!empty($grade)) {
+                    $productData['grade'] = $grade;
+                    Log::info('Grade finale assegnato al prodotto: ' . $grade);
+                }
+                
+                // Se non abbiamo trovato un grade ma abbiamo un visual_grade, usiamo quello come fallback
+                if (empty($productData['grade']) && !empty($productData['visual_grade'])) {
+                    $productData['grade'] = $productData['visual_grade'];
+                }
+                
+                // 3. Gestione del Tech Grade
+                $techGrade = '';
+                
+                // Cerca in diverse posizioni nel formato originale
+        if (!empty($finalGradeInfo['tech_grade'])) {
+                    $techGrade = $finalGradeInfo['tech_grade'];
+                } elseif (isset($product['functionality'])) {
+                    $techGrade = $product['functionality'];
+                } elseif (isset($product['tech_grade'])) {
+                    $techGrade = $product['tech_grade'];
+                } elseif (isset($product['specs']) && isset($product['specs']['Functionality'])) {
+                    $techGrade = $product['specs']['Functionality'];
+                } else {
+                    // Prova a estrarre dal visual grade o dal campo grade
+                    $visualGradeText = '';
+                    
+                    if (isset($product['specs']) && isset($product['specs']['Visual grade'])) {
+                        $visualGradeText = $product['specs']['Visual grade'];
+                    } elseif (isset($product['grade'])) {
+                        $visualGradeText = $product['grade'];
+                    }
+                    
+                    if (!empty($visualGradeText)) {
+                        if (preg_match('/Functionality:\s+(Working\*?|Not\s+working)/i', $visualGradeText, $matches)) {
+                            $techGrade = $matches[1];
+                        }
+                    }
+                }
+                
+                // Se abbiamo trovato un tech grade, assegnalo
+                if (!empty($techGrade)) {
+                    $productData['tech_grade'] = $techGrade;
+                }
+                
+                // 4. Gestione dei Problems
+                $problems = '';
+                
+                // Cerca in diverse posizioni nel formato originale
+        if (!empty($finalGradeInfo['problems'])) {
+                    $problems = $finalGradeInfo['problems'];
+                } elseif (isset($product['problems'])) {
+                    $problems = $product['problems'];
+                } elseif (isset($product['specs']) && isset($product['specs']['Problems'])) {
+                    $problems = $product['specs']['Problems'];
+                } else {
+                    // Prova a estrarre dal visual grade o dal campo grade
+                    $gradeText = '';
+                    
+                    if (isset($product['specs']) && isset($product['specs']['Visual grade'])) {
+                        $gradeText = $product['specs']['Visual grade'];
+                    } elseif (isset($product['grade'])) {
+                        $gradeText = $product['grade'];
+                    }
+                    
+                    if (!empty($gradeText)) {
+                        if (preg_match('/Problems:\s*([^;]+)/i', $gradeText, $matches)) {
+                            $problems = trim($matches[1]);
+                        }
+                    }
+                    
+                    // Cerca anche in original_specs come JSON
+                    if (empty($problems) && isset($product['original_specs']) && is_array($product['original_specs'])) {
+                        foreach ($product['original_specs'] as $key => $value) {
+                            if (stripos($key, 'problem') !== false) {
+                                $problems = $value;
+                                break;
+                            }
+                        }
+                    }
+                }
+                
+                // Se abbiamo trovato problemi, assegnali
+                if (!empty($problems)) {
+                    $productData['problems'] = $problems;
+                }
+                
+                // Verifica se original_specs contiene informazioni utili in formato JSON
+                if (isset($product['specs'])) {
+                    // Cerchiamo i campi di grading direttamente nelle specifiche
+                    $originalSpecs = $product['specs'];
+                    
+                    Log::info('Original specs for product ' . ($index + 1), [
+                        'specs' => $originalSpecs
+                    ]);
+                    
+                    foreach ($originalSpecs as $specKey => $specValue) {
+                        // Se abbiamo trovato un campo che contiene "Functionality"
+                        if (stripos($specKey, 'functionality') !== false || stripos($specValue, 'functionality') !== false) {
+                            // Estrai il valore Working/Working*/Not working
+                            if (stripos($specValue, 'Working*') !== false) {
+                                $productData['tech_grade'] = 'Working*';
+                            } elseif (stripos($specValue, 'Working') !== false) {
+                                $productData['tech_grade'] = 'Working';
+                            } elseif (stripos($specValue, 'Not working') !== false) {
+                                $productData['tech_grade'] = 'Not working';
+                            }
+                        }
+                        
+                        // Se abbiamo trovato un campo che contiene "Problems"
+                        if (stripos($specKey, 'problem') !== false || (stripos($specValue, 'Problems:') !== false && !empty($specValue))) {
+                            // Estrai il testo dopo "Problems:"
+                            if (preg_match('/Problems:\s*([^;]+)/i', $specValue, $matches) && !empty(trim($matches[1]))) {
+                                $productData['problems'] = trim($matches[1]);
+                            } else {
+                                // Se non c'è un pattern "Problems:", usa il valore intero
+                                $productData['problems'] = $specValue;
+                            }
+                        }
+                        
+                        // Prova a estrarre anche da Visual grade che contiene sia Functionality che Problems
+                        if (stripos($specKey, 'visual grade') !== false) {
+                            $visualGradeValue = $specValue;
+                            
+                            // Estrai Functionality
+                            if (preg_match('/Functionality:\s+(Working\*?|Not\s+working)/i', $visualGradeValue, $matches)) {
+                                $productData['tech_grade'] = trim($matches[1]);
+                            }
+                            
+                            // Estrai Problems
+                            if (preg_match('/Problems:([^;]+)/i', $visualGradeValue, $matches) && !empty(trim($matches[1]))) {
+                                $productData['problems'] = trim($matches[1]);
+                            }
+                        }
+                    }
+                }
+                
+                // Se abbiamo specs in formato JSON come stringa, prova a decodificarle
+                if (isset($product['original_specs']) && is_string($product['original_specs']) && !empty($product['original_specs'])) {
+                    try {
+                        $jsonSpecs = json_decode($product['original_specs'], true);
+                        if (is_array($jsonSpecs)) {
+                            foreach ($jsonSpecs as $jsonKey => $jsonValue) {
+                                if (stripos($jsonKey, 'functionality') !== false) {
+                                    $productData['tech_grade'] = $jsonValue;
+                                }
+                                
+                                if (stripos($jsonKey, 'problem') !== false) {
+                                    $productData['problems'] = $jsonValue;
+                                }
+                                
+                                // Prova a estrarre anche da Visual grade
+                                if (stripos($jsonKey, 'visual grade') !== false) {
+                                    $visualGradeValue = $jsonValue;
+                                    
+                                    // Estrai Functionality
+                                    if (preg_match('/Functionality:\s+(Working\*?|Not\s+working)/i', $visualGradeValue, $matches)) {
+                                        $productData['tech_grade'] = trim($matches[1]);
+                                    }
+                                    
+                                    // Estrai Problems
+                                    if (preg_match('/Problems:([^;]+)/i', $visualGradeValue, $matches) && !empty(trim($matches[1]))) {
+                                        $productData['problems'] = trim($matches[1]);
+                                    }
+                                }
+                            }
+                        }
+                    } catch (\Exception $e) {
+                        Log::warning('Error decoding JSON specs for product ' . ($index + 1) . ': ' . $e->getMessage());
+                    }
+                }
+                
+                // Ultimo tentativo: controlla direttamente nei dati originali per "Working*" e problemi
+                foreach ($product as $productKey => $productValue) {
+                    if (is_string($productValue)) {
+                        if (stripos($productValue, 'Working*') !== false) {
+                            $productData['tech_grade'] = 'Working*';
+                        }
+                        
+                        if (stripos($productValue, 'Problems:') !== false && preg_match('/Problems:([^;]+)/i', $productValue, $matches)) {
+                            $productData['problems'] = trim($matches[1]);
+                        }
+                    }
+                }
+                
+                // Controllo specifico per il formato standard di ITSale
+                // "Grade A Visual grade: A Functionality: Working* Security mark: Problems: cpu deffect;"
+                if (isset($product['specs']) && isset($product['specs']['Visual grade'])) {
+                    $standardFormatString = $product['specs']['Visual grade'];
+                    
+                    // Log per vedere cosa contiene esattamente
+                    if ($index < 3) {  // Limita il logging ai primi 3 prodotti
+                        Log::info('Visual grade field for product ' . ($index + 1) . ': ' . $standardFormatString);
+                    }
+                    
+                    // Estrai la funzionalità (Working, Working* o Not working)
+                    if (preg_match('/Functionality:\s*(Working\*?|Not\s+working)/i', $standardFormatString, $matches)) {
+                        $productData['tech_grade'] = trim($matches[1]);
+                        
+                        // Debug log
+                        if ($index < 3) {
+                            Log::info('Extracted tech_grade: ' . $productData['tech_grade']);
+                        }
+                    }
+                    
+                    // Estrai i problemi
+                    if (preg_match('/Problems:\s*([^;]+)/i', $standardFormatString, $matches)) {
+                        $extractedProblems = trim($matches[1]);
+                        if (!empty($extractedProblems)) {
+                            $productData['problems'] = $extractedProblems;
+                            
+                            // Debug log
+                            if ($index < 3) {
+                                Log::info('Extracted problems: ' . $productData['problems']);
+                            }
+                        }
+                    }
+                }
+                
+                // FINE GESTIONE SPECIALE CAMPI GRADING
+                
+                // Determina il nome del prodotto
                 if (!isset($productData['name']) && isset($product['model'])) {
                     $productData['name'] = $product['model'];
                 } elseif (!isset($productData['name']) && isset($product['name'])) {
                     $productData['name'] = $product['name'];
                 } elseif (!isset($productData['name'])) {
                     // Crea un nome di default
-                    $productData['name'] = $category->name . ' - Prodotto ' . ($index + 1);
+                    $productData['name'] = $category->name . ' - Item ' . ($index + 1);
                 }
                 
-                // Genera lo slug dal nome
-                $productData['slug'] = \Illuminate\Support\Str::slug($productData['name']);
+                // Assicurati che Manufacturer sia sempre definito
+                if (!isset($productData['manufacturer']) && isset($product['producer'])) {
+                    $productData['manufacturer'] = $product['producer'];
+                } elseif (!isset($productData['manufacturer']) && isset($product['manufacturer'])) {
+                    $productData['manufacturer'] = $product['manufacturer'];
+                }
+                
+                // Assicurati che Model sia sempre definito
+                if (!isset($productData['model']) && isset($product['model'])) {
+                    $productData['model'] = $product['model'];
+                }
+                
+                // Copia i campi standard rilevati direttamente dall'estrazione, se non sono già stati mappati
+                $standardFields = ['cpu', 'ram', 'storage', 'screen_size', 'battery', 'keyboard', 'webcam', 'coa'];
+                foreach ($standardFields as $stdField) {
+                    if (!isset($productData[$stdField]) && isset($product[$stdField])) {
+                        $productData[$stdField] = $product[$stdField];
+                    }
+                }
                 
                 // Determina la quantità
                 $quantity = 1; // Default
                 if (isset($productData['quantity'])) {
                     $quantity = (int)preg_replace('/[^0-9]/', '', $productData['quantity']);
                     if ($quantity < 1) $quantity = 1;
+                } elseif (isset($product['quantity'])) {
+                    $quantity = (int)$product['quantity'];
+                    if ($quantity < 1) $quantity = 1;
+                    $productData['quantity'] = $quantity;
                 }
                 
                 $productData['quantity'] = $quantity;
-                $productData['unit_price'] = $batch->unit_price;
+                $totalUnits += $quantity;
                 
-                // Assicurati che il prezzo totale sia calcolato correttamente
-                $productData['price'] = $quantity * $batch->unit_price;
+                // Calcola prezzo unitario e totale
+                $unitPrice = $batch->total_cost / max(1, count($productsFromITSale));
+                $productData['unit_price'] = $unitPrice;
+                $productData['price'] = $quantity * $unitPrice;
                 
-                // Aggiungi il prodotto all'array dei prodotti del batch
+                // Mantieni anche tutte le specifiche originali per riferimento
+                $productData['original_specs'] = $product['specs'] ?? [];
+                
+                // Aggiungi il prodotto all'array
                 $batchProducts[] = $productData;
             }
+            
+            // Log final del primo prodotto dopo tutte le elaborazioni
+            if (!empty($batchProducts)) {
+                Log::info('Primo prodotto dopo elaborazione completa:', [
+                    'product_data' => $batchProducts[0]
+                ]);
+            }
+            
+            // Salva i totali del batch
+            $batch->total_units = $totalUnits;
+            $batch->unit_quantity = $totalUnits;
+            $batch->unit_price = $totalUnits > 0 ? $batch->total_cost / $totalUnits : 0;
+            $batch->total_price = $batch->total_cost;
             
             // Salva l'array dei prodotti nel batch
             $batch->products = $batchProducts;
             
+            // Determina il produttore e il modello dal primo prodotto o da parametri aggiuntivi
+            $batch->product_manufacturer = $additionalParams['manufacturer'] ?? 
+                ($batchProducts[0]['manufacturer'] ?? 'Unknown');
+                
+            $batch->product_model = $additionalParams['model'] ?? 
+                ($batchProducts[0]['model'] ?? $category->name . ' Products');
+            
+            // Estrai specifiche comuni a tutti i prodotti
+            $specifications = [];
+            foreach ($batchProducts[0] as $key => $value) {
+                if (!in_array($key, ['name', 'quantity', 'unit_price', 'price', 'manufacturer', 'model'])) {
+                    $specifications[$key] = $value;
+                }
+            }
+            
+            $batch->specifications = $specifications;
+            
             // Salva il batch
             $batch->save();
-            
-            Log::info('Batch creato con successo:', [
-                'batch_id' => $batch->id, 
-                'name' => $batch->name, 
-                'total_units' => $batch->total_units,
-                'products_count' => count($batchProducts)
-            ]);
             
             return redirect()->route('admin.batches.show', $batch->id)
                 ->with('success', 'Batch importato con successo! Sono stati importati ' . count($batchProducts) . ' prodotti.');
@@ -1486,8 +1755,7 @@ class ITSaleScraperController extends Controller
             ]);
             
             return redirect()->route('admin.itsale.scraper.show-list', ['supplier' => $supplier, 'listSlug' => $listSlug])
-                ->with('error', 'Si è verificato un errore durante l\'importazione: ' . $e->getMessage())
-                ->with('import_summary', $importSummary);
+                ->with('error', 'Si è verificato un errore durante l\'importazione: ' . $e->getMessage());
         }
     }
     
@@ -1509,183 +1777,260 @@ class ITSaleScraperController extends Controller
         }
         
         $productsHtml = $productsResponse->body();
+        
+        // Salva l'HTML per debug
+        file_put_contents(storage_path('logs/itsale_products_' . $listSlug . '.html'), $productsHtml);
+        
         $productsCrawler = new Crawler($productsHtml);
         
-        // Estrai i prodotti dalla pagina
+        // Estrai i prodotti dalla pagina - cerca tabelle con dati
         $products = [];
-        $productRows = $productsCrawler->filter('.product-list-item');
         
-        // Debug info
-        Log::info('Trovati ' . $productRows->count() . ' prodotti usando il selettore .product-list-item');
-        
-        // Try alternative selectors if no products found
-        if ($productRows->count() == 0) {
-            Log::info('Provo selettore alternativo: tr.product-row');
-            $productRows = $productsCrawler->filter('tr.product-row');
-            Log::info('Trovati ' . $productRows->count() . ' prodotti usando il selettore tr.product-row');
-            
-            if ($productRows->count() == 0) {
-                Log::info('Provo un altro selettore: .product');
-                $productRows = $productsCrawler->filter('.product');
-                Log::info('Trovati ' . $productRows->count() . ' prodotti usando il selettore .product');
-                
-                // If still no products, try processing tables directly
-                if ($productRows->count() == 0) {
-                    Log::info('Provo a processare le tabelle direttamente');
+        // Trova tutte le tabelle nella pagina
                     $tables = $productsCrawler->filter('table');
                     Log::info('Trovate ' . $tables->count() . ' tabelle nella pagina');
                     
                     if ($tables->count() > 0) {
-                        // Process the first table with data
-                        $tableRows = $tables->first()->filter('tr');
-                        Log::info('Trovate ' . $tableRows->count() . ' righe nella prima tabella');
+            // Trova la tabella principale dei prodotti (solitamente la prima o seconda tabella)
+            $mainTable = null;
                         
-                        // Extract headers
+            // Cerca la tabella che contiene header come "Model", "Brand", ecc.
+            $tables->each(function (Crawler $table, $tableIndex) use (&$mainTable) {
+                if ($mainTable !== null) return;
+                
                         $headers = [];
-                        $headerRow = $tableRows->first();
+                $headerRow = $table->filter('tr')->first();
+                
+                // Controlla se ci sono header che sembrano essere per una tabella di prodotti
                         $headerRow->filter('th')->each(function (Crawler $th) use (&$headers) {
+                    $headerText = trim($th->text());
+                    $headers[] = $headerText;
+                });
+                
+                Log::info('Tabella #' . $tableIndex . ' headers: ' . json_encode($headers));
+                
+                // Verifica se questa tabella ha intestazioni tipiche per prodotti
+                $productHeaderKeywords = ['model', 'manufacturer', 'brand', 'cpu', 'ram', 'storage', 'grade'];
+                $isProductTable = false;
+                
+                foreach ($headers as $header) {
+                    foreach ($productHeaderKeywords as $keyword) {
+                        if (stripos($header, $keyword) !== false) {
+                            $isProductTable = true;
+                            break 2;
+                        }
+                    }
+                }
+                
+                if ($isProductTable) {
+                    $mainTable = $table;
+                    Log::info('Trovata tabella principale dei prodotti (#' . $tableIndex . ')');
+                }
+            });
+            
+            // Se non abbiamo trovato una tabella specifica, usa la prima tabella
+            if ($mainTable === null && $tables->count() > 0) {
+                $mainTable = $tables->first();
+                Log::info('Usando la prima tabella come fallback');
+            }
+            
+            // Elabora la tabella principale se l'abbiamo trovata
+            if ($mainTable !== null) {
+                $tableRows = $mainTable->filter('tr');
+                Log::info('Trovate ' . $tableRows->count() . ' righe nella tabella principale');
+                
+                if ($tableRows->count() > 0) {
+                    // Estrai le intestazioni (la prima riga)
+                    $headers = [];
+                    $tableRows->first()->filter('th')->each(function (Crawler $th) use (&$headers) {
                             $headers[] = trim($th->text());
                         });
                         
-                        Log::info('Headers della tabella: ' . json_encode($headers));
-                        
-                        // Process data rows
-                        $tableRows->slice(1)->each(function (Crawler $row, $i) use (&$products, $headers) {
-                            try {
-                                $cells = $row->filter('td');
-                                if ($cells->count() == 0) {
-                                    return; // Skip if no cells (might be a header or empty row)
-                                }
-                                
-                                $productData = [
-                                    'name' => 'Dell Laptop ' . ($i + 1),
-                                    'specs' => [],
-                                    'quantity' => 1,
-                                    'price' => '0.00'
-                                ];
-                                
-                                // Extract data from cells using headers as keys
-                                for ($j = 0; $j < min($cells->count(), count($headers)); $j++) {
-                                    $key = $headers[$j];
-                                    $value = trim($cells->eq($j)->text());
-                                    
-                                    $productData['specs'][$key] = $value;
-                                    
-                                    // Map common fields to standardized properties
-                                    if (stripos($key, 'model') !== false) {
-                                        $productData['model'] = $value;
-                                        $productData['name'] = $value;
-                                    } elseif (stripos($key, 'type') !== false) {
-                                        $productData['type'] = $value;
-                                    } elseif (stripos($key, 'brand') !== false || stripos($key, 'producer') !== false) {
-                                        $productData['producer'] = $value;
-                                    } elseif (stripos($key, 'cpu') !== false || stripos($key, 'processor') !== false) {
-                                        $productData['cpu'] = $value;
-                                    } elseif (stripos($key, 'ram') !== false || stripos($key, 'memory') !== false) {
-                                        $productData['ram'] = $value;
-                                    } elseif (stripos($key, 'hdd') !== false || stripos($key, 'ssd') !== false || stripos($key, 'drive') !== false || stripos($key, 'storage') !== false) {
-                                        $productData['drive'] = $value;
-                                    } elseif (stripos($key, 'os') !== false || stripos($key, 'operating') !== false) {
-                                        $productData['operating_system'] = $value;
-                                    } elseif (stripos($key, 'price') !== false) {
-                                        $productData['price'] = preg_replace('/[^0-9,.]/', '', $value);
-                                        $productData['price'] = str_replace(',', '.', $productData['price']);
-                                        $productData['price'] = (float)$productData['price'];
-                                    } elseif (stripos($key, 'screen') !== false || stripos($key, 'display') !== false) {
-                                        $productData['screen_size'] = $value;
-                                    } elseif (stripos($key, 'grade') !== false && stripos($key, 'visual') !== false) {
-                                        $productData['visual_grade'] = $value;
-                                    } elseif (stripos($key, 'grade') !== false && stripos($key, 'tech') !== false) {
-                                        $productData['tech_grade'] = $value;
-                                    } elseif (stripos($key, 'battery') !== false) {
-                                        $productData['battery'] = $value;
-                                    } elseif (stripos($key, 'quantity') !== false) {
-                                        $productData['quantity'] = (int)preg_replace('/[^0-9]/', '', $value);
-                                    }
-                                }
-                                
-                                $products[] = $productData;
-        } catch (\Exception $e) {
-                                Log::error('Errore durante l\'estrazione dei dati della riga della tabella: ' . $e->getMessage());
-                            }
+                    // Se non ci sono intestazioni th, prova a vedere se la prima riga contiene td con intestazioni
+                    if (empty($headers)) {
+                        $tableRows->first()->filter('td')->each(function (Crawler $td) use (&$headers) {
+                            $headers[] = trim($td->text());
                         });
+                        
+                        // Se abbiamo trovato intestazioni nelle celle td, skippiamo la prima riga
+                        $dataRows = $tableRows->slice(1);
+                    } else {
+                        // Altrimenti, usa tutte le righe tranne la prima (header)
+                        $dataRows = $tableRows->slice(1);
+                    }
+                    
+                    Log::info('Headers della tabella principale: ' . json_encode($headers));
+                    
+                    // Ora elabora ogni riga di dati
+                    foreach ($dataRows as $rowIndex => $row) {
+                        try {
+                            // Converti $row in un oggetto Crawler per poter usare il metodo filter()
+                            $rowCrawler = new Crawler($row);
+                            $cells = $rowCrawler->filter('td');
+                            
+                                if ($cells->count() == 0) {
+                                continue; // Salta righe senza celle
+                            }
+                            
+                            // Crea un array di specifiche per ogni prodotto usando gli header
+                            $productSpecs = [];
+                            $standardFields = [];
+                            
+                            // Per ogni cella, mappa il valore all'header corrispondente
+                            for ($i = 0; $i < min($cells->count(), count($headers)); $i++) {
+                                $headerKey = $headers[$i];
+                                $cellValue = trim($cells->eq($i)->text());
+                                
+                                // Salva tutte le specifiche con l'header esatto come chiave
+                                $productSpecs[$headerKey] = $cellValue;
+                                
+                                // Estrai anche informazioni standard in base al contenuto dell'header
+                                $this->extractStandardField($headerKey, $cellValue, $standardFields);
+                            }
+                            
+                            // Crea il prodotto
+                            $product = [
+                                'name' => $standardFields['name'] ?? ($standardFields['model'] ?? ('Product ' . ($rowIndex + 1))),
+                                'model' => $standardFields['model'] ?? null,
+                                'producer' => $standardFields['producer'] ?? null,
+                                'visual_grade' => $standardFields['visual_grade'] ?? null,
+                                'tech_grade' => $standardFields['tech_grade'] ?? null,
+                                'price' => $standardFields['price'] ?? 0,
+                                'quantity' => $standardFields['quantity'] ?? 1,
+                                
+                                // Importante: salva tutte le specifiche originali con i nomi degli header originali
+                                'specs' => $productSpecs
+                            ];
+                            
+                            // Aggiungi altri campi standard che possono essere presenti
+                            foreach ($standardFields as $key => $value) {
+                                if (!isset($product[$key])) {
+                                    $product[$key] = $value;
+                                }
+                            }
+                            
+                            $products[] = $product;
+        } catch (\Exception $e) {
+                            Log::error('Errore durante l\'elaborazione della riga #' . $rowIndex . ': ' . $e->getMessage());
+                        }
                     }
                 }
             }
         }
         
-        // Collect products from standard layout
-        $productRows->each(function (Crawler $row, $i) use (&$products) {
-            try {
-                // Modello/Nome prodotto
-                $nameNode = $row->filter('.product-title');
-                $name = $nameNode->count() > 0 ? trim($nameNode->text()) : 'Unknown Product ' . ($i + 1);
-                
-                // Dettagli prodotto (specifiche)
-                $specs = [];
-                $specNodes = $row->filter('.product-property');
-                $specNodes->each(function (Crawler $specNode) use (&$specs) {
-                    $label = $specNode->filter('.property-name');
-                    $value = $specNode->filter('.property-value');
-                    
-                    if ($label->count() > 0 && $value->count() > 0) {
-                        $labelText = trim($label->text());
-                        $valueText = trim($value->text());
-                        
-                        // Rimuovi i due punti dal label se presenti
-                        $labelText = rtrim($labelText, ':');
-                        
-                        $specs[$labelText] = $valueText;
-                    }
-                });
-                
-                // Estrai prezzo unitario
-                $priceNode = $row->filter('.price');
-                $price = '';
-                if ($priceNode->count() > 0) {
-                    $price = trim($priceNode->text());
+        // Se non abbiamo trovato prodotti da tabelle, proviamo altri metodi di estrazione
+        if (empty($products)) {
+            Log::info('Nessun prodotto trovato nelle tabelle, provo altri metodi di estrazione');
+            
+            // Qui potremmo implementare altri metodi di estrazione se necessario
+        }
+        
+        // Log dei dati estratti per debug
+        if (count($products) > 0) {
+            Log::info('Estratti ' . count($products) . ' prodotti dalla lista.');
+            Log::info('Esempio primo prodotto:', [
+                'specs' => isset($products[0]['specs']) ? json_encode($products[0]['specs']) : 'Nessuna specifica',
+                'standard_fields' => json_encode(array_diff_key($products[0], ['specs' => true]))
+            ]);
+        } else {
+            Log::warning('Nessun prodotto estratto dalla lista ' . $listSlug);
+        }
+        
+        return $products;
+    }
+    
+    /**
+     * Estrae campi standard dalle intestazioni della tabella e dai valori delle celle
+     */
+    private function extractStandardField($headerKey, $cellValue, &$standardFields)
+    {
+        // Normalizza l'header per il confronto
+        $normalizedHeader = strtolower(trim($headerKey));
+        
+        // Estrai dati in base al tipo di header
+        if (stripos($normalizedHeader, 'model') !== false) {
+            $standardFields['model'] = $cellValue;
+            $standardFields['name'] = $cellValue; // Usa model come nome se non viene specificato altro
+        }
+        elseif (stripos($normalizedHeader, 'manufacturer') !== false || stripos($normalizedHeader, 'brand') !== false || stripos($normalizedHeader, 'producer') !== false) {
+            $standardFields['producer'] = $cellValue;
+            $standardFields['manufacturer'] = $cellValue;
+        }
+        elseif (stripos($normalizedHeader, 'cpu') !== false || stripos($normalizedHeader, 'processor') !== false) {
+            $standardFields['cpu'] = $cellValue;
+        }
+        elseif (stripos($normalizedHeader, 'ram') !== false || stripos($normalizedHeader, 'memory') !== false) {
+            $standardFields['ram'] = $cellValue;
+        }
+        elseif (stripos($normalizedHeader, 'storage') !== false || stripos($normalizedHeader, 'hdd') !== false || stripos($normalizedHeader, 'ssd') !== false || stripos($normalizedHeader, 'drive') !== false) {
+            $standardFields['storage'] = $cellValue;
+        }
+        elseif (stripos($normalizedHeader, 'visual') !== false && stripos($normalizedHeader, 'grade') !== false) {
+            $standardFields['visual_grade'] = $cellValue;
+            
+            // Estrai anche tech_grade e problems se presenti nel campo visual_grade
+            if (preg_match('/Functionality:\s+(Working\*?|Not\s+working)/i', $cellValue, $matches)) {
+                $standardFields['functionality'] = $matches[1];
+                $standardFields['tech_grade'] = $matches[1];
+            }
+            
+            if (preg_match('/Problems:([^;]+)/i', $cellValue, $matches)) {
+                $standardFields['problems'] = trim($matches[1]);
+            }
+        }
+        elseif ((stripos($normalizedHeader, 'tech') !== false && stripos($normalizedHeader, 'grade') !== false) || 
+                stripos($normalizedHeader, 'functionality') !== false) {
+            $standardFields['tech_grade'] = $cellValue;
+            $standardFields['functionality'] = $cellValue;
+        }
+        elseif (stripos($normalizedHeader, 'problem') !== false) {
+            $standardFields['problems'] = $cellValue;
+        }
+        elseif (stripos($normalizedHeader, 'grade') !== false) {
+            // General grade field
+            $standardFields['grade'] = $cellValue;
+            // Se non abbiamo un visual_grade specifico, usiamo questo
+            if (!isset($standardFields['visual_grade'])) {
+                $standardFields['visual_grade'] = $cellValue;
+            }
+            
+            // Estrai anche tech_grade e problems se presenti nel campo grade
+            if (preg_match('/Functionality:\s+(Working\*?|Not\s+working)/i', $cellValue, $matches)) {
+                $standardFields['functionality'] = $matches[1];
+                $standardFields['tech_grade'] = $matches[1];
+            }
+            
+            if (preg_match('/Problems:([^;]+)/i', $cellValue, $matches)) {
+                $standardFields['problems'] = trim($matches[1]);
+            }
+        }
+        elseif (stripos($normalizedHeader, 'screen') !== false || stripos($normalizedHeader, 'display') !== false) {
+            $standardFields['screen_size'] = $cellValue;
+        }
+        elseif (stripos($normalizedHeader, 'price') !== false) {
                     // Estrai solo i numeri dal prezzo
-                    $price = preg_replace('/[^0-9,.]/', '', $price);
+            $price = preg_replace('/[^0-9,.]/', '', $cellValue);
                     // Converti virgole in punti
                     $price = str_replace(',', '.', $price);
                     // Converti esplicitamente in float
-                    $price = (float)$price;
-                }
-                
-                // Estrai quantità
-                $quantity = 1; // Default
-                if (isset($specs['Quantity'])) {
-                    $quantity = (int)preg_replace('/[^0-9]/', '', $specs['Quantity']);
-                }
-                
-                // Mappa i valori delle specifiche alle proprietà del prodotto
-                $productData = [
-                    'name' => $name,
-                    'type' => isset($specs['Type']) ? $specs['Type'] : null,
-                    'model' => isset($specs['Model']) ? $specs['Model'] : $name,
-                    'producer' => isset($specs['Brand']) ? $specs['Brand'] : (isset($specs['Producer']) ? $specs['Producer'] : null),
-                    'cpu' => isset($specs['CPU']) ? $specs['CPU'] : (isset($specs['Processor']) ? $specs['Processor'] : null),
-                    'ram' => isset($specs['RAM']) ? $specs['RAM'] : (isset($specs['Memory']) ? $specs['Memory'] : null),
-                    'drive' => isset($specs['HDD']) ? $specs['HDD'] : (isset($specs['SSD']) ? $specs['SSD'] : (isset($specs['Storage']) ? $specs['Storage'] : null)),
-                    'operating_system' => isset($specs['OS']) ? $specs['OS'] : (isset($specs['Operating System']) ? $specs['Operating System'] : null),
-                    'gpu' => isset($specs['GPU']) ? $specs['GPU'] : (isset($specs['Graphics']) ? $specs['Graphics'] : null),
-                    'color' => isset($specs['Color']) ? $specs['Color'] : null,
-                    'screen_size' => isset($specs['Screen Size']) ? $specs['Screen Size'] : (isset($specs['Display']) ? $specs['Display'] : null),
-                    'visual_grade' => isset($specs['Visual Grade']) ? $specs['Visual Grade'] : (isset($specs['Cosmetic']) ? $specs['Cosmetic'] : null),
-                    'tech_grade' => isset($specs['Tech Grade']) ? $specs['Tech Grade'] : (isset($specs['Technical']) ? $specs['Technical'] : null),
-                    'battery' => isset($specs['Battery']) ? $specs['Battery'] : null,
-                    'price' => $price,
-                    'quantity' => $quantity,
-                    'specs' => $specs, // Manteniamo tutte le specifiche originali
-                ];
-                
-                $products[] = $productData;
-            } catch (\Exception $e) {
-                Log::error('Errore durante l\'estrazione dei dati del prodotto: ' . $e->getMessage());
-            }
-        });
-        
-        return $products;
+            $standardFields['price'] = (float)$price;
+        }
+        elseif (stripos($normalizedHeader, 'quantity') !== false || stripos($normalizedHeader, 'qty') !== false) {
+            $standardFields['quantity'] = (int)preg_replace('/[^0-9]/', '', $cellValue);
+            if ($standardFields['quantity'] < 1) $standardFields['quantity'] = 1;
+        }
+        elseif (stripos($normalizedHeader, 'battery') !== false) {
+            $standardFields['battery'] = $cellValue;
+        }
+        elseif (stripos($normalizedHeader, 'keyboard') !== false) {
+            $standardFields['keyboard'] = $cellValue;
+        }
+        elseif (stripos($normalizedHeader, 'coa') !== false || stripos($normalizedHeader, 'license') !== false) {
+            $standardFields['coa'] = $cellValue;
+        }
+        elseif (stripos($normalizedHeader, 'webcam') !== false || stripos($normalizedHeader, 'camera') !== false) {
+            $standardFields['webcam'] = $cellValue;
+        }
     }
 
     /**
@@ -1742,13 +2087,6 @@ class ITSaleScraperController extends Controller
             elseif (stripos($key, 'screen') !== false || stripos($key, 'display') !== false) {
                 $processedItem['screen_size'] = $value;
             }
-            // Grades
-            elseif (stripos($key, 'grade') !== false && stripos($key, 'visual') !== false) {
-                $processedItem['visual_grade'] = $value;
-            }
-            elseif (stripos($key, 'grade') !== false && stripos($key, 'tech') !== false) {
-                $processedItem['tech_grade'] = $value;
-            }
             // Battery
             elseif (stripos($key, 'battery') !== false) {
                 $processedItem['battery'] = $value;
@@ -1758,6 +2096,9 @@ class ITSaleScraperController extends Controller
                 $processedItem['quantity'] = (int)preg_replace('/[^0-9]/', '', $value);
             }
         }
+        
+        // Special case for grades - handle visual_grade, tech_grade, and problems extraction
+        $this->extractGradeInformation($item, $processedItem);
         
         // Ensure we have a name
         if (!isset($processedItem['name']) && isset($processedItem['model'])) {
@@ -1770,5 +2111,251 @@ class ITSaleScraperController extends Controller
         }
         
         return $processedItem;
+    }
+    
+    /**
+     * Extract grade information from item data
+     * This handles the special case of extracting visual_grade, tech_grade and problems
+     * from various fields like "Visual grade" which contains multiple pieces of information
+     */
+    private function extractGradeInformation($item, &$processedItem)
+    {
+        // Log what we're processing for debugging
+        Log::info('Extracting grade information from: ', [
+            'item_keys' => array_keys($item),
+            'raw_item' => $item // Log dell'item completo per debug
+        ]);
+        
+        // Extract Visual Grade
+        // Priority: 1. Visual grade field > 2. Extract from "Grade X Visual grade: X" pattern > 3. LCD Quality
+        
+        // Extract from Visual grade field - PRIORITARIO
+        if (isset($item['Visual grade'])) {
+            $visualGradeValue = $item['Visual grade'];
+            Log::info('Visual grade field trovato', [
+                'value' => $visualGradeValue
+            ]);
+            
+            // Extract the simple grade letter if it matches pattern "Grade X Visual grade: X"
+            if (preg_match('/Grade\s+([A-Z][\-\+]?)\s+Visual\s+grade:\s+([A-Z][\-\+]?)/i', $visualGradeValue, $matches)) {
+                $processedItem['grade'] = $matches[1]; // Primo match è il grade principale
+                $processedItem['visual_grade'] = $matches[2]; // Secondo match è il visual grade
+                
+                Log::info('Grade estratto da pattern completo in Visual grade', [
+                    'grade' => $matches[1],
+                    'visual_grade' => $matches[2]
+                ]);
+                
+                // Also extract functionality and problems while we're here
+                if (preg_match('/Functionality:\s+(Working\*?|Not\s+working)/i', $visualGradeValue, $funcMatches)) {
+                    $processedItem['tech_grade'] = trim($funcMatches[1]);
+                    $processedItem['functionality'] = trim($funcMatches[1]);
+                }
+                
+                if (preg_match('/Problems:\s*([^;]+)/i', $visualGradeValue, $probMatches) && !empty(trim($probMatches[1]))) {
+                    $processedItem['problems'] = trim($probMatches[1]);
+                }
+            }
+            // Se non corrisponde al pattern completo, prova a estrarre solo il grade
+            else if (preg_match('/Grade\s+([A-Z][\-\+]?)/i', $visualGradeValue, $simpleMatches)) {
+                $processedItem['grade'] = $simpleMatches[1];
+                $processedItem['visual_grade'] = $simpleMatches[1];
+                
+                Log::info('Grade estratto da pattern semplice in Visual grade', [
+                    'grade' => $simpleMatches[1]
+                ]);
+            }
+        }
+        
+        // Log il risultato intermedio dopo l'estrazione da Visual grade
+        Log::info('Risultato intermedio dopo estrazione da Visual grade', [
+            'grade' => $processedItem['grade'] ?? 'non impostato',
+            'visual_grade' => $processedItem['visual_grade'] ?? 'non impostato'
+        ]);
+        
+        // Verifica se il grade viene corretto dal campo Grade diretto (se presente)
+        if (isset($item['Grade']) && !empty($item['Grade'])) {
+            Log::info('Campo Grade diretto trovato', [
+                'value' => $item['Grade']
+            ]);
+            
+            // Estrai il grado direttamente se è un singolo carattere
+            if (preg_match('/^[A-Z][\-\+]?$/i', trim($item['Grade']))) {
+                // Non sovrascriviamo grade se già impostato da Visual grade
+                if (!isset($processedItem['grade'])) {
+                    $processedItem['grade'] = strtoupper(trim($item['Grade']));
+                }
+                
+                // Manteniamo separato visual_grade da grade
+                if (!isset($processedItem['visual_grade'])) {
+                    $processedItem['visual_grade'] = strtoupper(trim($item['Grade']));
+                }
+                
+                Log::info('Grade estratto direttamente dal campo Grade', [
+                    'grade' => $processedItem['grade']
+                ]);
+            }
+            // Altrimenti prova a estrarre da un formato più complesso
+            else if (preg_match('/Grade\s+([A-Z][\-\+]?)/i', $item['Grade'], $gradeMatches)) {
+                // Non sovrascriviamo grade se già impostato da Visual grade
+                if (!isset($processedItem['grade'])) {
+                    $processedItem['grade'] = $gradeMatches[1];
+                }
+                
+                // Manteniamo separato visual_grade da grade
+                if (!isset($processedItem['visual_grade'])) {
+                    $processedItem['visual_grade'] = $gradeMatches[1];
+                }
+                
+                Log::info('Grade estratto da pattern nel campo Grade', [
+                    'grade' => $processedItem['grade']
+                ]);
+            }
+        }
+        
+        // LCD Quality come fallback solo se non abbiamo trovato visual_grade altrove
+        if (!isset($processedItem['visual_grade']) && isset($item['LCD Quality']) && !empty($item['LCD Quality'])) {
+            $processedItem['visual_grade'] = $item['LCD Quality'];
+            // NON impostiamo grade da LCD Quality
+            
+            Log::info('Visual Grade estratto da LCD Quality come fallback', [
+                'value' => $item['LCD Quality']
+            ]);
+        }
+        
+        // Extract Tech Grade / Functionality
+        // Priority: 1. Functionality field > 2. Tech_grade field > 3. Extract from Visual grade
+        if (isset($item['Functionality']) && !empty($item['Functionality'])) {
+            $processedItem['tech_grade'] = $item['Functionality'];
+            $processedItem['functionality'] = $item['Functionality'];
+        }
+        
+        // Extract Problems
+        if (isset($item['Problems']) && !empty($item['Problems'])) {
+            $processedItem['problems'] = $item['Problems'];
+        }
+        
+        // Extra check for original_specs in JSON format
+        if (isset($item['original_specs']) && is_string($item['original_specs'])) {
+            try {
+                $specs = json_decode($item['original_specs'], true);
+                if (is_array($specs)) {
+                    // Extract grade information from specs
+                    $this->extractFromJsonSpecs($specs, $processedItem);
+                }
+            } catch (\Exception $e) {
+                Log::warning('Error parsing original_specs as JSON: ' . $e->getMessage());
+            }
+        }
+        
+        // Process the specs array if present
+        if (isset($item['specs']) && is_array($item['specs'])) {
+            $this->extractFromJsonSpecs($item['specs'], $processedItem);
+        }
+        
+        // Log il risultato finale
+        Log::info('Risultato finale dell\'estrazione del grade', [
+            'grade' => $processedItem['grade'] ?? 'non impostato',
+            'visual_grade' => $processedItem['visual_grade'] ?? 'non impostato',
+            'tech_grade' => $processedItem['tech_grade'] ?? 'non impostato'
+        ]);
+    }
+    
+    /**
+     * Extract grade information from JSON specs
+     */
+    private function extractFromJsonSpecs($specs, &$processedItem)
+    {
+        Log::info('Extracting from JSON specs', [
+            'spec_keys' => array_keys($specs)
+        ]);
+        
+        // Prima gestione di 'Grade' diretto per assicurarci che abbia priorità
+        if (isset($specs['Grade']) && !empty($specs['Grade'])) {
+            Log::info('Campo Grade in specs', [
+                'value' => $specs['Grade']
+            ]);
+            
+            if (preg_match('/^[A-Z][\-\+]?$/i', trim($specs['Grade']))) {
+                $processedItem['grade'] = strtoupper(trim($specs['Grade']));
+                // Non sovrascriviamo visual_grade se già impostato
+                if (!isset($processedItem['visual_grade'])) {
+                    $processedItem['visual_grade'] = strtoupper(trim($specs['Grade']));
+                }
+                
+                Log::info('Grade estratto direttamente da specs Grade', [
+                    'grade' => $processedItem['grade']
+                ]);
+            } else if (preg_match('/Grade\s+([A-Z][\-\+]?)/i', $specs['Grade'], $gradeMatches)) {
+                $processedItem['grade'] = $gradeMatches[1];
+                // Non sovrascriviamo visual_grade se già impostato
+                if (!isset($processedItem['visual_grade'])) {
+                    $processedItem['visual_grade'] = $gradeMatches[1];
+                }
+                
+                Log::info('Grade estratto da pattern in specs Grade', [
+                    'grade' => $gradeMatches[1]
+                ]);
+            }
+        }
+        
+        foreach ($specs as $key => $value) {
+            if ($key === 'Visual grade' && !empty($value)) {
+                Log::info('Visual grade in specs', [
+                    'value' => $value
+                ]);
+                
+                // Extract visual grade
+                if (preg_match('/Grade\s+([A-Z][\-\+]?)\s+Visual\s+grade:\s+([A-Z][\-\+]?)/i', $value, $matches)) {
+                    // Per il grade, manteniamo il valore già esistente se presente
+                    if (!isset($processedItem['grade'])) {
+                        $processedItem['grade'] = $matches[1];
+                    }
+                    $processedItem['visual_grade'] = $matches[2];
+                    
+                    Log::info('Grade estratto da specs con pattern completo', [
+                        'grade' => $matches[1],
+                        'visual_grade' => $matches[2]
+                    ]);
+                }
+                // Se non corrisponde al pattern completo, prova a estrarre solo il grade
+                else if (preg_match('/Grade\s+([A-Z][\-\+]?)/i', $value, $simpleMatches)) {
+                    // Per il grade, manteniamo il valore già esistente se presente
+                    if (!isset($processedItem['grade'])) {
+                        $processedItem['grade'] = $simpleMatches[1];
+                    }
+                    $processedItem['visual_grade'] = $simpleMatches[1];
+                    
+                    Log::info('Grade estratto da specs con pattern semplice', [
+                        'grade' => $simpleMatches[1]
+                    ]);
+                }
+                
+                // Extract functionality
+                if (preg_match('/Functionality:\s+(Working\*?|Not\s+working)/i', $value, $matches)) {
+                    $processedItem['tech_grade'] = trim($matches[1]);
+                    $processedItem['functionality'] = trim($matches[1]);
+                }
+                
+                // Extract problems
+                if (preg_match('/Problems:\s*([^;]+)/i', $value, $matches) && !empty(trim($matches[1]))) {
+                    $processedItem['problems'] = trim($matches[1]);
+                }
+            } elseif ($key === 'Functionality' && !empty($value)) {
+                $processedItem['tech_grade'] = $value;
+                $processedItem['functionality'] = $value;
+            } elseif ($key === 'Problems' && !empty($value)) {
+                $processedItem['problems'] = $value;
+            } elseif ($key === 'LCD Quality' && !empty($value)) {
+                // LCD Quality come fallback solo per visual_grade e solo se non è già impostato
+                if (!isset($processedItem['visual_grade'])) {
+                    $processedItem['visual_grade'] = $value;
+                    
+                    Log::info('Visual Grade estratto da LCD Quality in specs come fallback', [
+                        'value' => $value
+                    ]);
+                }
+            }
+        }
     }
 } 

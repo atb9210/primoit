@@ -105,42 +105,68 @@
                     
                     @if(is_array($batch->products) && count($batch->products) > 0)
                     <div class="overflow-x-auto">
-                            <table class="min-w-full bg-white border border-gray-300">
+                            <table class="min-w-full bg-white border border-gray-300 text-xs">
                                 <thead>
                                 <tr>
-                                        <th class="px-4 py-2 bg-gray-100 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Manufacturer</th>
-                                        <th class="px-4 py-2 bg-gray-100 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Model</th>
-                                        <th class="px-4 py-2 bg-gray-100 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Grade</th>
-                                        <th class="px-4 py-2 bg-gray-100 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Tech Grade</th>
-                                        <th class="px-4 py-2 bg-gray-100 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Price</th>
-                                        <th class="px-4 py-2 bg-gray-100 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Quantity</th>
+                                        <th class="px-2 py-2 bg-gray-100 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Manufacturer</th>
+                                        <th class="px-2 py-2 bg-gray-100 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Model</th>
+                                        <th class="px-2 py-2 bg-gray-100 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Grade</th>
+                                        <th class="px-2 py-2 bg-gray-100 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Tech Grade</th>
+                                        <th class="px-2 py-2 bg-gray-100 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Price</th>
+                                        <th class="px-2 py-2 bg-gray-100 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Qty</th>
                                         
                                         @if(is_array($batch->specifications))
                                             @foreach($batch->specifications as $key => $value)
-                                                <th class="px-4 py-2 bg-gray-100 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">{{ ucfirst(str_replace('_', ' ', $key)) }}</th>
+                                                @if(!in_array($key, ['grade', 'visual_grade', 'tech_grade', 'original_specs']))
+                                                <th class="px-2 py-2 bg-gray-100 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">{{ ucfirst(str_replace('_', ' ', $key)) }}</th>
+                                                @endif
                                             @endforeach
-                                                    @endif
+                                        @endif
                                     </tr>
                                 </thead>
                                 <tbody class="divide-y divide-gray-300">
                                     @foreach($batch->products as $product)
                                     <tr>
-                                            <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900">{{ $product['manufacturer'] }}</td>
-                                            <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900">{{ $product['model'] }}</td>
-                                            <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900">{{ $product['grade'] ?? 'N/A' }}</td>
-                                            <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900">{{ $product['tech_grade'] ?? 'N/A' }}</td>
-                                            <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900">@formatPrice($product['price'])</td>
-                                            <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900">{{ $product['quantity'] }}</td>
+                                            <td class="px-2 py-2 whitespace-nowrap text-xs text-gray-900">{{ $product['manufacturer'] }}</td>
+                                            <td class="px-2 py-2 whitespace-nowrap text-xs text-gray-900">{{ $product['model'] }}</td>
+                                            <td class="px-2 py-2 whitespace-nowrap text-xs text-gray-900">{{ $product['grade'] ?? '-' }}</td>
+                                            <td class="px-2 py-2 whitespace-nowrap text-xs 
+                                                @if(isset($product['tech_grade']))
+                                                    @if($product['tech_grade'] === 'Working')
+                                                        text-green-600 font-semibold
+                                                    @elseif($product['tech_grade'] === 'Working*')
+                                                        text-amber-600 font-semibold
+                                                    @elseif($product['tech_grade'] === 'Not working')
+                                                        text-red-600 font-semibold
+                                                    @else
+                                                        text-gray-900
+                                                    @endif
+                                                @else
+                                                    text-gray-400
+                                                @endif">
+                                                {{ $product['tech_grade'] ?? '-' }}
+                                                @if(isset($product['problems']) && !empty($product['problems']))
+                                                    <span class="block text-gray-500 text-xs italic truncate max-w-xs">{{ $product['problems'] }}</span>
+                                                @endif
+                                            </td>
+                                            <td class="px-2 py-2 whitespace-nowrap text-xs text-gray-900">@formatPrice($product['price'])</td>
+                                            <td class="px-2 py-2 whitespace-nowrap text-xs text-gray-900">{{ $product['quantity'] }}</td>
                                             
                                             @if(is_array($batch->specifications))
                                                 @foreach($batch->specifications as $key => $value)
-                                                    <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
-                                                        @if(isset($product['parameters']) && is_array($product['parameters']) && isset($product['parameters'][$key]))
-                                                            {{ $product['parameters'][$key] }}
+                                                    @if(!in_array($key, ['grade', 'visual_grade', 'tech_grade', 'original_specs']))
+                                                    <td class="px-2 py-2 whitespace-nowrap text-xs text-gray-900">
+                                                        @if(isset($product[$key]))
+                                                            @if(is_array($product[$key]))
+                                                                {{ json_encode($product[$key]) }}
+                                                            @else
+                                                                {{ $product[$key] }}
+                                                            @endif
                                                         @else
                                                             <span class="text-gray-400">-</span>
                                                         @endif
                                                     </td>
+                                                    @endif
                                                 @endforeach
                                             @endif
                                     </tr>

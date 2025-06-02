@@ -174,10 +174,10 @@
                                     </div>
                                 </div>
                                 
-                                <div id="image-preview-container" class="mt-2 {{ count(is_array($batch->images) ? $batch->images : []) > 0 ? '' : 'hidden' }}">
+                                <div id="image-preview-container" class="mt-2 {{ count(is_array($batch->images) && !empty($batch->images) ? $batch->images : []) > 0 ? '' : 'hidden' }}">
                                     <label class="block text-sm font-medium text-gray-700 mb-1">Existing Images</label>
                                     <div class="grid grid-cols-2 sm:grid-cols-3 gap-2" id="existing-images">
-                                        @if(is_array($batch->images))
+                                        @if(is_array($batch->images) && !empty($batch->images))
                                             @php
                                                 $defaultImage = isset($batch->images['default']) ? $batch->images['default'] : null;
                                                 $numericImages = array_filter($batch->images, function($key) {
@@ -186,6 +186,7 @@
                                             @endphp
                                             
                                             @foreach($numericImages as $index => $image)
+                                                @if(is_string($image))
                                                 <div class="relative group cursor-pointer border rounded-md overflow-hidden {{ $defaultImage && $defaultImage === $image ? 'ring-2 ring-indigo-500' : '' }}" data-index="{{ $index }}">
                                                     <img src="{{ asset('storage/' . $image) }}" alt="Batch Image" class="h-24 w-full object-cover">
                                                     <div class="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
@@ -201,10 +202,11 @@
                                                         </label>
                                                     </div>
                                                 </div>
+                                                @endif
                                             @endforeach
                                         @endif
                                     </div>
-                                    <input type="hidden" name="default_image_index" id="default_image_index" value="{{ isset($batch->images['default']) ? array_search($batch->images['default'], $batch->images) : 0 }}">
+                                    <input type="hidden" name="default_image_index" id="default_image_index" value="{{ isset($batch->images['default']) && is_string($batch->images['default']) ? array_search($batch->images['default'], is_array($batch->images) ? $batch->images : []) : 0 }}">
                                     <p class="text-xs text-gray-500 mt-1">Click on an image to set it as default. Hover and click 'Remove' to mark for deletion.</p>
                                 </div>
                                 
@@ -369,8 +371,9 @@
                                 
                                 <div id="dynamic-parameters" class="flex flex-wrap gap-2 mb-4">
                                     <!-- Existing parameters will be displayed here -->
-                                    @if(is_array($batch->specifications))
+                                    @if(is_array($batch->specifications) && !empty($batch->specifications))
                                         @foreach($batch->specifications as $key => $value)
+                                            @if(is_string($key) && is_string($value))
                                             <div class="dynamic-param-tag bg-blue-100 text-blue-800 px-3 py-1.5 rounded-full flex items-center">
                                                 <span class="text-sm mr-2">{{ $key }}</span>
                                                 <input type="hidden" name="param_keys[]" value="{{ $key }}">
@@ -381,6 +384,7 @@
                                                     </svg>
                                                 </button>
                                             </div>
+                                            @endif
                                         @endforeach
                                     @endif
                                 </div>
@@ -435,8 +439,9 @@
                                         </tr>
                                     </thead>
                                     <tbody class="bg-white divide-y divide-gray-200" id="product-rows">
-                                        @if(is_array($batch->products) && count($batch->products) > 0)
+                                        @if(is_array($batch->products) && !empty($batch->products))
                                             @foreach($batch->products as $index => $product)
+                                            @if(is_array($product) && isset($product['manufacturer']) && isset($product['model']) && isset($product['quantity']) && isset($product['price']))
                                             <tr class="product-row">
                                                 <td class="px-4 py-3">
                                                         <div class="text-sm text-gray-900">
@@ -462,6 +467,7 @@
                                                     </button>
                                                 </td>
                                             </tr>
+                                            @endif
                                         @endforeach
                                         @endif
                                     </tbody>

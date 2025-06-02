@@ -15,6 +15,24 @@ class BatchController extends Controller
     public function index()
     {
         $batches = Batch::paginate(15);
+        
+        // Aggiorna total_quantity per ogni batch
+        foreach ($batches as $batch) {
+            // Verifica se ci sono prodotti e aggiorna total_quantity
+            if (is_array($batch->products) && count($batch->products) > 0) {
+                $totalQuantity = 0;
+                foreach ($batch->products as $product) {
+                    $totalQuantity += (int)($product['quantity'] ?? 0);
+                }
+                
+                // Aggiorna solo se ci sono differenze
+                if ($batch->total_quantity != $totalQuantity) {
+                    $batch->total_quantity = $totalQuantity;
+                    $batch->save();
+                }
+            }
+        }
+        
         return view('admin.batches.index', compact('batches'));
     }
 

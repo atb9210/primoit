@@ -28,7 +28,6 @@
                                     <th class="px-6 py-3 bg-gray-100 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Name</th>
                                     <th class="px-6 py-3 bg-gray-100 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Reference Code</th>
                                     <th class="px-6 py-3 bg-gray-100 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Status</th>
-                                    <th class="px-6 py-3 bg-gray-100 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Products</th>
                                     <th class="px-6 py-3 bg-gray-100 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Total Price</th>
                                     <th class="px-6 py-3 bg-gray-100 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Total Quantity</th>
                                     <th class="px-6 py-3 bg-gray-100 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Actions</th>
@@ -49,7 +48,6 @@
                                                 {{ ucfirst($batch->status) }}
                                             </span>
                                         </td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $batch->products_count }}</td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">@formatPrice($batch->total_price)</td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $batch->total_quantity }}</td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
@@ -67,7 +65,7 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="8" class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">No batches found.</td>
+                                        <td colspan="7" class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">No batches found.</td>
                                     </tr>
                                 @endforelse
                             </tbody>
