@@ -12,9 +12,23 @@ class BatchController extends Controller
     /**
      * Display a listing of the batches.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $batches = Batch::paginate(15);
+        // Applicazione dei filtri
+        $query = Batch::query();
+        
+        // Filtro per stato
+        if ($request->has('status') && in_array($request->status, ['active', 'reserved', 'sold', 'draft'])) {
+            $query->where('status', $request->status);
+        }
+        
+        // Filtro per tipo sorgente
+        if ($request->has('source_type') && in_array($request->source_type, ['internal', 'external', 'imported'])) {
+            $query->where('source_type', $request->source_type);
+        }
+        
+        // Recupero dei batches paginati
+        $batches = $query->paginate(15)->withQueryString();
         
         // Aggiorna total_quantity per ogni batch
         foreach ($batches as $batch) {

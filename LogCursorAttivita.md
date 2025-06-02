@@ -478,3 +478,14 @@
 - 03/06/2024 15:32 - Aggiunto controllo di validità per array di specifiche prodotto
 - 03/06/2024 15:32 - Aggiunto controllo di validità per array di prodotti nel batch
 - 03/06/2024 15:32 - Eseguiti php artisan config:clear, cache:clear, view:clear, route:clear e optimize
+
+- 03/06/2024 16:15 - Eliminati tutti i batch dal database per ripartire da zero
+- 03/06/2024 16:15 - Eseguito App\Models\Batch::truncate() tramite tinker
+- 03/06/2024 16:15 - Commit e push delle modifiche al repository GitHub
+- 03/06/2024 16:15 - Commit message: "Eliminati tutti i batch dal database per ripartire da zero"
+- 03/06/2024 16:30 - Ottimizzata completamente la vista admin/batches/index.blade.php
+- 03/06/2024 16:30 - Implementata visualizzazione a card con icone, statistiche e filtri rapidi
+- 03/06/2024 16:30 - Migliorate le informazioni mostrate per ogni batch con campi utili e tag colorati
+- 03/06/2024 16:30 - Aggiunto supporto per filtri di stato (active, reserved, sold) e sorgente (internal, external)
+- 03/06/2024 16:30 - Migliorato il controller BatchController per supportare i nuovi filtri
+- 03/06/2024 16:30 - Eseguiti php artisan config:clear, cache:clear, view:clear, route:clear, optimize
