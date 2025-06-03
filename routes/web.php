@@ -103,6 +103,7 @@ Route::middleware(['auth', 'verified', \App\Http\Middleware\AdminMiddleware::cla
     Route::delete('batches/{batch}/remove-product/{index}', [AdminBatchController::class, 'removeProduct'])->name('batches.remove-product');
     Route::get('batches/{batch}/print-label', [AdminBatchController::class, 'printLabel'])->name('batches.print-label');
     Route::get('batches/{batch}/print-product-labels', [AdminBatchController::class, 'printProductLabels'])->name('batches.print-product-labels');
+    Route::get('batches/{batch}/generate-pdf', [AdminBatchController::class, 'generatePdf'])->name('batches.generate-pdf');
     Route::get('batches/{batch}/download-product-labels', [AdminBatchController::class, 'downloadProductLabelsPdf'])->name('batches.download-product-labels');
     
     // Categories

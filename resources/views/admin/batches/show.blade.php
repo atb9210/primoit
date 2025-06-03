@@ -37,6 +37,13 @@
                     {{ __('Print Product Labels') }}
                 </a>
 
+                <a href="{{ route('admin.batches.generate-pdf', $batch) }}" target="_blank" class="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition ease-in-out duration-150">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    {{ __('Generate PDF') }}
+                </a>
+
                 <!-- Pulsante alternativo in caso si utilizzi un altro stile -->
                 <a href="{{ route('admin.batches.print-label', $batch) }}" target="_blank" class="bg-amber-500 text-white px-4 py-2 rounded-md uppercase text-xs font-bold flex items-center ml-2">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">

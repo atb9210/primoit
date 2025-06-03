@@ -518,4 +518,36 @@ class BatchController extends Controller
         return redirect()->route('admin.batches.manage-products', $batch)
             ->with('success', 'Product removed from batch successfully.');
     }
+
+    /**
+     * Generate a PDF report for the batch with detailed product information.
+     */
+    public function generatePdf(Batch $batch)
+    {
+        // Get the product count for this batch
+        $productCount = 0;
+        if (is_array($batch->products)) {
+            $productCount = count($batch->products);
+        }
+
+        // Calculate total values for summary
+        $totalQuantity = 0;
+        $totalPrice = 0;
+        
+        if (is_array($batch->products) && count($batch->products) > 0) {
+            foreach ($batch->products as $product) {
+                $totalQuantity += (int)($product['quantity'] ?? 0);
+                $totalPrice += (float)($product['price'] ?? 0) * (int)($product['quantity'] ?? 0);
+            }
+        }
+
+        // Load the category
+        $category = \App\Models\Category::find($batch->category_id);
+
+        // Generate PDF with landscape orientation
+        $pdf = \PDF::loadView('admin.batches.pdf', compact('batch', 'productCount', 'totalQuantity', 'totalPrice', 'category'))
+            ->setPaper('a4', 'landscape');
+        
+        return $pdf->stream('batch-' . $batch->reference_code . '.pdf');
+    }
 }

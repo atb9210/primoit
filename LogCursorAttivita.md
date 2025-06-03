@@ -498,9 +498,45 @@
 
 ## 20/06/2024
 
-- 15:30 - Risolto problema con il form di importazione che veniva inviato come GET invece di POST
-- 15:30 - Corretto errore di sintassi JavaScript (elseif -> else if) nel file import-form.blade.php
-- 15:30 - Migliorato il codice JavaScript che gestisce il submit del form per garantire l'invio come POST
-- 15:30 - Forzato l'uso di fetch() con method POST per evitare problemi con alcuni browser
-- 15:30 - Corretto errore di parentesi graffe mancanti in ITSaleScraperController.php
+- 15:30 - Ristrutturato completamente il layout del template PDF per i batch
+- 15:30 - Rimossa la colonna "Price" (prezzo unitario) per eliminare ridondanza
+- 15:30 - Rinominato la colonna "Total" in "Price" per maggiore chiarezza
+- 15:30 - Spostate le colonne "Qty" e "Price" subito dopo "Tech Grade" per migliorare organizzazione visiva
+- 15:30 - Aumentata la larghezza della colonna "Problems/Notes" dal 14% al 16% per maggiori dettagli
+- 15:30 - Ottimizzata la riga dei totali per adattarsi al nuovo layout delle colonne
 - 15:30 - Eseguiti php artisan config:clear, cache:clear, view:clear, route:clear e optimize
+
+- 20-06-2024 15:00 - Mantenuto layout compatto con Tech Grade e CPU scritti per intero per maggiore chiarezza
+- 20-06-2024 15:00 - Eseguiti php artisan config:clear, cache:clear, view:clear, route:clear e optimize
+
+- 20-06-2024 15:15 - Ottimizzato ulteriormente il template PDF dei batch per massimizzare lo spazio
+- 20-06-2024 15:15 - Rimossa completamente la colonna "Created" per recuperare spazio orizzontale
+- 20-06-2024 15:15 - Ridotte le larghezze delle colonne "Producer" (dal 5% al 4%) e "RAM" (dal 4% al 3%)
+- 20-06-2024 15:15 - Aumentata la larghezza della colonna "Problems/Notes" dal 13% al 14% per maggiori dettagli
+- 20-06-2024 15:15 - Ridotta la lunghezza massima del testo produttore da 12 a 10 caratteri per evitare overflow
+- 20-06-2024 15:15 - Eseguiti php artisan config:clear, cache:clear, view:clear, route:clear e optimize
+
+- 20-06-2024 15:45 - Riorganizzato completamente il layout della tabella prodotti nel PDF dei batch
+- 20-06-2024 15:45 - Rimossa la colonna "Price" (prezzo unitario) mantenendo solo il prezzo totale
+- 20-06-2024 15:45 - Rinominato la colonna "Total" in "Price" per maggiore immediatezza
+- 20-06-2024 15:45 - Spostate le colonne "Qty" e "Price" subito dopo "Tech Grade" all'inizio della tabella
+- 20-06-2024 15:45 - Aumentata la larghezza della colonna "Problems/Notes" al 16% per migliorare leggibilità
+- 20-06-2024 15:45 - Ottimizzata la riga dei totali con nuova struttura di colspan per adattarsi al layout modificato
+- 20-06-2024 15:45 - Eseguiti php artisan config:clear, cache:clear, view:clear, route:clear e optimize
+
+- 20-06-2024 16:00 - Effettuate ultime ottimizzazioni al template PDF dei batch
+- 20-06-2024 16:00 - Ridotta la larghezza della colonna "Price" dal 4% al 3% per maggiore compattezza
+- 20-06-2024 16:00 - Ridotta la larghezza della colonna "RAM" dal 3% al 2% per risparmiare ulteriore spazio
+- 20-06-2024 16:00 - Aumentata la larghezza della colonna "Problems/Notes" dal 16% al 18% 
+- 20-06-2024 16:00 - Centralizzato tutte le intestazioni e i contenuti delle celle per un layout più ordinato
+- 20-06-2024 16:00 - Eseguiti php artisan config:clear, cache:clear, view:clear, route:clear e optimize
+
+- 20-06-2024 16:15 - Perfezionato l'allineamento delle colonne nel template PDF
+- 20-06-2024 16:15 - Mantenuto l'allineamento a sinistra per la colonna "Res" (Risoluzione) per migliore leggibilità
+- 20-06-2024 16:15 - Lasciato centralizzate tutte le altre colonne per mantenere uniformità nel layout
+- 20-06-2024 16:15 - Eseguiti php artisan config:clear, cache:clear, view:clear, route:clear e optimize
+
+- 20-06-2024 16:30 - Uniformato l'allineamento delle colonne correlate nel template PDF
+- 20-06-2024 16:30 - Allineata a sinistra anche la colonna "Screen" per mantenere coerenza con "Res"
+- 20-06-2024 16:30 - Migliorata la leggibilità dei valori dimensionali correlati (dimensione schermo e risoluzione)
+- 20-06-2024 16:30 - Eseguiti php artisan config:clear, cache:clear, view:clear, route:clear e optimize
