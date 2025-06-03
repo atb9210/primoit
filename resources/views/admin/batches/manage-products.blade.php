@@ -197,74 +197,55 @@
                     
                     @if(is_array($batch->products) && count($batch->products) > 0)
                         <div class="overflow-x-auto">
-                            <table class="min-w-full divide-y divide-gray-200 border">
+                            <table class="min-w-full divide-y divide-gray-200 mt-6">
                                 <thead class="bg-gray-50">
                                     <tr>
-                                        <th class="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-r">Images</th>
-                                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r">Manufacturer</th>
-                                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r">Model</th>
-                                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r">Grade</th>
-                                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r">Tech Grade</th>
-                                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r">Problems</th>
-                                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r">Price</th>
-                                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r">Quantity</th>
-                                        
-                                        @if(is_array($batch->specifications))
-                                            @foreach($batch->specifications as $key => $value)
-                                                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r">{{ ucfirst(str_replace('_', ' ', $key)) }}</th>
-                                            @endforeach
-                                        @endif
-                                        
-                                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Product</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Grade</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quantity</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody class="bg-white divide-y divide-gray-200">
+                                    @if(is_array($batch->products) && !empty($batch->products))
                                     @foreach($batch->products as $index => $product)
-                                        <tr class="hover:bg-gray-50">
-                                            <td class="px-4 py-2 whitespace-nowrap text-sm text-center border-r">
-                                                @if(isset($product['images']) && !empty($product['images']))
-                                                    <span class="inline-flex items-center justify-center h-8 w-8 rounded-full bg-green-100 cursor-pointer" onclick="openProductImagesModal({{ $index }})">
-                                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                                        </svg>
-                                                    </span>
-                                                @else
-                                                    <span class="inline-flex items-center justify-center h-8 w-8 rounded-full bg-gray-100">
-                                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
-                                                        </svg>
-                                                    </span>
+                                            <tr>
+                                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                                    {{ $product['id'] ?? ($batch->reference_code . '-' . ($index + 1)) }}
+                                                </td>
+                                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                                    {{ $product['manufacturer'] }} {{ $product['model'] }}
+                                                </td>
+                                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                    {{ $product['grade'] }} / {{ $product['tech_grade'] }}
+                                                    @if(isset($product['problems']) && !empty($product['problems']))
+                                                        <span class="block text-xs text-red-600">{{ $product['problems'] }}</span>
                                                 @endif
                                             </td>
-                                            <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900 border-r">{{ $product['manufacturer'] }}</td>
-                                            <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900 border-r">{{ $product['model'] }}</td>
-                                            <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900 border-r">{{ $product['grade'] ?? '-' }}</td>
-                                            <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900 border-r">{{ $product['tech_grade'] ?? 'N/A' }}</td>
-                                            <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900 border-r">{{ $product['problems'] ?? '-' }}</td>
-                                            <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900 border-r">@formatPrice($product['price'])</td>
-                                            <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900 border-r">{{ $product['quantity'] }}</td>
-                                            
-                                            @if(is_array($batch->specifications))
-                                                @foreach($batch->specifications as $key => $value)
-                                                    <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900 border-r">
-                                                        @if(isset($product['parameters']) && is_array($product['parameters']) && isset($product['parameters'][$key]))
-                                                            {{ $product['parameters'][$key] }}
-                                                        @else
-                                                            <span class="text-gray-400">-</span>
-                                                        @endif
+                                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                    @formatPrice($product['price'])
+                                                </td>
+                                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                    {{ $product['quantity'] }}
+                                                </td>
+                                                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                                    <a href="{{ route('admin.batches.remove-product', ['batch' => $batch->id, 'index' => $index]) }}" 
+                                                       class="text-red-600 hover:text-red-900"
+                                                       onclick="return confirm('Are you sure you want to remove this product?');">
+                                                        Remove
+                                                    </a>
                                                     </td>
+                                            </tr>
                                                 @endforeach
-                                            @endif
-                                            
-                                            <td class="px-4 py-2 whitespace-nowrap text-sm font-medium">
-                                                <form action="{{ route('admin.batches.remove-product', ['batch' => $batch->id, 'index' => $index]) }}" method="POST" class="inline-block" onsubmit="return confirm('Are you sure you want to remove this product?');">
-                                                    @csrf
-                                                    @method('DELETE')
-                                                    <button type="submit" class="text-red-600 hover:text-red-900">Remove</button>
-                                                </form>
+                                    @else
+                                        <tr>
+                                            <td colspan="6" class="px-6 py-4 text-center text-sm text-gray-500">
+                                                No products in this batch yet.
                                             </td>
                                         </tr>
-                                    @endforeach
+                                    @endif
                                 </tbody>
                             </table>
                         </div>

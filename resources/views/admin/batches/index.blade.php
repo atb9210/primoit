@@ -217,6 +217,18 @@
                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                                                     </svg>
                                                 </a>
+
+                                                <a href="{{ route('admin.batches.print-label', $batch) }}" target="_blank" class="inline-flex items-center px-1.5 py-0.5 bg-amber-100 border border-amber-300 rounded text-xs text-amber-700 hover:bg-amber-200">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                                                    </svg>
+                                                </a>
+                                                
+                                                <a href="{{ route('admin.batches.print-product-labels', $batch) }}" target="_blank" class="inline-flex items-center px-1.5 py-0.5 bg-indigo-100 border border-indigo-300 rounded text-xs text-indigo-700 hover:bg-indigo-200" title="Print Product Labels">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
+                                                    </svg>
+                                                </a>
                                                 
                                                 <form action="{{ route('admin.batches.destroy', $batch) }}" method="POST" class="inline" onsubmit="return confirm('Are you sure you want to delete this batch?');">
                                                     @csrf

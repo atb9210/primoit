@@ -15,7 +15,7 @@
         </div>
     </x-slot>
 
-    <div class="py-6 px-4 sm:px-6 lg:px-8">
+    <div class="py-4 px-2 sm:px-4 lg:px-6">
         <div class="max-w-7xl mx-auto">
             <!-- Status Messages -->
             @if (session('success'))
@@ -49,35 +49,44 @@
             @endif
 
             <!-- Import Form -->
-            <div class="bg-white rounded-lg shadow-sm overflow-hidden mb-6">
-                <div class="p-6">
-                    <div class="mb-6">
-                        <h3 class="text-lg font-bold text-gray-900 mb-2">Import List as Batch</h3>
-                        <p class="text-gray-600">
-                            You are about to import <span class="font-semibold">{{ $listDetails['name'] }}</span> with {{ count($products) }} products and {{ $listDetails['units'] }} units.
-                            Please configure how the data should be imported into your system by mapping the fields below.
+            <div class="bg-white rounded-lg shadow-sm overflow-hidden mb-4">
+                <div class="p-4">
+                    <div class="mb-4">
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-lg font-bold text-gray-900">Import List as Batch</h3>
+                            <span class="px-3 py-1 bg-indigo-100 text-indigo-800 text-sm font-medium rounded-full">
+                                {{ count($products) }} products | {{ $listDetails['units'] }} units
+                            </span>
+                        </div>
+                        <p class="text-sm text-gray-600 mt-1">
+                            Configure how <span class="font-semibold">{{ $listDetails['name'] }}</span> should be imported into your system.
                         </p>
                     </div>
 
                     <!-- Batch Settings Form -->
-                    <form action="{{ route('admin.itsale.scraper.import-batch', ['supplier' => $supplier, 'listSlug' => $listSlug]) }}" method="POST" class="space-y-8">
+                    <form id="import-batch-form" action="{{ route('admin.itsale.scraper.import-batch', ['supplier' => $supplier, 'listSlug' => $listSlug]) }}" method="POST" class="space-y-6">
                         @csrf
                         <input type="hidden" name="confirm_import" value="1">
                         
                         <!-- Batch Information -->
                         <div>
-                            <h4 class="text-base font-semibold text-gray-900 mb-3 pb-2 border-b border-gray-200">Batch Information</h4>
-                            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <h4 class="text-base font-semibold text-gray-900 mb-2 pb-1 border-b border-gray-200 flex items-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                                </svg>
+                                Batch Information
+                            </h4>
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
                                 <div>
-                                    <label for="batch_name" class="block text-sm font-medium text-gray-700 mb-1">Batch Name</label>
+                                    <label for="batch_name" class="block text-xs font-medium text-gray-700 mb-1">Batch Name</label>
                                     <input type="text" name="batch_name" id="batch_name" value="{{ $listDetails['name'] }}" class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md">
                                 </div>
                                 <div>
-                                    <label for="batch_reference" class="block text-sm font-medium text-gray-700 mb-1">Reference Code</label>
+                                    <label for="batch_reference" class="block text-xs font-medium text-gray-700 mb-1">Reference Code</label>
                                     <input type="text" name="batch_reference" id="batch_reference" value="ITSALE-{{ strtoupper($listSlug) }}" class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md">
                                 </div>
                                 <div>
-                                    <label for="batch_status" class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                                    <label for="batch_status" class="block text-xs font-medium text-gray-700 mb-1">Status</label>
                                     <select name="batch_status" id="batch_status" class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md">
                                         <option value="active" selected>Active</option>
                                         <option value="pending">Pending</option>
@@ -85,15 +94,8 @@
                                         <option value="reserved">Reserved</option>
                                     </select>
                                 </div>
-                            </div>
-                            
-                            <div class="mt-4 grid grid-cols-1 md:grid-cols-3 gap-6">
-                                <div class="col-span-1 md:col-span-2">
-                                    <label for="batch_description" class="block text-sm font-medium text-gray-700 mb-1">Description</label>
-                                    <textarea name="batch_description" id="batch_description" rows="2" class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md">{{ $listDetails['description'] }}</textarea>
-                                </div>
                                 <div>
-                                    <label for="category_id" class="block text-sm font-medium text-gray-700 mb-1">Category</label>
+                                    <label for="category_id" class="block text-xs font-medium text-gray-700 mb-1">Category</label>
                                     <select name="category_id" id="category_id" class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md">
                                         @foreach($categories as $category)
                                             <option value="{{ $category->id }}">{{ $category->name }}</option>
@@ -101,82 +103,115 @@
                                     </select>
                                 </div>
                             </div>
+                            
+                            <div class="mt-3">
+                                <label for="batch_description" class="block text-xs font-medium text-gray-700 mb-1">Description</label>
+                                <textarea name="batch_description" id="batch_description" rows="2" class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md">{{ $listDetails['description'] }}</textarea>
+                            </div>
                         </div>
 
                         <!-- Batch Source -->
                         <div>
-                            <h4 class="text-base font-semibold text-gray-900 mb-3 pb-2 border-b border-gray-200">Batch Source</h4>
-                            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                                <div>
-                                    <label for="source_type" class="block text-sm font-medium text-gray-700 mb-1">Source Type</label>
+                            <h4 class="text-base font-semibold text-gray-900 mb-2 pb-1 border-b border-gray-200 flex items-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                                </svg>
+                                Source & Costs
+                            </h4>
+                            
+                            <div class="grid grid-cols-2 md:grid-cols-6 gap-3">
+                                <div class="md:col-span-1">
+                                    <label for="source_type" class="block text-xs font-medium text-gray-700 mb-1">Source Type</label>
                                     <select name="source_type" id="source_type" class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md">
                                         <option value="internal">Internal</option>
                                         <option value="external" selected>External</option>
                                     </select>
                                 </div>
-                                <div id="supplier_container">
-                                    <label for="supplier" class="block text-sm font-medium text-gray-700 mb-1">Supplier</label>
+                                <div id="supplier_container" class="md:col-span-1">
+                                    <label for="supplier" class="block text-xs font-medium text-gray-700 mb-1">Supplier</label>
                                     <select name="supplier" id="supplier" class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md">
                                         <option value="ITSale" selected>ITSale</option>
                                         <option value="Foxway">Foxway</option>
                                         <option value="Ecorefurb">Ecorefurb</option>
                                     </select>
                                 </div>
-                                <div>
-                                    <label for="external_reference" class="block text-sm font-medium text-gray-700 mb-1">External Reference</label>
+                                <div class="md:col-span-2">
+                                    <label for="external_reference" class="block text-xs font-medium text-gray-700 mb-1">External Reference</label>
                                     <input type="text" name="external_reference" id="external_reference" value="https://itsale.pl/list/{{ $listSlug }}" class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md">
+                            </div>
+                            
+                                <div class="md:col-span-1">
+                                    <label for="batch_cost" class="block text-xs font-medium text-gray-700 mb-1">Batch Cost (€)</label>
+                                    <input type="number" step="0.01" name="batch_cost" id="batch_cost" value="{{ (float)preg_replace('/[^0-9.,]/', '', $listDetails['total_price']) }}" class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md cost-input">
+                                </div>
+                                <div class="md:col-span-1">
+                                    <label for="total_cost" class="block text-xs font-medium text-gray-700 mb-1">Total Cost (€)</label>
+                                    <input type="number" step="0.01" name="total_cost" id="total_cost" readonly class="bg-gray-50 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md font-medium text-indigo-600">
                                 </div>
                             </div>
                             
-                            <div class="mt-4 grid grid-cols-1 md:grid-cols-4 gap-6">
+                            <div class="mt-3 grid grid-cols-3 gap-3">
                                 <div>
-                                    <label for="batch_cost" class="block text-sm font-medium text-gray-700 mb-1">Batch Cost (€)</label>
-                                    <input type="number" step="0.01" name="batch_cost" id="batch_cost" value="{{ (float)preg_replace('/[^0-9.,]/', '', $listDetails['total_price']) }}" class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md cost-input">
-                                </div>
-                                <div>
-                                    <label for="shipping_cost" class="block text-sm font-medium text-gray-700 mb-1">Shipping Cost (€)</label>
+                                    <label for="shipping_cost" class="block text-xs font-medium text-gray-700 mb-1">Shipping Cost (€)</label>
                                     <input type="number" step="0.01" name="shipping_cost" id="shipping_cost" value="0.00" class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md cost-input">
                                 </div>
                                 <div>
-                                    <label for="tax_amount" class="block text-sm font-medium text-gray-700 mb-1">Tax Amount (€)</label>
+                                    <label for="tax_amount" class="block text-xs font-medium text-gray-700 mb-1">Tax Amount (€)</label>
                                     <input type="number" step="0.01" name="tax_amount" id="tax_amount" value="0.00" class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md cost-input">
                                 </div>
-                                <div>
-                                    <label for="total_cost" class="block text-sm font-medium text-gray-700 mb-1">Total Cost (€)</label>
-                                    <input type="number" step="0.01" name="total_cost" id="total_cost" readonly class="bg-gray-50 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md">
+                                <div class="flex items-end">
+                                    <button type="button" id="calculate-cost" class="mt-5 inline-flex justify-center items-center px-3 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                                        </svg>
+                                        Calculate Total
+                                    </button>
                                 </div>
                             </div>
                         </div>
 
                         <!-- Field Mapping -->
                         <div>
-                            <h4 class="text-base font-semibold text-gray-900 mb-3 pb-2 border-b border-gray-200">Field Mapping</h4>
-                            <p class="text-sm text-gray-600 mb-3">Map the specifications from ITSale.pl to your system's fields. We'll automatically extract grading information from the Visual grade field.</p>
+                            <h4 class="text-base font-semibold text-gray-900 mb-2 pb-1 border-b border-gray-200 flex items-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                                </svg>
+                                Field Mapping
+                            </h4>
                             
-                            <div class="bg-gray-50 p-4 rounded-lg mb-4">
-                                <h5 class="text-sm font-semibold text-gray-700 mb-2">Preview of first product:</h5>
+                            <div class="flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4">
+                                <!-- Preview Panel (Left) -->
+                                <div class="w-full md:w-1/3 bg-gray-50 p-3 rounded-lg">
+                                    <h5 class="text-sm font-semibold text-gray-700 mb-2 flex items-center">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                        </svg>
+                                        Product Preview
+                                    </h5>
+                                    
                                 @if($sampleProduct && isset($sampleProduct['specs']) && is_array($sampleProduct['specs']))
-                                    <div class="grid grid-cols-1 gap-4 text-xs">
-                                        <div>
+                                        <div class="text-xs max-h-64 overflow-y-auto pr-2">
                                             <table class="min-w-full divide-y divide-gray-200">
                                                 <thead class="bg-gray-100">
                                                     <tr>
-                                                        <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Spec</th>
-                                                        <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Value</th>
+                                                        <th scope="col" class="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Spec</th>
+                                                        <th scope="col" class="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Value</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody class="bg-white divide-y divide-gray-200">
                                                     @foreach($sampleProduct['specs'] as $key => $value)
-                                                        <tr>
-                                                            <td class="px-3 py-2 whitespace-nowrap text-xs font-medium text-gray-900">{{ $key }}</td>
-                                                            <td class="px-3 py-2 whitespace-nowrap text-xs text-gray-500">{{ $value }}</td>
+                                                        <tr class="hover:bg-gray-50">
+                                                            <td class="px-2 py-1 whitespace-nowrap text-xs font-medium text-gray-900">{{ $key }}</td>
+                                                            <td class="px-2 py-1 whitespace-nowrap text-xs text-gray-500">{{ $value }}</td>
                                                         </tr>
                                                     @endforeach
                                                 </tbody>
                                             </table>
                                         </div>
-                                    </div>
+                                    @endif
 
+                                    <!-- Grading Information -->
                                     @if(isset($sampleProduct['specs']['Visual grade']) || isset($sampleProduct['specs']['Grade']))
                                         @php
                                             // Cerca in tutti i campi possibili che potrebbero contenere info sul grade
@@ -218,63 +253,63 @@
                                                 $visualGrade = '';
                                                 if (preg_match('/Grade\s+([A-D])/i', $gradeText, $matches)) {
                                                     $visualGrade = $matches[1];
-                                                } elseif (preg_match('/Visual\s+grade:\s*([A-D])/i', $gradeText, $matches)) {
+                                                } else if (preg_match('/Visual\s+grade:\s*([A-D])/i', $gradeText, $matches)) {
                                                     $visualGrade = $matches[1];
-                                                } elseif (preg_match('/[^a-zA-Z]([A-D])(?:\s+Grade|\s+Quality|\s+Condition)/i', $gradeText, $matches)) {
+                                                } else if (preg_match('/[^a-zA-Z]([A-D])(?:\s+Grade|\s+Quality|\s+Condition)/i', $gradeText, $matches)) {
                                                     $visualGrade = $matches[1];
                                                 }
                                                 
                                                 // Extract Functionality (Tech Grade)
                                                 $functionality = '';
-                                                if (preg_match('/Functionality:\s+([^\n,:;]+)/', $gradeText, $matches)) {
+                                                if (preg_match('/Functionality:\s+([^\n]+)/i', $gradeText, $matches)) {
                                                     $functionality = trim($matches[1]);
-                                                } elseif (preg_match('/Working(?:\*)?/i', $gradeText)) {
-                                                    if (stripos($gradeText, 'Not working') !== false) {
+                                                } else if (preg_match('/Working(?:\*)?/i', $gradeText)) {
+                                                    if (preg_match('/Not\s+working/i', $gradeText)) {
                                                         $functionality = 'Not working';
-                                                    } elseif (stripos($gradeText, 'Working*') !== false) {
+                                                    } else if (preg_match('/Working\*/i', $gradeText)) {
                                                         $functionality = 'Working*';
                                                     } else {
                                                         $functionality = 'Working';
                                                     }
                                                 }
                                                 
-                                                // Extract Problems - cerca solo il testo dopo "Problems:"
+                                                // Extract Problems
                                                 $problems = '';
-                                                if (preg_match('/Problems:\s+([^\n.,:;]+)/', $gradeText, $matches)) {
+                                                if (preg_match('/Problems:\s+([^\n.,:;]+)/i', $gradeText, $matches)) {
                                                     $problems = trim($matches[1]);
-                                                } elseif (preg_match('/(?:Issue|Problem)s?(?:\s+with|\s*:)?\s+([^\n.,:;]+)/i', $gradeText, $matches)) {
+                                                } else if (preg_match('/(?:Issue|Problem)s?(?:\s+with|\s*:)?\s+([^\n.,:;]+)/i', $gradeText, $matches)) {
                                                     $problems = trim($matches[1]);
                                                 }
                                             }
                                         @endphp
 
                                         <div class="mt-4 p-3 border border-indigo-200 rounded-md bg-indigo-50">
-                                            <h5 class="text-sm font-semibold text-indigo-700 mb-2">Grading Information:</h5>
-                                            <div class="grid grid-cols-1 gap-4">
-                                                <div class="grid grid-cols-3 gap-4">
+                                            <h5 class="text-xs font-semibold text-indigo-700 mb-2">Auto-detected Grading:</h5>
+                                            <div class="grid grid-cols-3 gap-2 text-xs">
                                                     <div>
-                                                        <p class="text-xs font-medium text-gray-700">Visual Grade (Auto-detected)</p>
-                                                        <p class="text-xs text-gray-900">{{ $visualGrade ?: 'Not detected' }}</p>
+                                                    <p class="font-medium text-gray-700">Visual Grade</p>
+                                                    <p class="text-gray-900">{{ $visualGrade ?: 'Not detected' }}</p>
                                                     </div>
                                                     <div>
-                                                        <p class="text-xs font-medium text-gray-700">Tech Grade (Auto-detected)</p>
-                                                        <p class="text-xs text-gray-900">{{ $functionality ?: 'Not detected' }}</p>
+                                                    <p class="font-medium text-gray-700">Tech Grade</p>
+                                                    <p class="text-gray-900">{{ $functionality ?: 'Not detected' }}</p>
                                                     </div>
                                                     <div>
-                                                        <p class="text-xs font-medium text-gray-700">Problems (Auto-detected)</p>
-                                                        <p class="text-xs text-gray-900">{{ $problems ?: 'Not detected' }}</p>
+                                                    <p class="font-medium text-gray-700">Problems</p>
+                                                    <p class="text-gray-900">{{ $problems ?: 'None' }}</p>
+                                                </div>
                                                     </div>
+                                            
+                                            <div class="mt-2 p-2 border border-indigo-300 rounded-md bg-indigo-100">
+                                                <div class="flex items-center justify-between mb-1">
+                                                    <h6 class="text-xs font-semibold text-indigo-700">Manual Override:</h6>
+                                                    <span class="text-xs text-gray-500">(Optional)</span>
                                                 </div>
                                                 
-                                                <div class="mt-2 p-3 border border-indigo-300 rounded-md bg-indigo-100">
-                                                    <h6 class="text-xs font-semibold text-indigo-700 mb-2">Manual Override (Optional):</h6>
-                                                    <p class="text-xs text-gray-600 mb-2">If the automatic detection didn't work correctly, you can manually specify the grading values:</p>
-                                                    
-                                                    <div class="grid grid-cols-3 gap-4">
+                                                <div class="grid grid-cols-3 gap-2">
                                                         <div>
-                                                            <label for="manual_visual_grade" class="block text-xs font-medium text-gray-700 mb-1">Visual Grade:</label>
                                                             <select id="manual_visual_grade" name="manual_visual_grade" class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full text-xs border-gray-300 rounded-md">
-                                                                <option value="">-- Use auto-detected --</option>
+                                                            <option value="">-- Auto --</option>
                                                                 <option value="A" {{ $visualGrade == 'A' ? 'selected' : '' }}>A</option>
                                                                 <option value="B" {{ $visualGrade == 'B' ? 'selected' : '' }}>B</option>
                                                                 <option value="C" {{ $visualGrade == 'C' ? 'selected' : '' }}>C</option>
@@ -282,30 +317,26 @@
                                                             </select>
                                                         </div>
                                                         <div>
-                                                            <label for="manual_tech_grade" class="block text-xs font-medium text-gray-700 mb-1">Tech Grade:</label>
                                                             <select id="manual_tech_grade" name="manual_tech_grade" class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full text-xs border-gray-300 rounded-md">
-                                                                <option value="">-- Use auto-detected --</option>
+                                                            <option value="">-- Auto --</option>
                                                                 <option value="Working" {{ $functionality == 'Working' ? 'selected' : '' }}>Working</option>
                                                                 <option value="Working*" {{ $functionality == 'Working*' ? 'selected' : '' }}>Working*</option>
                                                                 <option value="Not working" {{ $functionality == 'Not working' ? 'selected' : '' }}>Not working</option>
                                                             </select>
                                                         </div>
                                                         <div>
-                                                            <label for="manual_problems" class="block text-xs font-medium text-gray-700 mb-1">Problems:</label>
-                                                            <input type="text" id="manual_problems" name="manual_problems" value="{{ $problems }}" placeholder="Enter problems if any" class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full text-xs border-gray-300 rounded-md">
-                                                        </div>
+                                                        <input type="text" id="manual_problems" name="manual_problems" value="{{ $problems }}" placeholder="Problems" class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full text-xs border-gray-300 rounded-md">
                                                     </div>
                                                 </div>
                                             </div>
                                         </div>
                                     @else
                                         <div class="mt-4 p-3 border border-indigo-200 rounded-md bg-indigo-50">
-                                            <h5 class="text-sm font-semibold text-indigo-700 mb-2">No Grading Information Found</h5>
-                                            <p class="text-xs text-gray-600 mb-2">No grade fields detected in the product specifications. You can manually specify the grading:</p>
+                                            <h5 class="text-xs font-semibold text-indigo-700 mb-1">No Grade Information Found</h5>
+                                            <p class="text-xs text-gray-600 mb-2">Specify manually if needed:</p>
                                             
-                                            <div class="grid grid-cols-3 gap-4">
+                                            <div class="grid grid-cols-3 gap-2">
                                                 <div>
-                                                    <label for="manual_visual_grade" class="block text-xs font-medium text-gray-700 mb-1">Visual Grade:</label>
                                                     <select id="manual_visual_grade" name="manual_visual_grade" class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full text-xs border-gray-300 rounded-md">
                                                         <option value="">-- Not specified --</option>
                                                         <option value="A">A</option>
@@ -315,7 +346,6 @@
                                                     </select>
                                                 </div>
                                                 <div>
-                                                    <label for="manual_tech_grade" class="block text-xs font-medium text-gray-700 mb-1">Tech Grade:</label>
                                                     <select id="manual_tech_grade" name="manual_tech_grade" class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full text-xs border-gray-300 rounded-md">
                                                         <option value="">-- Not specified --</option>
                                                         <option value="Working">Working</option>
@@ -324,37 +354,102 @@
                                                     </select>
                                                 </div>
                                                 <div>
-                                                    <label for="manual_problems" class="block text-xs font-medium text-gray-700 mb-1">Problems:</label>
-                                                    <input type="text" id="manual_problems" name="manual_problems" placeholder="Enter problems if any" class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full text-xs border-gray-300 rounded-md">
+                                                    <input type="text" id="manual_problems" name="manual_problems" placeholder="Problems" class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full text-xs border-gray-300 rounded-md">
                                                 </div>
                                             </div>
                                         </div>
-                                    @endif
-                                @else
-                                    <p class="text-sm text-gray-500">No sample product specifications available for preview.</p>
                                 @endif
                             </div>
 
-                            <!-- Field Mapping Table -->
-                            <div class="overflow-hidden shadow-sm sm:rounded-lg border border-gray-200">
+                                <!-- Field Mapping Table (Right) -->
+                                <div class="w-full md:w-2/3">
+                                    <div class="shadow-sm sm:rounded-lg border border-gray-200">
+                                        <div class="max-h-96 overflow-y-auto">
                                 <table class="min-w-full divide-y divide-gray-200">
-                                    <thead class="bg-gray-50">
-                                        <tr>
-                                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/3">ITSale Specification</th>
-                                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/3">System Parameter</th>
-                                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/3">Sample Value</th>
+                                                <thead class="bg-gray-50 sticky top-0 z-10">
+                                                    <tr>
+                                                        <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/5">ITSale Specification</th>
+                                                        <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-3/5">System Parameter</th>
+                                                        <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/5">Sample Value</th>
                                         </tr>
                                     </thead>
                                     <tbody id="field-mapping-body" class="bg-white divide-y divide-gray-200">
                                         @if($sampleProduct && isset($sampleProduct['specs']))
                                             @foreach($sampleProduct['specs'] as $specKey => $specValue)
-                                                <tr>
-                                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                                            <tr class="hover:bg-gray-50 field-mapping-row" 
+                                                                style="{{ stripos($specKey, 'model') !== false || 
+                                                                          stripos($specKey, 'brand') !== false || 
+                                                                          stripos($specKey, 'producer') !== false || 
+                                                                          stripos($specKey, 'cpu') !== false || 
+                                                                          stripos($specKey, 'processor') !== false || 
+                                                                          stripos($specKey, 'ram') !== false || 
+                                                                          stripos($specKey, 'memory') !== false || 
+                                                                          stripos($specKey, 'hdd') !== false || 
+                                                                          stripos($specKey, 'ssd') !== false || 
+                                                                          stripos($specKey, 'drive') !== false || 
+                                                                          stripos($specKey, 'storage') !== false || 
+                                                                          stripos($specKey, 'screen') !== false || 
+                                                                          stripos($specKey, 'display') !== false || 
+                                                                          stripos($specKey, 'os') !== false || 
+                                                                          stripos($specKey, 'operating') !== false || 
+                                                                          stripos($specKey, 'battery') !== false || 
+                                                                          stripos($specKey, 'color') !== false || 
+                                                                          stripos($specKey, 'quantity') !== false || 
+                                                                          stripos($specKey, 'qty') !== false || 
+                                                                          (stripos($specKey, 'visual') !== false && stripos($specKey, 'grade') !== false) || 
+                                                                          (stripos($specKey, 'tech') !== false && stripos($specKey, 'grade') !== false) || 
+                                                                          stripos($specKey, 'functionality') !== false || 
+                                                                          stripos($specKey, 'problem') !== false || 
+                                                                          stripos($specKey, 'issue') !== false || 
+                                                                          stripos($specKey, 'keyboard') !== false || 
+                                                                          stripos($specKey, 'coa') !== false || 
+                                                                          stripos($specKey, 'certificate') !== false || 
+                                                                          stripos($specKey, 'license') !== false || 
+                                                                          stripos($specKey, 'camera') !== false || 
+                                                                          stripos($specKey, 'webcam') !== false || 
+                                                                          stripos($specKey, 'cam') !== false || 
+                                                                          stripos($specKey, 'grade') !== false 
+                                                                          ? 'background-color: #ecfdf5; border-left: 3px solid #10b981;' 
+                                                                          : 'background-color: #f9fafb; border-left: 3px solid #d1d5db;' }}">
+                                                                <td class="px-3 py-2 text-sm font-medium text-gray-900 truncate" style="max-width: 150px;">
                                                         {{ $specKey }}
                                                         <input type="hidden" name="spec_fields[]" value="{{ $specKey }}">
                                                     </td>
-                                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                        <select name="spec_params[]" class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md">
+                                                                <td class="px-3 py-2 text-sm text-gray-500">
+                                                                    <select name="spec_params[]" class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md mapping-select" style="min-width: 200px; {{ stripos($specKey, 'model') !== false || 
+                                                                          stripos($specKey, 'brand') !== false || 
+                                                                          stripos($specKey, 'producer') !== false || 
+                                                                          stripos($specKey, 'cpu') !== false || 
+                                                                          stripos($specKey, 'processor') !== false || 
+                                                                          stripos($specKey, 'ram') !== false || 
+                                                                          stripos($specKey, 'memory') !== false || 
+                                                                          stripos($specKey, 'hdd') !== false || 
+                                                                          stripos($specKey, 'ssd') !== false || 
+                                                                          stripos($specKey, 'drive') !== false || 
+                                                                          stripos($specKey, 'storage') !== false || 
+                                                                          stripos($specKey, 'screen') !== false || 
+                                                                          stripos($specKey, 'display') !== false || 
+                                                                          stripos($specKey, 'os') !== false || 
+                                                                          stripos($specKey, 'operating') !== false || 
+                                                                          stripos($specKey, 'battery') !== false || 
+                                                                          stripos($specKey, 'color') !== false || 
+                                                                          stripos($specKey, 'quantity') !== false || 
+                                                                          stripos($specKey, 'qty') !== false || 
+                                                                          (stripos($specKey, 'visual') !== false && stripos($specKey, 'grade') !== false) || 
+                                                                          (stripos($specKey, 'tech') !== false && stripos($specKey, 'grade') !== false) || 
+                                                                          stripos($specKey, 'functionality') !== false || 
+                                                                          stripos($specKey, 'problem') !== false || 
+                                                                          stripos($specKey, 'issue') !== false || 
+                                                                          stripos($specKey, 'keyboard') !== false || 
+                                                                          stripos($specKey, 'coa') !== false || 
+                                                                          stripos($specKey, 'certificate') !== false || 
+                                                                          stripos($specKey, 'license') !== false || 
+                                                                          stripos($specKey, 'camera') !== false || 
+                                                                          stripos($specKey, 'webcam') !== false || 
+                                                                          stripos($specKey, 'cam') !== false || 
+                                                                          stripos($specKey, 'grade') !== false 
+                                                                          ? 'border-color: #10b981; background-color: #f8fffc;' 
+                                                                          : '' }}">
                                                             <option value="">-- Not mapped --</option>
                                                             
                                                             <!-- Common mappings -->
@@ -385,7 +480,7 @@
                                                         </select>
                                                         <input type="text" name="spec_custom_params[]" placeholder="Enter custom parameter name" class="hidden mt-2 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md">
                                                     </td>
-                                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                                <td class="px-3 py-2 text-sm text-gray-500 truncate" style="max-width: 150px;">
                                                         {{ $specValue }}
                                                     </td>
                                                 </tr>
@@ -393,16 +488,36 @@
                                         @endif
                                     </tbody>
                                 </table>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="mt-2 flex justify-between items-center text-xs text-gray-600">
+                                        <div class="flex items-center">
+                                            <span class="inline-block w-3 h-3 bg-green-100 border border-green-300 rounded-full mr-1"></span>
+                                            <span>Mapped</span>
+                                            <span class="inline-block w-3 h-3 bg-gray-100 border border-gray-300 rounded-full ml-4 mr-1"></span>
+                                            <span>Not mapped</span>
+                                        </div>
+                                        <div>
+                                            <span id="mapped-count" class="font-medium text-indigo-600">0</span> of <span id="total-count" class="font-medium">0</span> fields mapped
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
                         <!-- Custom Parameters -->
                         <div>
-                            <h4 class="text-base font-semibold text-gray-900 mb-3 pb-2 border-b border-gray-200">Additional Parameters</h4>
-                            <p class="text-sm text-gray-600 mb-3">Add any additional parameters that should be included in all products in this batch.</p>
+                            <h4 class="text-base font-semibold text-gray-900 mb-2 pb-1 border-b border-gray-200 flex items-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                Additional Parameters
+                            </h4>
+                            <p class="text-xs text-gray-600 mb-2">Add any extra parameters that should be included in all products in this batch.</p>
                             
-                            <div id="custom-parameters" class="space-y-3">
-                                <div class="flex items-center space-x-4">
+                            <div id="custom-parameters" class="space-y-2 mb-2">
+                                <div class="flex items-center space-x-3">
                                     <div class="w-1/3">
                                         <input type="text" name="additional_param_names[]" placeholder="Parameter Name" class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md">
                                     </div>
@@ -410,11 +525,11 @@
                                         <input type="text" name="additional_param_values[]" placeholder="Parameter Value" class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md">
                                     </div>
                                     <div>
-                                        <button type="button" class="add-param-btn inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                                        <button type="button" class="add-param-btn inline-flex items-center px-3 py-1.5 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
                                             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                                             </svg>
-                                            Add Parameter
+                                            Add
                                         </button>
                                     </div>
                                 </div>
@@ -422,13 +537,21 @@
                         </div>
 
                         <!-- Submit Buttons -->
-                        <div class="flex justify-end pt-5 border-t border-gray-200">
-                            <a href="{{ route('admin.itsale.scraper.show-list', ['supplier' => $supplier, 'listSlug' => $listSlug]) }}" class="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        <div class="flex justify-end pt-4 border-t border-gray-200">
+                            <div class="flex space-x-3">
+                                <a href="{{ route('admin.itsale.scraper.show-list', ['supplier' => $supplier, 'listSlug' => $listSlug]) }}" class="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 flex items-center">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
                                 Cancel
                             </a>
-                            <button type="submit" class="ml-3 inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                                <button type="submit" id="import-batch-button" class="inline-flex justify-center items-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10" />
+                                    </svg>
                                 Import Batch
                             </button>
+                            </div>
                         </div>
                     </form>
                 </div>
@@ -438,6 +561,71 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            // Debug form submission
+            const form = document.getElementById('import-batch-form');
+            const submitButton = document.getElementById('import-batch-button');
+            
+            if (form && submitButton) {
+                submitButton.addEventListener('click', function(e) {
+                    e.preventDefault(); // Preveniamo l'azione di default
+                    console.log('Import button clicked');
+                    
+                    // Assicuriamoci che il campo confirm_import sia impostato
+                    let confirmImportField = form.querySelector('input[name="confirm_import"]');
+                    if (!confirmImportField) {
+                        confirmImportField = document.createElement('input');
+                        confirmImportField.type = 'hidden';
+                        confirmImportField.name = 'confirm_import';
+                        confirmImportField.value = '1';
+                        form.appendChild(confirmImportField);
+                    } else {
+                        confirmImportField.value = '1';
+                    }
+                    
+                    // Verifichiamo che il token CSRF sia presente
+                    if (!form.querySelector('input[name="_token"]')) {
+                        console.error('CSRF token missing!');
+                        alert('CSRF token is missing. Cannot submit the form.');
+                        return;
+                    }
+                    
+                    console.log('Submitting form to:', form.action);
+                    console.log('With method:', form.method);
+                    
+                    // Assicuriamoci che il metodo sia impostato correttamente a POST
+                    form.method = 'POST';
+                    
+                    // Inviamo il form utilizzando un FormData per garantire l'invio come POST
+                    const formData = new FormData(form);
+                    
+                    fetch(form.action, {
+                        method: 'POST',
+                        body: formData,
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        redirect: 'follow'
+                    })
+                    .then(response => {
+                        // Redirect alla pagina di risposta
+                        window.location.href = response.url;
+                    })
+                    .catch(error => {
+                        console.error('Error submitting form:', error);
+                        // Fallback: invia il form normalmente
+                        form.submit();
+                    });
+                });
+            }
+            
+            if (form) {
+                form.addEventListener('submit', function(e) {
+                    console.log('Form is being submitted to:', form.action);
+                    console.log('With method:', form.method);
+                    // Non blocchiamo la sottomissione, ma loghiamo l'evento
+                });
+            }
+            
             // Gestione dei parametri personalizzati per ogni campo mappato
             document.querySelectorAll('select[name="spec_params[]"]').forEach(select => {
                 select.addEventListener('change', function() {
@@ -448,6 +636,7 @@
                         customInput.classList.add('hidden');
                         customInput.value = '';
                     }
+                    updateMappingStyles();
                 });
             });
             
@@ -455,7 +644,7 @@
             document.querySelector('.add-param-btn').addEventListener('click', function() {
                 const container = document.getElementById('custom-parameters');
                 const newRow = document.createElement('div');
-                newRow.className = 'flex items-center space-x-4';
+                newRow.className = 'flex items-center space-x-3';
                 newRow.innerHTML = `
                     <div class="w-1/3">
                         <input type="text" name="additional_param_names[]" placeholder="Parameter Name" class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md">
@@ -464,7 +653,7 @@
                         <input type="text" name="additional_param_values[]" placeholder="Parameter Value" class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md">
                     </div>
                     <div>
-                        <button type="button" class="remove-param-btn inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
+                        <button type="button" class="remove-param-btn inline-flex items-center px-3 py-1.5 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                             </svg>
@@ -511,6 +700,9 @@
                 input.addEventListener('input', calculateTotalCost);
             });
             
+            // Pulsante per calcolare il costo totale
+            document.getElementById('calculate-cost').addEventListener('click', calculateTotalCost);
+            
             // Popolamento dinamico dei parametri in base alla categoria selezionata
             const categorySelect = document.getElementById('category_id');
             const categoryParameters = @json($categoryParameters);
@@ -531,203 +723,232 @@
                 
                 // Pattern riconoscimento per formato specifico ITSale "Grade A Visual grade: A Functionality: Working Security mark: Problems: [problemi]"
                 const standardPattern = /Grade\s+([A-D])(?:\s+Visual\s+grade:\s+([A-D]))?(?:\s+Functionality:\s+([^.,:;]+))?(?:\s+Security\s+mark:([^:]*))?\s+Problems:\s*(.*?)(?:\s*$|(?:\s+[A-Z][a-z]+:))/s;
-                const standardMatch = gradeText.match(standardPattern);
+                const standardMatch = preg_match($standardPattern, $gradeText, $fullMatches);
                 
                 let visualGrade = '';
                 let functionality = '';
                 let problems = '';
                 
-                if (standardMatch) {
+                if ($standardMatch) {
                     // Se abbiamo un match completo, estrai tutti i componenti
-                    visualGrade = standardMatch[2] ? standardMatch[2] : standardMatch[1]; // Usa Visual grade: se presente, altrimenti Grade
-                    functionality = standardMatch[3] ? standardMatch[3].trim() : '';
-                    problems = standardMatch[5] ? standardMatch[5].trim() : '';
+                    $visualGrade = !empty($fullMatches[2]) ? $fullMatches[2] : $fullMatches[1]; // Usa Visual grade: se presente, altrimenti Grade
+                    $functionality = !empty($fullMatches[3]) ? trim($fullMatches[3]) : '';
+                    $problems = !empty($fullMatches[5]) ? trim($fullMatches[5]) : '';
                     
-                    console.log('Standard pattern match:', {visualGrade, functionality, problems});
+                    console.log('Standard pattern match:', ['visualGrade' => $visualGrade, 'functionality' => $functionality, 'problems' => $problems]);
                 } else {
                     // Altrimenti usa il metodo precedente
-                    // Estrai Visual Grade
-                    if (gradeText.match(/Grade\s+([A-D])/i)) {
-                        visualGrade = gradeText.match(/Grade\s+([A-D])/i)[1];
-                    } else if (gradeText.match(/Visual\s+grade:\s*([A-D])/i)) {
-                        visualGrade = gradeText.match(/Visual\s+grade:\s*([A-D])/i)[1];
-                    } else if (gradeText.match(/[^a-zA-Z]([A-D])(?:\s+Grade|\s+Quality|\s+Condition)/i)) {
-                        visualGrade = gradeText.match(/[^a-zA-Z]([A-D])(?:\s+Grade|\s+Quality|\s+Condition)/i)[1];
+                    // Extract Visual Grade
+                    $visualGrade = '';
+                    if (preg_match('/Grade\s+([A-D])/i', $gradeText, $matches)) {
+                        $visualGrade = $matches[1];
+                    } else if (preg_match('/Visual\s+grade:\s*([A-D])/i', $gradeText, $matches)) {
+                        $visualGrade = $matches[1];
+                    } else if (preg_match('/[^a-zA-Z]([A-D])(?:\s+Grade|\s+Quality|\s+Condition)/i', $gradeText, $matches)) {
+                        $visualGrade = $matches[1];
                     }
                     
-                    // Estrai Functionality (Tech Grade)
-                    if (gradeText.match(/Functionality:\s+([^\n,:;]+)/)) {
-                        functionality = gradeText.match(/Functionality:\s+([^\n,:;]+)/)[1].trim();
-                    } else if (gradeText.match(/Working(?:\*)?/i)) {
-                        if (gradeText.match(/Not\s+working/i)) {
-                            functionality = 'Not working';
-                        } else if (gradeText.match(/Working\*/i)) {
-                            functionality = 'Working*';
+                    // Extract Functionality (Tech Grade)
+                    $functionality = '';
+                    if (preg_match('/Functionality:\s+([^\n]+)/i', $gradeText, $matches)) {
+                        $functionality = trim($matches[1]);
+                    } else if (preg_match('/Working(?:\*)?/i', $gradeText)) {
+                        if (preg_match('/Not\s+working/i', $gradeText)) {
+                            $functionality = 'Not working';
+                        } else if (preg_match('/Working\*/i', $gradeText)) {
+                            $functionality = 'Working*';
                         } else {
-                            functionality = 'Working';
+                            $functionality = 'Working';
                         }
                     }
                     
-                    // Estrai Problems - solo il testo dopo "Problems:"
-                    if (gradeText.match(/Problems:\s+([^\n.,:;]+)/)) {
-                        problems = gradeText.match(/Problems:\s+([^\n.,:;]+)/)[1].trim();
-                    } else if (gradeText.match(/(?:Issue|Problem)s?(?:\s+with|\s*:)?\s+([^\n.,:;]+)/i)) {
-                        problems = gradeText.match(/(?:Issue|Problem)s?(?:\s+with|\s*:)?\s+([^\n.,:;]+)/i)[1].trim();
+                    // Extract Problems
+                    $problems = '';
+                    if (preg_match('/Problems:\s+([^\n.,:;]+)/i', $gradeText, $matches)) {
+                        $problems = trim($matches[1]);
+                    } else if (preg_match('/(?:Issue|Problem)s?(?:\s+with|\s*:)?\s+([^\n.,:;]+)/i', $gradeText, $matches)) {
+                        $problems = trim($matches[1]);
                     }
                 }
                 
                 // Verifica speciale per rimuovere il testo di grading dal campo problems
-                if (problems && (problems.includes('Grade') || problems.includes('Visual grade'))) {
+                if ($problems && ($problems.includes('Grade') || $problems.includes('Visual grade'))) {
                     // Se problems contiene l'intera stringa di grading, estraiamo solo la parte dopo "Problems:"
-                    const problemsMatch = problems.match(/Problems:\s+([^\n.,:;]+)/i);
-                    if (problemsMatch) {
-                        problems = problemsMatch[1].trim();
-                    } else {
-                        // Se non troviamo "Problems:" nel testo, probabilmente non ci sono problemi
-                        problems = '';
-                    }
+                    $problems = preg_replace('/Problems:\s+([^\n.,:;]+)/i', '', $problems);
                 }
                 
                 // Aggiorna i campi nascosti per il form di importazione
-                document.getElementById('extracted_visual_grade').value = visualGrade;
-                document.getElementById('extracted_tech_grade').value = functionality;
-                document.getElementById('extracted_problems').value = problems;
+                $extracted_visual_grade = $visualGrade;
+                $extracted_tech_grade = $functionality;
+                $extracted_problems = $problems;
                 
                 // Aggiorna anche i campi di visualizzazione
-                const visualGradeDisplay = document.getElementById('visual_grade_display');
-                const techGradeDisplay = document.getElementById('tech_grade_display');
-                const problemsDisplay = document.getElementById('problems_display');
+                $visual_grade_display = document.getElementById('visual_grade_display');
+                $tech_grade_display = document.getElementById('tech_grade_display');
+                $problems_display = document.getElementById('problems_display');
                 
-                if (visualGradeDisplay) visualGradeDisplay.textContent = visualGrade || 'Not detected';
-                if (techGradeDisplay) techGradeDisplay.textContent = functionality || 'Not detected';
-                if (problemsDisplay) problemsDisplay.textContent = problems || 'Not detected';
+                if ($visual_grade_display) $visual_grade_display.textContent = $visualGrade || 'Not detected';
+                if ($tech_grade_display) $tech_grade_display.textContent = $functionality || 'Not detected';
+                if ($problems_display) $problems_display.textContent = $problems || 'Not detected';
                 
                 // Aggiorna i campi di override se esistono
-                const manualVisualGrade = document.getElementById('manual_visual_grade');
-                const manualTechGrade = document.getElementById('manual_tech_grade');
-                const manualProblems = document.getElementById('manual_problems');
+                $manual_visual_grade = document.getElementById('manual_visual_grade');
+                $manual_tech_grade = document.getElementById('manual_tech_grade');
+                $manual_problems = document.getElementById('manual_problems');
                 
-                if (manualVisualGrade && visualGrade && !manualVisualGrade.value) {
+                if ($manual_visual_grade && $visualGrade && !$manual_visual_grade.value) {
                     // Trova l'opzione corrispondente e selezionala
-                    for (let i = 0; i < manualVisualGrade.options.length; i++) {
-                        if (manualVisualGrade.options[i].value === visualGrade) {
-                            manualVisualGrade.selectedIndex = i;
+                    for ($i = 0; $i < $manual_visual_grade.options.length; $i++) {
+                        if ($manual_visual_grade.options[$i].value === $visualGrade) {
+                            $manual_visual_grade.selectedIndex = $i;
                             break;
                         }
                     }
                 }
                 
-                if (manualTechGrade && functionality && !manualTechGrade.value) {
+                if ($manual_tech_grade && $functionality && !$manual_tech_grade.value) {
                     // Trova l'opzione corrispondente e selezionala
-                    for (let i = 0; i < manualTechGrade.options.length; i++) {
-                        if (manualTechGrade.options[i].value === functionality) {
-                            manualTechGrade.selectedIndex = i;
+                    for ($i = 0; $i < $manual_tech_grade.options.length; $i++) {
+                        if ($manual_tech_grade.options[$i].value === $functionality) {
+                            $manual_tech_grade.selectedIndex = $i;
                             break;
                         }
                     }
                 }
                 
-                if (manualProblems && problems && !manualProblems.value) {
-                    manualProblems.value = problems;
+                if ($manual_problems && $problems && !$manual_problems.value) {
+                    $manual_problems.value = $problems;
                 }
             }
             
             // Aggiungi campi nascosti per i valori estratti
-            const form = document.querySelector('form');
-            const hiddenFields = document.createElement('div');
-            hiddenFields.style.display = 'none';
-            hiddenFields.innerHTML = `
+            $form = document.querySelector('form');
+            $hiddenFields = document.createElement('div');
+            $hiddenFields.style.display = 'none';
+            $hiddenFields.innerHTML = `
                 <input type="hidden" id="extracted_visual_grade" name="extracted_visual_grade" value="">
                 <input type="hidden" id="extracted_tech_grade" name="extracted_tech_grade" value="">
                 <input type="hidden" id="extracted_problems" name="extracted_problems" value="">
             `;
-            form.appendChild(hiddenFields);
+            $form.appendChild($hiddenFields);
             
             // Trova il campo Visual grade e analizzalo all'avvio
-            document.querySelectorAll('select[name="spec_params[]"]').forEach((select, index) => {
-                if (select.value === '_grade_special') {
-                    const specField = select.closest('tr').querySelector('td:first-child').textContent.trim();
-                    const specValue = select.closest('tr').querySelector('td:last-child').textContent.trim();
+            document.querySelectorAll('select[name="spec_params[]"]').forEach(function($select, $index) {
+                if ($select.value === '_grade_special') {
+                    $row = $select.closest('tr');
+                    $specField = $row.querySelector('td:first-child').textContent.trim();
+                    $specValue = $row.querySelector('td:last-child').textContent.trim();
                     
-                    if (specValue) {
-                        parseGradeInfo(specValue);
+                    if ($specValue) {
+                        parseGradeInfo($specValue);
                     }
                 }
             });
             
             // Gestisci i campi di override manuali
-            document.querySelectorAll('[name="manual_visual_grade"], [name="manual_tech_grade"], [name="manual_problems"]').forEach(field => {
-                field.addEventListener('change', function() {
+            document.querySelectorAll('[name="manual_visual_grade"], [name="manual_tech_grade"], [name="manual_problems"]').forEach(function($field) {
+                $field.addEventListener('change', function() {
                     // Se viene selezionato un valore manuale, sovrascrive quello auto-detected
-                    if (this.name === 'manual_visual_grade' && this.value) {
-                        document.getElementById('extracted_visual_grade').value = this.value;
+                    if ($this->name === 'manual_visual_grade' && $this->value) {
+                        $extracted_visual_grade = $this->value;
                     }
-                    if (this.name === 'manual_tech_grade' && this.value) {
-                        document.getElementById('extracted_tech_grade').value = this.value;
+                    if ($this->name === 'manual_tech_grade' && $this->value) {
+                        $extracted_tech_grade = $this->value;
                     }
-                    if (this.name === 'manual_problems') {
-                        document.getElementById('extracted_problems').value = this.value;
+                    if ($this->name === 'manual_problems') {
+                        $extracted_problems = $this->value;
                     }
                 });
             });
             
             // Elabora automaticamente i campi "Not mapped" prima del submit
-            form.addEventListener('submit', function(e) {
+            $form.addEventListener('submit', function(e) {
                 // Per ogni select con valore vuoto, imposta automaticamente come parametro custom con lo stesso nome
-                document.querySelectorAll('select[name="spec_params[]"]').forEach((select, index) => {
-                    if (select.value === '') {
-                        const row = select.closest('tr');
-                        const specName = row.querySelector('td:first-child').textContent.trim();
-                        const specValue = row.querySelector('td:last-child').textContent.trim();
+                document.querySelectorAll('select[name="spec_params[]"]').forEach(function($select, $index) {
+                    if ($select.value === '') {
+                        $row = $select.closest('tr');
+                        $specName = $row.querySelector('td:first-child').textContent.trim();
+                        $specValue = $row.querySelector('td:last-child').textContent.trim();
                         
                         // Se il valore della specifica non è vuoto, crea un parametro custom automatico
-                        if (specValue && specValue !== 'N/A') {
-                            select.value = 'custom';
-                            const customInput = select.nextElementSibling;
-                            customInput.value = specName;
-                            customInput.classList.remove('hidden');
+                        if ($specValue && $specValue !== 'N/A') {
+                            $select.value = 'custom';
+                            $customInput = $select.nextElementSibling;
+                            $customInput.value = $specName;
+                            $customInput.classList.remove('hidden');
                         }
                     }
                 });
                 
                 // Assicurati che sia impostato almeno quantity=1 se non è già mappato
                 let hasQuantity = false;
-                document.querySelectorAll('select[name="spec_params[]"]').forEach(select => {
-                    if (select.value === 'quantity') {
+                document.querySelectorAll('select[name="spec_params[]"]').forEach(function($select) {
+                    if ($select.value === 'quantity') {
                         hasQuantity = true;
                     }
                 });
                 
-                if (!hasQuantity) {
+                if (!$hasQuantity) {
                     // Aggiungi un parametro aggiuntivo per quantity=1
-                    const additionalParamNames = document.querySelectorAll('input[name="additional_param_names[]"]');
-                    const additionalParamValues = document.querySelectorAll('input[name="additional_param_values[]"]');
+                    $additionalParamNames = document.querySelectorAll('input[name="additional_param_names[]"]');
+                    $additionalParamValues = document.querySelectorAll('input[name="additional_param_values[]"]');
                     
                     // Controlla se esiste già un campo vuoto per aggiungere il parametro
                     let quantityAdded = false;
-                    for (let i = 0; i < additionalParamNames.length; i++) {
-                        if (additionalParamNames[i].value === '') {
-                            additionalParamNames[i].value = 'quantity';
-                            additionalParamValues[i].value = '1';
-                            quantityAdded = true;
+                    for ($i = 0; $i < $additionalParamNames.length; $i++) {
+                        if ($additionalParamNames[$i].value === '') {
+                            $additionalParamNames[$i].value = 'quantity';
+                            $additionalParamValues[$i].value = '1';
+                            $quantityAdded = true;
                             break;
                         }
                     }
                     
                     // Se non c'è un campo vuoto, aggiungi un nuovo parametro cliccando sul pulsante
-                    if (!quantityAdded && additionalParamNames.length > 0) {
+                    if (!$quantityAdded && $additionalParamNames.length > 0) {
                         // Clicca sul pulsante per aggiungere un nuovo parametro
                         document.querySelector('.add-param-btn').click();
                         
                         // Ora prendi l'ultimo parametro aggiunto
-                        const newParamNames = document.querySelectorAll('input[name="additional_param_names[]"]');
-                        const newParamValues = document.querySelectorAll('input[name="additional_param_values[]"]');
+                        $newParamNames = document.querySelectorAll('input[name="additional_param_names[]"]');
+                        $newParamValues = document.querySelectorAll('input[name="additional_param_values[]"]');
                         
                         // Imposta i valori
-                        newParamNames[newParamNames.length - 1].value = 'quantity';
-                        newParamValues[newParamValues.length - 1].value = '1';
+                        $newParamNames[$newParamNames.length - 1].value = 'quantity';
+                        $newParamValues[$newParamValues.length - 1].value = '1';
                     }
                 }
+            });
+
+            // Funzione per aggiornare gli stili in base allo stato di mapping
+            function updateMappingStyles() {
+                $selects = document.querySelectorAll('.mapping-select');
+                $rows = document.querySelectorAll('.field-mapping-row');
+                let mappedCount = 0;
+                
+                $selects.forEach(function($select, $index) {
+                    $row = $rows[$index];
+                    if ($select.value && $select.value !== '') {
+                        $row.classList.add('bg-green-50');
+                        $row.classList.remove('bg-gray-50');
+                        $mappedCount++;
+                    } else {
+                        $row.classList.remove('bg-green-50');
+                        $row.classList.add('bg-gray-50');
+                    }
+                });
+                
+                // Aggiorna il conteggio visualizzato
+                document.getElementById('mapped-count').textContent = $mappedCount;
+                document.getElementById('total-count').textContent = $selects.length;
+            }
+            
+            // Esegui l'aggiornamento degli stili all'avvio
+            updateMappingStyles();
+            
+            // Aggiungi listener per aggiornare gli stili quando un select cambia
+            document.querySelectorAll('.mapping-select').forEach(function($select) {
+                $select.addEventListener('change', updateMappingStyles);
             });
         });
     </script>

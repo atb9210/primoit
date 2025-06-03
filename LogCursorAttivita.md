@@ -278,12 +278,17 @@
 
 ## 04/06/2024
 
-- 10:45 - Ridisegnata completamente la vista pubblica dei batch (batches/show.blade.php) per renderla simile allo stile ITSale scraper
-- 10:45 - Implementate card di riepilogo (Status, Cost, Quantity, Availability) in stile dashboard ITSale
-- 10:45 - Aggiunta visualizzazione immagini prodotti con layout coerente all'interfaccia admin
-- 10:45 - Migliorata presentazione delle specifiche tecniche con maggiore leggibilità e organizzazione
-- 10:45 - Implementato sistema di tab per visualizzazione organizzata dei contenuti
-- 10:45 - Eseguiti php artisan config:clear, cache:clear, view:clear, route:clear e optimize
+- 00:10 - Implementato parametro "ID" obbligatorio per i prodotti nei batch con formato REFCODE-(ID di creazione)
+- 00:10 - Modificato il controller BatchController per generare automaticamente ID univoci per ogni nuovo prodotto
+- 00:10 - Aggiornato ITSaleScraperController per assegnare ID univoci ai prodotti importati
+- 00:10 - Aggiunta migrazione add_product_id_to_batch_products_table per aggiornare i batch esistenti
+- 00:10 - Aggiornate le viste manage-products.blade.php, edit.blade.php e show.blade.php per mostrare l'ID del prodotto
+- 00:10 - Aggiornato JavaScript per generare nuovi ID quando si aggiungono prodotti manualmente
+- 00:10 - Eseguiti php artisan config:clear, cache:clear, view:clear, route:clear e optimize
+- 00:45 - Risolto errore "HTTP 405 Method Not Allowed" nella pagina di importazione batch
+- 00:45 - Aggiunta route GET per la visualizzazione del form di importazione in routes/web.php
+- 00:45 - Modificato il pulsante "Import As Batch" per utilizzare la nuova route GET invece di POST diretto
+- 00:45 - Eseguiti php artisan config:clear, cache:clear, view:clear, route:clear e optimize per applicare le modifiche
 
 ## 05/06/2024
 
@@ -472,53 +477,30 @@
 - 13:00 - Modificato il controller BatchController per aggiornare total_quantity in base ai prodotti presenti
 - 13:00 - Aggiunto controllo che verifica e aggiorna automaticamente i valori errati durante la visualizzazione
 - 13:00 - Implementata correzione per assicurare la coerenza tra i dati effettivi e quelli visualizzati
+- 15:45 - Risolto errore nell'importazione batch da ITSale dove il form non veniva processato correttamente
+- 15:45 - Modificato il controller ITSaleScraperController per semplificare la logica di gestione del form
+- 15:45 - Rimossa la logica condizionale che redirezionava al form, rendendo più robusto il processo di importazione
+- 15:45 - Eseguiti php artisan config:clear, cache:clear, view:clear, route:clear e optimize
 
-- 03/06/2024 15:32 - Risolto errore "htmlspecialchars(): Argument #1 ($string) must be of type string, array given" nella modifica batch importati
-- 03/06/2024 15:32 - Modificata la vista edit.blade.php con controlli sicuri sui tipi di dati per le immagini
-- 03/06/2024 15:32 - Aggiunto controllo di validità per array di specifiche prodotto
-- 03/06/2024 15:32 - Aggiunto controllo di validità per array di prodotti nel batch
-- 03/06/2024 15:32 - Eseguiti php artisan config:clear, cache:clear, view:clear, route:clear e optimize
+## 19/06/2024
 
-- 03/06/2024 16:15 - Eliminati tutti i batch dal database per ripartire da zero
-- 03/06/2024 16:15 - Eseguito App\Models\Batch::truncate() tramite tinker
-- 03/06/2024 16:15 - Commit e push delle modifiche al repository GitHub
-- 03/06/2024 16:15 - Commit message: "Eliminati tutti i batch dal database per ripartire da zero"
-- 03/06/2024 16:45 - Ottimizzata la vista admin/batches/index.blade.php con un design più moderno e intuitivo
-- 03/06/2024 16:45 - Aggiunta sezione di statistiche con riepilogo totale batch, batch attivi, riservati e valore totale
-- 03/06/2024 16:45 - Migliorato design della tabella con immagini di anteprima, dettagli prodotto e azioni con icone
-- 03/06/2024 16:45 - Aggiunti filtri per status e categoria e campo di ricerca per un'esperienza utente migliore
-- 03/06/2024 16:45 - Eseguiti php artisan config:clear, cache:clear, view:clear, route:clear e optimize
+- 18:15 - Risolto problema con il calcolo dei prezzi nell'importazione batch da ITSale
+- 18:15 - Implementata nuova logica di calcolo in due fasi nel metodo importAsBatch di ITSaleScraperController
+- 18:15 - Prima fase: calcolo del numero totale di unità in tutti i prodotti della lista
+- 18:15 - Seconda fase: distribuzione del costo totale del batch in base al numero di unità
+- 18:15 - Migliorato logging per visualizzare il prezzo unitario base calcolato
+- 18:15 - Corretto calcolo del prezzo totale di ciascun prodotto (unit_price * quantity)
+- 18:15 - Eseguiti php artisan config:clear, cache:clear, view:clear, route:clear e optimize
 
-- 03/06/2024 17:10 - Migliorata la scheda Total Value nella vista admin/batches/index.blade.php mostrando anche il numero totale di unità
-- 03/06/2024 17:10 - Aggiunto conteggio totale unità sotto il valore totale dei batch per migliorare la visualizzazione delle statistiche
-- 03/06/2024 17:10 - Eseguiti php artisan view:clear, cache:clear e optimize
+- 19:30 - Risolto problema con il bottone "Import Batch" che non completava l'operazione
+- 19:30 - Aggiunto il campo 'confirm_import' ai campi validati nel metodo importAsBatch
+- 19:30 - Eseguiti php artisan config:clear, cache:clear, view:clear, route:clear e optimize
 
-- 04/06/2024 12:05 - Ottimizzata la vista admin/batches/index.blade.php con design minimale e funzionale
-- 04/06/2024 12:05 - Rimosse immagini dei batch dalla tabella per un'interfaccia più compatta
-- 04/06/2024 12:05 - Ridotte dimensioni di padding e font per visualizzare più dati nello stesso spazio
-- 04/06/2024 12:05 - Semplificati i pulsanti di azione rimuovendo il testo e lasciando solo le icone
-- 04/06/2024 12:05 - Eseguiti php artisan config:clear, cache:clear, view:clear, route:clear e optimize
+## 20/06/2024
 
-- 04/06/2024 12:30 - Aggiunta distinzione visiva tra batch interne/esterne nella vista batches/index.blade.php
-- 04/06/2024 12:30 - Aggiunta colonna supplier con logo fornitore nella tabella dei batch
-- 04/06/2024 12:30 - Implementato feedback visivo per batch esterne con sfondo azzurro per distinguerle visivamente
-- 04/06/2024 12:30 - Aggiunta badge con indicatore External/Internal colorato per facile identificazione
-- 04/06/2024 12:30 - Eseguiti php artisan config:clear, cache:clear, view:clear, route:clear e optimize
-
-- 04/06/2024 13:00 - Completata ottimizzazione dell'interfaccia tabellare per i batch con design minimal e funzionale
-- 04/06/2024 13:00 - Implementata distinzione visiva tra batch interne ed esterne con feedback cromatico
-- 04/06/2024 13:00 - Finalizzato commit di tutte le modifiche al repository GitHub
-- 04/06/2024 13:00 - Chiusura attività giornaliera
-
-## 04/11/2024
-
-- 11:15 - Implementata funzionalità di etichette per i batch con layout ottimizzato per formato 4x6 pollici
-- 11:15 - Creato metodo printLabel nel BatchController per generare etichette per i batch
-- 11:15 - Aggiunta rotta admin/batches/{batch}/print-label per accedere alla vista etichetta
-- 11:15 - Creata vista label.blade.php con layout responsive e dimensioni ottimizzate
-- 11:15 - Installato pacchetto simplesoftwareio/simple-qrcode per generazione QR code
-- 11:15 - Aggiunto bottone "Print Label" nella pagina di dettaglio batch
-- 11:15 - Integrato QR code nell'etichetta che punta alla pagina di dettaglio del batch
-- 11:15 - Aggiunto bottone di stampa con funzionalità window.print() per stampare l'etichetta
-- 11:15 - Ottimizzato il CSS per la stampa con media queries per rimuovere elementi non necessari
-- 11:15 - Eseguiti php artisan config:clear, cache:clear, view:clear, route:clear e optimize
+- 15:30 - Risolto problema con il form di importazione che veniva inviato come GET invece di POST
+- 15:30 - Corretto errore di sintassi JavaScript (elseif -> else if) nel file import-form.blade.php
+- 15:30 - Migliorato il codice JavaScript che gestisce il submit del form per garantire l'invio come POST
+- 15:30 - Forzato l'uso di fetch() con method POST per evitare problemi con alcuni browser
+- 15:30 - Corretto errore di parentesi graffe mancanti in ITSaleScraperController.php
+- 15:30 - Eseguiti php artisan config:clear, cache:clear, view:clear, route:clear e optimize

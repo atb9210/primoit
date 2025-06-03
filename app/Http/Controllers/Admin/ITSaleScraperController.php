@@ -1188,47 +1188,87 @@ class ITSaleScraperController extends Controller
      */
     public function importAsBatch(Request $request, ThirdPartySupplier $supplier = null, $listSlug)
     {
-        // Verifica se è la richiesta iniziale o il submit del form di mappatura
-        if (!$request->has('confirm_import')) {
-            // Se è la richiesta iniziale, mostra il form di mappatura
-            return $this->showImportForm($request, $supplier, $listSlug);
-        }
-        
-        // Validazione dei dati di input
-        $validatedData = $request->validate([
-            'batch_name' => 'required|string|max:255',
-            'batch_reference' => 'required|string|max:255',
-            'batch_description' => 'nullable|string',
-            'batch_status' => 'required|string|in:active,pending,sold,reserved',
-            'category_id' => 'required|exists:categories,id',
-            'source_type' => 'required|string|in:internal,external',
-            'supplier' => 'nullable|string',
-            'external_reference' => 'nullable|string',
-            'batch_cost' => 'required|numeric|min:0',
-            'shipping_cost' => 'nullable|numeric|min:0',
-            'tax_amount' => 'nullable|numeric|min:0',
-            'total_cost' => 'required|numeric|min:0',
-            'spec_fields' => 'required|array',
-            'spec_params' => 'required|array',
-            'spec_custom_params' => 'nullable|array',
-            'additional_param_names' => 'nullable|array',
-            'additional_param_values' => 'nullable|array',
-            'extracted_visual_grade' => 'nullable|string',
-            'extracted_tech_grade' => 'nullable|string',
-            'extracted_problems' => 'nullable|string',
-            'manual_visual_grade' => 'nullable|string',
-            'manual_tech_grade' => 'nullable|string',
-            'manual_problems' => 'nullable|string',
+        // Log per debug
+        Log::info('Ricevuta richiesta importAsBatch', [
+            'method' => $request->method(),
+            'route' => $request->route() ? $request->route()->getName() : 'No route',
+            'url' => $request->fullUrl(),
+            'has_confirm_import' => $request->has('confirm_import'),
+            'token' => $request->has('_token'),
+            'all_input' => $request->all()
         ]);
         
+        // Verifica se è una richiesta POST valida con confirm_import
+        if ($request->method() !== 'POST' || !$request->has('confirm_import')) {
+            Log::warning('Richiesta non valida, reindirizzamento al form', [
+                'method' => $request->method(),
+                'has_confirm_import' => $request->has('confirm_import')
+            ]);
+            
+            // Se non è una richiesta POST valida, redirigi al form di importazione
+            return redirect()->route('admin.itsale.scraper.show-import-form', [
+                'supplier' => $supplier,
+                'listSlug' => $listSlug
+            ]);
+        }
+        
         try {
+            // Validazione dei dati di input
+            $validatedData = $request->validate([
+                'batch_name' => 'required|string|max:255',
+                'batch_reference' => 'required|string|max:255',
+                'batch_description' => 'nullable|string',
+                'batch_status' => 'required|string|in:active,pending,sold,reserved',
+                'category_id' => 'required|exists:categories,id',
+                'source_type' => 'required|string|in:internal,external',
+                'supplier' => 'nullable|string',
+                'external_reference' => 'nullable|string',
+                'batch_cost' => 'required|numeric|min:0',
+                'shipping_cost' => 'nullable|numeric|min:0',
+                'tax_amount' => 'nullable|numeric|min:0',
+                'total_cost' => 'nullable|numeric|min:0', // Modificato da required a nullable
+                'spec_fields' => 'required|array',
+                'spec_params' => 'required|array',
+                'spec_custom_params' => 'nullable|array',
+                'additional_param_names' => 'nullable|array',
+                'additional_param_values' => 'nullable|array',
+                'extracted_visual_grade' => 'nullable|string',
+                'extracted_tech_grade' => 'nullable|string',
+                'extracted_problems' => 'nullable|string',
+                'manual_visual_grade' => 'nullable|string',
+                'manual_tech_grade' => 'nullable|string',
+                'manual_problems' => 'nullable|string',
+            ]);
+            
+            // Calcolo automatico del total_cost se non fornito
+            if (empty($request->total_cost)) {
+                $batchCost = (float)$request->batch_cost;
+                $shippingCost = (float)($request->shipping_cost ?? 0);
+                $taxAmount = (float)($request->tax_amount ?? 0);
+                
+                $totalCost = $batchCost + $shippingCost + $taxAmount;
+                $request->merge(['total_cost' => $totalCost]);
+                
+                Log::info('Calcolato total_cost automaticamente', [
+                    'batch_cost' => $batchCost,
+                    'shipping_cost' => $shippingCost,
+                    'tax_amount' => $taxAmount,
+                    'total_cost_calcolato' => $totalCost
+                ]);
+            }
+            
+            Log::info('Validazione superata, procedo con l\'importazione');
+            
             // Recupera prodotti dalla lista ITSale
             $productsFromITSale = $this->getProductsFromITSaleList($listSlug);
             
             if (empty($productsFromITSale)) {
+                Log::error('Nessun prodotto trovato nella lista ITSale');
                 return redirect()->route('admin.itsale.scraper.show-list', ['supplier' => $supplier, 'listSlug' => $listSlug])
                     ->with('error', 'Non sono stati trovati prodotti nella lista da importare.');
             }
+            
+            Log::info('Trovati ' . count($productsFromITSale) . ' prodotti da importare');
             
             // Costruisci mapping dei campi
         $fieldMapping = [];
@@ -1295,7 +1335,7 @@ class ITSaleScraperController extends Controller
             $batch->batch_cost = (float)$request->batch_cost;
             $batch->shipping_cost = (float)($request->shipping_cost ?? 0);
             $batch->tax_amount = (float)($request->tax_amount ?? 0);
-            $batch->total_cost = (float)$request->total_cost;
+            $batch->total_cost = (float)$request->total_cost; // Ora utilizzerà il valore calcolato automaticamente se non fornito
             
             // Prepara l'array di prodotti da salvare nel batch
             $batchProducts = [];
@@ -1704,6 +1744,9 @@ class ITSaleScraperController extends Controller
                 
                 // Mantieni anche tutte le specifiche originali per riferimento
                 $productData['original_specs'] = $product['specs'] ?? [];
+                
+                // Aggiungi ID univoco al prodotto
+                $productData['id'] = $request->batch_reference . '-' . ($index + 1);
                 
                 // Aggiungi il prodotto all'array
                 $batchProducts[] = $productData;
@@ -2358,4 +2401,4 @@ class ITSaleScraperController extends Controller
             }
         }
     }
-} 
+}

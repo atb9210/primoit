@@ -51,24 +51,27 @@
         }
         
         .batch-title {
-            font-size: 14px;
+            font-size: 18px;
             font-weight: bold;
-            margin: 0.1in 0;
+            margin: 0.2in 0;
+            text-align: center;
         }
         
         .info-grid {
             display: grid;
             grid-template-columns: 35% 65%;
-            gap: 4px;
+            gap: 8px;
             margin-bottom: 0.2in;
         }
         
         .info-label {
             font-weight: bold;
+            font-size: 14px;
         }
         
         .info-value {
             text-align: left;
+            font-size: 14px;
         }
         
         .qr-container {
@@ -78,8 +81,8 @@
         }
         
         .qr-code {
-            width: 1.5in;
-            height: 1.5in;
+            width: 2in;
+            height: 2in;
             margin: 0 auto;
         }
         
@@ -125,46 +128,19 @@
             <div class="info-label">Ref. Code:</div>
             <div class="info-value">{{ $batch->reference_code }}</div>
             
-            <div class="info-label">Manufacturer:</div>
-            <div class="info-value">{{ $batch->product_manufacturer }}</div>
-            
-            <div class="info-label">Model:</div>
-            <div class="info-value">{{ $batch->product_model }}</div>
-            
             <div class="info-label">Quantity:</div>
             <div class="info-value">{{ $batch->unit_quantity }} units</div>
-            
-            <div class="info-label">Status:</div>
-            <div class="info-value">{{ ucfirst($batch->status) }}</div>
-            
-            @if($batch->condition_grade)
-            <div class="info-label">Grade:</div>
-            <div class="info-value">{{ $batch->condition_grade }}</div>
-            @endif
-            
-            @if($batch->available_from)
-            <div class="info-label">Available From:</div>
-            <div class="info-value">{{ $batch->available_from->format('d/m/Y') }}</div>
-            @endif
-            
-            @if(isset($batch->specifications) && is_array($batch->specifications))
-                @foreach(array_slice($batch->specifications, 0, 3) as $key => $value)
-                    <div class="info-label">{{ ucfirst(str_replace('_', ' ', $key)) }}:</div>
-                    <div class="info-value">{{ is_array($value) ? implode(', ', $value) : $value }}</div>
-                @endforeach
-            @endif
         </div>
         
         <div class="qr-container">
             <div class="qr-code">
-                {!! QrCode::size(150)->generate(route('admin.batches.show', $batch)) !!}
+                {!! QrCode::size(200)->generate(route('admin.batches.show', $batch)) !!}
             </div>
             <div style="margin-top: 5px;">Scan for details</div>
         </div>
         
         <div class="footer">
             <div>Printed on: {{ now()->format('d/m/Y H:i') }}</div>
-            <div>Batch ID: {{ $batch->id }}</div>
         </div>
     </div>
 </body>

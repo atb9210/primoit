@@ -431,9 +431,10 @@
                                 <table class="min-w-full divide-y divide-gray-200" id="products-table">
                                     <thead class="bg-gray-50">
                                         <tr>
+                                            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
                                             <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Product</th>
                                             <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quantity</th>
-                                            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Unit Price (€)</th>
+                                            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Unit Price</th>
                                             <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
                                             <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                                         </tr>
@@ -443,6 +444,10 @@
                                             @foreach($batch->products as $index => $product)
                                             @if(is_array($product) && isset($product['manufacturer']) && isset($product['model']) && isset($product['quantity']) && isset($product['price']))
                                             <tr class="product-row">
+                                                <td class="px-4 py-3 text-sm font-medium text-gray-900">
+                                                    {{ $product['id'] ?? ($batch->reference_code . '-' . ($index + 1)) }}
+                                                    <input type="hidden" name="product_ids[]" value="{{ $product['id'] ?? ($batch->reference_code . '-' . ($index + 1)) }}">
+                                                </td>
                                                 <td class="px-4 py-3">
                                                         <div class="text-sm text-gray-900">
                                                             {{ $product['manufacturer'] }} {{ $product['model'] }}
@@ -455,12 +460,12 @@
                                                         <input type="number" name="unit_prices[]" value="{{ (float)$product['price'] }}" min="0" step="0.01" class="price-input w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" required>
                                                 </td>
                                                 <td class="px-4 py-3">
-                                                    <div class="row-total text-sm font-medium text-gray-900">
-                                                            €{{ number_format((float)$product['price'] * $product['quantity'], 2) }}
+                                                    <div class="product-total text-sm font-medium text-gray-900">
+                                                        @formatPrice($product['price'] * $product['quantity'])
                                                     </div>
                                                 </td>
                                                 <td class="px-4 py-3">
-                                                    <button type="button" class="remove-row text-red-600 hover:text-red-900">
+                                                    <button type="button" class="remove-product-row text-red-600 hover:text-red-900 font-medium">
                                                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                                         </svg>
@@ -590,14 +595,29 @@
                 batchQuantityElement.textContent = totalQuantity;
             }
             
-            // Function to create a new product row
-            function createProductRow() {
-                const rowTemplate = `
-                    <tr class="product-row">
+            // Funzione per aggiungere una nuova riga di prodotto
+            document.getElementById('add-product-row').addEventListener('click', function() {
+                const tableBody = document.getElementById('product-rows');
+                const productCount = tableBody.querySelectorAll('.product-row').length;
+                
+                const newRow = document.createElement('tr');
+                newRow.className = 'product-row';
+                
+                // Ottieni il reference code
+                const refCode = "{{ $batch->reference_code }}";
+                
+                // Genera un ID univoco per il nuovo prodotto
+                const newProductId = refCode + '-' + (productCount + 1);
+                
+                newRow.innerHTML = `
+                    <td class="px-4 py-3 text-sm font-medium text-gray-900">
+                        ${newProductId}
+                        <input type="hidden" name="product_ids[]" value="${newProductId}">
+                    </td>
                         <td class="px-4 py-3">
                             <div class="flex space-x-2">
-                                <input type="text" name="product_manufacturers[]" placeholder="Manufacturer" class="w-1/2 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" required>
-                                <input type="text" name="product_models[]" placeholder="Model" class="w-1/2 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" required>
+                            <input type="text" name="manufacturers[]" placeholder="Manufacturer" class="w-1/2 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" required>
+                            <input type="text" name="models[]" placeholder="Model" class="w-1/2 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" required>
                             </div>
                         </td>
                         <td class="px-4 py-3">
@@ -607,64 +627,25 @@
                             <input type="number" name="unit_prices[]" value="0.00" min="0" step="0.01" class="price-input w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" required>
                         </td>
                         <td class="px-4 py-3">
-                            <div class="row-total text-sm font-medium text-gray-900">€0.00</div>
+                        <div class="product-total text-sm font-medium text-gray-900">€0.00</div>
                         </td>
                         <td class="px-4 py-3">
-                            <button type="button" class="remove-row text-red-600 hover:text-red-900">
+                        <button type="button" class="remove-product-row text-red-600 hover:text-red-900 font-medium">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                 </svg>
                             </button>
                         </td>
-                    </tr>
                 `;
                 
-                const tempDiv = document.createElement('div');
-                tempDiv.innerHTML = rowTemplate;
-                const newRow = tempDiv.firstElementChild;
+                tableBody.appendChild(newRow);
                 
-                // Add event listeners to the new row
-                addRowEventListeners(newRow);
+                // Aggiungi listener per gli eventi di calcolo
+                addEventListenersToRow(newRow);
                 
-                // Append the new row
-                productRows.appendChild(newRow);
-                
-                // Update totals
-                updateBatchTotals();
-            }
-            
-            // Function to add event listeners to a row
-            function addRowEventListeners(row) {
-                const quantityInput = row.querySelector('.quantity-input');
-                const priceInput = row.querySelector('.price-input');
-                const removeButton = row.querySelector('.remove-row');
-                
-                quantityInput.addEventListener('input', function() {
-                    updateRowTotal(row);
-                    updateBatchTotals();
-                });
-                
-                priceInput.addEventListener('input', function() {
-                    updateRowTotal(row);
-                    updateBatchTotals();
-                });
-                
-                removeButton.addEventListener('click', function() {
-                    if (document.querySelectorAll('.product-row').length > 1 || confirm('Are you sure you want to remove the last product?')) {
-                        row.remove();
-                        updateBatchTotals();
-                    }
-                });
-            }
-            
-            // Add event listener to the "Add Product" button
-            addProductButton.addEventListener('click', createProductRow);
-            
-            // Add event listeners to existing rows
-            document.querySelectorAll('.product-row').forEach(addRowEventListeners);
-            
-            // Initial calculation
-            updateBatchTotals();
+                // Ricalcola i totali
+                calculateTotals();
+            });
 
             // Image preview functionality
             const imageInput = document.getElementById('images');
