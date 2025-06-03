@@ -253,9 +253,9 @@
                                                 $visualGrade = '';
                                                 if (preg_match('/Grade\s+([A-D])/i', $gradeText, $matches)) {
                                                     $visualGrade = $matches[1];
-                                                } else if (preg_match('/Visual\s+grade:\s*([A-D])/i', $gradeText, $matches)) {
+                                                } elseif (preg_match('/Visual\s+grade:\s*([A-D])/i', $gradeText, $matches)) {
                                                     $visualGrade = $matches[1];
-                                                } else if (preg_match('/[^a-zA-Z]([A-D])(?:\s+Grade|\s+Quality|\s+Condition)/i', $gradeText, $matches)) {
+                                                } elseif (preg_match('/[^a-zA-Z]([A-D])(?:\s+Grade|\s+Quality|\s+Condition)/i', $gradeText, $matches)) {
                                                     $visualGrade = $matches[1];
                                                 }
                                                 
@@ -263,21 +263,21 @@
                                                 $functionality = '';
                                                 if (preg_match('/Functionality:\s+([^\n]+)/i', $gradeText, $matches)) {
                                                     $functionality = trim($matches[1]);
-                                                } else if (preg_match('/Working(?:\*)?/i', $gradeText)) {
-                                                    if (preg_match('/Not\s+working/i', $gradeText)) {
+                                                } elseif (preg_match('/Working(?:\*)?/i', $gradeText)) {
+                                                    if (stripos($gradeText, 'Not working') !== false) {
                                                         $functionality = 'Not working';
-                                                    } else if (preg_match('/Working\*/i', $gradeText)) {
+                                                    } elseif (stripos($gradeText, 'Working*') !== false) {
                                                         $functionality = 'Working*';
                                                     } else {
                                                         $functionality = 'Working';
                                                     }
                                                 }
                                                 
-                                                // Extract Problems
+                                                // Extract Problems - cerca solo il testo dopo "Problems:"
                                                 $problems = '';
                                                 if (preg_match('/Problems:\s+([^\n.,:;]+)/i', $gradeText, $matches)) {
                                                     $problems = trim($matches[1]);
-                                                } else if (preg_match('/(?:Issue|Problem)s?(?:\s+with|\s*:)?\s+([^\n.,:;]+)/i', $gradeText, $matches)) {
+                                                } elseif (preg_match('/(?:Issue|Problem)s?(?:\s+with|\s*:)?\s+([^\n.,:;]+)/i', $gradeText, $matches)) {
                                                     $problems = trim($matches[1]);
                                                 }
                                             }
@@ -592,29 +592,8 @@
                     console.log('Submitting form to:', form.action);
                     console.log('With method:', form.method);
                     
-                    // Assicuriamoci che il metodo sia impostato correttamente a POST
-                    form.method = 'POST';
-                    
-                    // Inviamo il form utilizzando un FormData per garantire l'invio come POST
-                    const formData = new FormData(form);
-                    
-                    fetch(form.action, {
-                        method: 'POST',
-                        body: formData,
-                        headers: {
-                            'X-Requested-With': 'XMLHttpRequest'
-                        },
-                        redirect: 'follow'
-                    })
-                    .then(response => {
-                        // Redirect alla pagina di risposta
-                        window.location.href = response.url;
-                    })
-                    .catch(error => {
-                        console.error('Error submitting form:', error);
-                        // Fallback: invia il form normalmente
-                        form.submit();
-                    });
+                    // Inviamo il form
+                    form.submit();
                 });
             }
             
@@ -723,232 +702,435 @@
                 
                 // Pattern riconoscimento per formato specifico ITSale "Grade A Visual grade: A Functionality: Working Security mark: Problems: [problemi]"
                 const standardPattern = /Grade\s+([A-D])(?:\s+Visual\s+grade:\s+([A-D]))?(?:\s+Functionality:\s+([^.,:;]+))?(?:\s+Security\s+mark:([^:]*))?\s+Problems:\s*(.*?)(?:\s*$|(?:\s+[A-Z][a-z]+:))/s;
-                const standardMatch = preg_match($standardPattern, $gradeText, $fullMatches);
+                const standardMatch = gradeText.match(standardPattern);
                 
                 let visualGrade = '';
                 let functionality = '';
                 let problems = '';
                 
-                if ($standardMatch) {
+                if (standardMatch) {
                     // Se abbiamo un match completo, estrai tutti i componenti
-                    $visualGrade = !empty($fullMatches[2]) ? $fullMatches[2] : $fullMatches[1]; // Usa Visual grade: se presente, altrimenti Grade
-                    $functionality = !empty($fullMatches[3]) ? trim($fullMatches[3]) : '';
-                    $problems = !empty($fullMatches[5]) ? trim($fullMatches[5]) : '';
+                    visualGrade = standardMatch[2] ? standardMatch[2] : standardMatch[1]; // Usa Visual grade: se presente, altrimenti Grade
+                    functionality = standardMatch[3] ? standardMatch[3].trim() : '';
+                    problems = standardMatch[5] ? standardMatch[5].trim() : '';
                     
-                    console.log('Standard pattern match:', ['visualGrade' => $visualGrade, 'functionality' => $functionality, 'problems' => $problems]);
+                    console.log('Standard pattern match:', {visualGrade, functionality, problems});
                 } else {
                     // Altrimenti usa il metodo precedente
-                    // Extract Visual Grade
-                    $visualGrade = '';
-                    if (preg_match('/Grade\s+([A-D])/i', $gradeText, $matches)) {
-                        $visualGrade = $matches[1];
-                    } else if (preg_match('/Visual\s+grade:\s*([A-D])/i', $gradeText, $matches)) {
-                        $visualGrade = $matches[1];
-                    } else if (preg_match('/[^a-zA-Z]([A-D])(?:\s+Grade|\s+Quality|\s+Condition)/i', $gradeText, $matches)) {
-                        $visualGrade = $matches[1];
+                    // Estrai Visual Grade
+                    if (gradeText.match(/Grade\s+([A-D])/i)) {
+                        visualGrade = gradeText.match(/Grade\s+([A-D])/i)[1];
+                    } else if (gradeText.match(/Visual\s+grade:\s*([A-D])/i)) {
+                        visualGrade = gradeText.match(/Visual\s+grade:\s*([A-D])/i)[1];
+                    } else if (gradeText.match(/[^a-zA-Z]([A-D])(?:\s+Grade|\s+Quality|\s+Condition)/i)) {
+                        visualGrade = gradeText.match(/[^a-zA-Z]([A-D])(?:\s+Grade|\s+Quality|\s+Condition)/i)[1];
                     }
                     
-                    // Extract Functionality (Tech Grade)
-                    $functionality = '';
-                    if (preg_match('/Functionality:\s+([^\n]+)/i', $gradeText, $matches)) {
-                        $functionality = trim($matches[1]);
-                    } else if (preg_match('/Working(?:\*)?/i', $gradeText)) {
-                        if (preg_match('/Not\s+working/i', $gradeText)) {
-                            $functionality = 'Not working';
-                        } else if (preg_match('/Working\*/i', $gradeText)) {
-                            $functionality = 'Working*';
+                    // Estrai Functionality (Tech Grade)
+                    if (gradeText.match(/Functionality:\s+([^\n]+)/i)) {
+                        functionality = gradeText.match(/Functionality:\s+([^\n]+)/i)[1].trim();
+                    } elseif (gradeText.match(/Working(?:\*)?/i)) {
+                        if (gradeText.match(/Not\s+working/i)) {
+                            functionality = 'Not working';
+                        } else if (gradeText.match(/Working\*/i)) {
+                            functionality = 'Working*';
                         } else {
-                            $functionality = 'Working';
+                            functionality = 'Working';
                         }
                     }
                     
-                    // Extract Problems
-                    $problems = '';
-                    if (preg_match('/Problems:\s+([^\n.,:;]+)/i', $gradeText, $matches)) {
-                        $problems = trim($matches[1]);
-                    } else if (preg_match('/(?:Issue|Problem)s?(?:\s+with|\s*:)?\s+([^\n.,:;]+)/i', $gradeText, $matches)) {
-                        $problems = trim($matches[1]);
+                    // Estrai Problems - solo il testo dopo "Problems:"
+                    if (gradeText.match(/Problems:\s+([^\n.,:;]+)/i)) {
+                        problems = gradeText.match(/Problems:\s+([^\n.,:;]+)/i)[1].trim();
+                    } elseif (gradeText.match(/(?:Issue|Problem)s?(?:\s+with|\s*:)?\s+([^\n.,:;]+)/i)) {
+                        problems = gradeText.match(/(?:Issue|Problem)s?(?:\s+with|\s*:)?\s+([^\n.,:;]+)/i)[1].trim();
                     }
                 }
                 
                 // Verifica speciale per rimuovere il testo di grading dal campo problems
-                if ($problems && ($problems.includes('Grade') || $problems.includes('Visual grade'))) {
+                if (problems && (problems.includes('Grade') || problems.includes('Visual grade'))) {
                     // Se problems contiene l'intera stringa di grading, estraiamo solo la parte dopo "Problems:"
-                    $problems = preg_replace('/Problems:\s+([^\n.,:;]+)/i', '', $problems);
+                    const problemsMatch = problems.match(/Problems:\s+([^\n.,:;]+)/i);
+                    if (problemsMatch) {
+                        problems = problemsMatch[1].trim();
+                    } else {
+                        // Se non troviamo "Problems:" nel testo, probabilmente non ci sono problemi
+                        problems = '';
+                    }
                 }
                 
                 // Aggiorna i campi nascosti per il form di importazione
-                $extracted_visual_grade = $visualGrade;
-                $extracted_tech_grade = $functionality;
-                $extracted_problems = $problems;
+                document.getElementById('extracted_visual_grade').value = visualGrade;
+                document.getElementById('extracted_tech_grade').value = functionality;
+                document.getElementById('extracted_problems').value = problems;
                 
                 // Aggiorna anche i campi di visualizzazione
-                $visual_grade_display = document.getElementById('visual_grade_display');
-                $tech_grade_display = document.getElementById('tech_grade_display');
-                $problems_display = document.getElementById('problems_display');
+                const visualGradeDisplay = document.getElementById('visual_grade_display');
+                const techGradeDisplay = document.getElementById('tech_grade_display');
+                const problemsDisplay = document.getElementById('problems_display');
                 
-                if ($visual_grade_display) $visual_grade_display.textContent = $visualGrade || 'Not detected';
-                if ($tech_grade_display) $tech_grade_display.textContent = $functionality || 'Not detected';
-                if ($problems_display) $problems_display.textContent = $problems || 'Not detected';
+                if (visualGradeDisplay) visualGradeDisplay.textContent = visualGrade || 'Not detected';
+                if (techGradeDisplay) techGradeDisplay.textContent = functionality || 'Not detected';
+                if (problemsDisplay) problemsDisplay.textContent = problems || 'Not detected';
                 
                 // Aggiorna i campi di override se esistono
-                $manual_visual_grade = document.getElementById('manual_visual_grade');
-                $manual_tech_grade = document.getElementById('manual_tech_grade');
-                $manual_problems = document.getElementById('manual_problems');
+                const manualVisualGrade = document.getElementById('manual_visual_grade');
+                const manualTechGrade = document.getElementById('manual_tech_grade');
+                const manualProblems = document.getElementById('manual_problems');
                 
-                if ($manual_visual_grade && $visualGrade && !$manual_visual_grade.value) {
+                if (manualVisualGrade && visualGrade && !manualVisualGrade.value) {
                     // Trova l'opzione corrispondente e selezionala
-                    for ($i = 0; $i < $manual_visual_grade.options.length; $i++) {
-                        if ($manual_visual_grade.options[$i].value === $visualGrade) {
-                            $manual_visual_grade.selectedIndex = $i;
+                    for (let i = 0; i < manualVisualGrade.options.length; i++) {
+                        if (manualVisualGrade.options[i].value === visualGrade) {
+                            manualVisualGrade.selectedIndex = i;
                             break;
                         }
                     }
                 }
                 
-                if ($manual_tech_grade && $functionality && !$manual_tech_grade.value) {
+                if (manualTechGrade && functionality && !manualTechGrade.value) {
                     // Trova l'opzione corrispondente e selezionala
-                    for ($i = 0; $i < $manual_tech_grade.options.length; $i++) {
-                        if ($manual_tech_grade.options[$i].value === $functionality) {
-                            $manual_tech_grade.selectedIndex = $i;
+                    for (let i = 0; i < manualTechGrade.options.length; i++) {
+                        if (manualTechGrade.options[i].value === functionality) {
+                            manualTechGrade.selectedIndex = i;
                             break;
                         }
                     }
                 }
                 
-                if ($manual_problems && $problems && !$manual_problems.value) {
-                    $manual_problems.value = $problems;
+                if (manualProblems && problems && !manualProblems.value) {
+                    manualProblems.value = problems;
                 }
             }
             
             // Aggiungi campi nascosti per i valori estratti
-            $form = document.querySelector('form');
-            $hiddenFields = document.createElement('div');
-            $hiddenFields.style.display = 'none';
-            $hiddenFields.innerHTML = `
+            const form = document.querySelector('form');
+            const hiddenFields = document.createElement('div');
+            hiddenFields.style.display = 'none';
+            hiddenFields.innerHTML = `
                 <input type="hidden" id="extracted_visual_grade" name="extracted_visual_grade" value="">
                 <input type="hidden" id="extracted_tech_grade" name="extracted_tech_grade" value="">
                 <input type="hidden" id="extracted_problems" name="extracted_problems" value="">
             `;
-            $form.appendChild($hiddenFields);
+            form.appendChild(hiddenFields);
             
             // Trova il campo Visual grade e analizzalo all'avvio
-            document.querySelectorAll('select[name="spec_params[]"]').forEach(function($select, $index) {
-                if ($select.value === '_grade_special') {
-                    $row = $select.closest('tr');
-                    $specField = $row.querySelector('td:first-child').textContent.trim();
-                    $specValue = $row.querySelector('td:last-child').textContent.trim();
+            document.querySelectorAll('select[name="spec_params[]"]').forEach((select, index) => {
+                if (select.value === '_grade_special') {
+                    const specField = select.closest('tr').querySelector('td:first-child').textContent.trim();
+                    const specValue = select.closest('tr').querySelector('td:last-child').textContent.trim();
                     
-                    if ($specValue) {
-                        parseGradeInfo($specValue);
+                    if (specValue) {
+                        parseGradeInfo(specValue);
                     }
                 }
             });
             
             // Gestisci i campi di override manuali
-            document.querySelectorAll('[name="manual_visual_grade"], [name="manual_tech_grade"], [name="manual_problems"]').forEach(function($field) {
-                $field.addEventListener('change', function() {
+            document.querySelectorAll('[name="manual_visual_grade"], [name="manual_tech_grade"], [name="manual_problems"]').forEach(field => {
+                field.addEventListener('change', function() {
                     // Se viene selezionato un valore manuale, sovrascrive quello auto-detected
-                    if ($this->name === 'manual_visual_grade' && $this->value) {
-                        $extracted_visual_grade = $this->value;
+                    if (this.name === 'manual_visual_grade' && this.value) {
+                        document.getElementById('extracted_visual_grade').value = this.value;
                     }
-                    if ($this->name === 'manual_tech_grade' && $this->value) {
-                        $extracted_tech_grade = $this->value;
+                    if (this.name === 'manual_tech_grade' && this.value) {
+                        document.getElementById('extracted_tech_grade').value = this.value;
                     }
-                    if ($this->name === 'manual_problems') {
-                        $extracted_problems = $this->value;
+                    if (this.name === 'manual_problems') {
+                        document.getElementById('extracted_problems').value = this.value;
                     }
                 });
             });
             
             // Elabora automaticamente i campi "Not mapped" prima del submit
-            $form.addEventListener('submit', function(e) {
+            form.addEventListener('submit', function(e) {
                 // Per ogni select con valore vuoto, imposta automaticamente come parametro custom con lo stesso nome
-                document.querySelectorAll('select[name="spec_params[]"]').forEach(function($select, $index) {
-                    if ($select.value === '') {
-                        $row = $select.closest('tr');
-                        $specName = $row.querySelector('td:first-child').textContent.trim();
-                        $specValue = $row.querySelector('td:last-child').textContent.trim();
+                document.querySelectorAll('select[name="spec_params[]"]').forEach((select, index) => {
+                    if (select.value === '') {
+                        const row = select.closest('tr');
+                        const specName = row.querySelector('td:first-child').textContent.trim();
+                        const specValue = row.querySelector('td:last-child').textContent.trim();
                         
                         // Se il valore della specifica non è vuoto, crea un parametro custom automatico
-                        if ($specValue && $specValue !== 'N/A') {
-                            $select.value = 'custom';
-                            $customInput = $select.nextElementSibling;
-                            $customInput.value = $specName;
-                            $customInput.classList.remove('hidden');
+                        if (specValue && specValue !== 'N/A') {
+                            select.value = 'custom';
+                            const customInput = select.nextElementSibling;
+                            customInput.value = specName;
+                            customInput.classList.remove('hidden');
                         }
                     }
                 });
                 
                 // Assicurati che sia impostato almeno quantity=1 se non è già mappato
                 let hasQuantity = false;
-                document.querySelectorAll('select[name="spec_params[]"]').forEach(function($select) {
-                    if ($select.value === 'quantity') {
+                document.querySelectorAll('select[name="spec_params[]"]').forEach(select => {
+                    if (select.value === 'quantity') {
                         hasQuantity = true;
                     }
                 });
                 
-                if (!$hasQuantity) {
+                if (!hasQuantity) {
                     // Aggiungi un parametro aggiuntivo per quantity=1
-                    $additionalParamNames = document.querySelectorAll('input[name="additional_param_names[]"]');
-                    $additionalParamValues = document.querySelectorAll('input[name="additional_param_values[]"]');
+                    const additionalParamNames = document.querySelectorAll('input[name="additional_param_names[]"]');
+                    const additionalParamValues = document.querySelectorAll('input[name="additional_param_values[]"]');
                     
                     // Controlla se esiste già un campo vuoto per aggiungere il parametro
                     let quantityAdded = false;
-                    for ($i = 0; $i < $additionalParamNames.length; $i++) {
-                        if ($additionalParamNames[$i].value === '') {
-                            $additionalParamNames[$i].value = 'quantity';
-                            $additionalParamValues[$i].value = '1';
-                            $quantityAdded = true;
+                    for (let i = 0; i < additionalParamNames.length; i++) {
+                        if (additionalParamNames[i].value === '') {
+                            additionalParamNames[i].value = 'quantity';
+                            additionalParamValues[i].value = '1';
+                            quantityAdded = true;
                             break;
                         }
                     }
                     
                     // Se non c'è un campo vuoto, aggiungi un nuovo parametro cliccando sul pulsante
-                    if (!$quantityAdded && $additionalParamNames.length > 0) {
+                    if (!quantityAdded && additionalParamNames.length > 0) {
                         // Clicca sul pulsante per aggiungere un nuovo parametro
                         document.querySelector('.add-param-btn').click();
                         
                         // Ora prendi l'ultimo parametro aggiunto
-                        $newParamNames = document.querySelectorAll('input[name="additional_param_names[]"]');
-                        $newParamValues = document.querySelectorAll('input[name="additional_param_values[]"]');
+                        const newParamNames = document.querySelectorAll('input[name="additional_param_names[]"]');
+                        const newParamValues = document.querySelectorAll('input[name="additional_param_values[]"]');
                         
                         // Imposta i valori
-                        $newParamNames[$newParamNames.length - 1].value = 'quantity';
-                        $newParamValues[$newParamValues.length - 1].value = '1';
+                        newParamNames[newParamNames.length - 1].value = 'quantity';
+                        newParamValues[newParamValues.length - 1].value = '1';
                     }
                 }
             });
 
             // Funzione per aggiornare gli stili in base allo stato di mapping
             function updateMappingStyles() {
-                $selects = document.querySelectorAll('.mapping-select');
-                $rows = document.querySelectorAll('.field-mapping-row');
+                const selects = document.querySelectorAll('.mapping-select');
+                const rows = document.querySelectorAll('.field-mapping-row');
                 let mappedCount = 0;
                 
-                $selects.forEach(function($select, $index) {
-                    $row = $rows[$index];
-                    if ($select.value && $select.value !== '') {
-                        $row.classList.add('bg-green-50');
-                        $row.classList.remove('bg-gray-50');
-                        $mappedCount++;
+                selects.forEach((select, index) => {
+                    const row = rows[index];
+                    if (select.value && select.value !== '') {
+                        row.classList.add('bg-green-50');
+                        row.classList.remove('bg-gray-50');
+                        mappedCount++;
                     } else {
-                        $row.classList.remove('bg-green-50');
-                        $row.classList.add('bg-gray-50');
+                        row.classList.remove('bg-green-50');
+                        row.classList.add('bg-gray-50');
                     }
                 });
                 
                 // Aggiorna il conteggio visualizzato
-                document.getElementById('mapped-count').textContent = $mappedCount;
-                document.getElementById('total-count').textContent = $selects.length;
+                document.getElementById('mapped-count').textContent = mappedCount;
+                document.getElementById('total-count').textContent = selects.length;
             }
             
             // Esegui l'aggiornamento degli stili all'avvio
             updateMappingStyles();
             
             // Aggiungi listener per aggiornare gli stili quando un select cambia
-            document.querySelectorAll('.mapping-select').forEach(function($select) {
-                $select.addEventListener('change', updateMappingStyles);
+            document.querySelectorAll('.mapping-select').forEach(select => {
+                select.addEventListener('change', updateMappingStyles);
+            });
+        });
+    </script>
+</x-admin-layout>                         } else if (gradeText.match(/Working\*/i)) {
+                            functionality = 'Working*';
+                        } else {
+                            functionality = 'Working';
+                        }
+                    }
+                    
+                    // Estrai Problems - solo il testo dopo "Problems:"
+                    if (gradeText.match(/Problems:\s+([^\n.,:;]+)/i)) {
+                        problems = gradeText.match(/Problems:\s+([^\n.,:;]+)/i)[1].trim();
+                    } elseif (gradeText.match(/(?:Issue|Problem)s?(?:\s+with|\s*:)?\s+([^\n.,:;]+)/i)) {
+                        problems = gradeText.match(/(?:Issue|Problem)s?(?:\s+with|\s*:)?\s+([^\n.,:;]+)/i)[1].trim();
+                    }
+                }
+                
+                // Verifica speciale per rimuovere il testo di grading dal campo problems
+                if (problems && (problems.includes('Grade') || problems.includes('Visual grade'))) {
+                    // Se problems contiene l'intera stringa di grading, estraiamo solo la parte dopo "Problems:"
+                    const problemsMatch = problems.match(/Problems:\s+([^\n.,:;]+)/i);
+                    if (problemsMatch) {
+                        problems = problemsMatch[1].trim();
+                    } else {
+                        // Se non troviamo "Problems:" nel testo, probabilmente non ci sono problemi
+                        problems = '';
+                    }
+                }
+                
+                // Aggiorna i campi nascosti per il form di importazione
+                document.getElementById('extracted_visual_grade').value = visualGrade;
+                document.getElementById('extracted_tech_grade').value = functionality;
+                document.getElementById('extracted_problems').value = problems;
+                
+                // Aggiorna anche i campi di visualizzazione
+                const visualGradeDisplay = document.getElementById('visual_grade_display');
+                const techGradeDisplay = document.getElementById('tech_grade_display');
+                const problemsDisplay = document.getElementById('problems_display');
+                
+                if (visualGradeDisplay) visualGradeDisplay.textContent = visualGrade || 'Not detected';
+                if (techGradeDisplay) techGradeDisplay.textContent = functionality || 'Not detected';
+                if (problemsDisplay) problemsDisplay.textContent = problems || 'Not detected';
+                
+                // Aggiorna i campi di override se esistono
+                const manualVisualGrade = document.getElementById('manual_visual_grade');
+                const manualTechGrade = document.getElementById('manual_tech_grade');
+                const manualProblems = document.getElementById('manual_problems');
+                
+                if (manualVisualGrade && visualGrade && !manualVisualGrade.value) {
+                    // Trova l'opzione corrispondente e selezionala
+                    for (let i = 0; i < manualVisualGrade.options.length; i++) {
+                        if (manualVisualGrade.options[i].value === visualGrade) {
+                            manualVisualGrade.selectedIndex = i;
+                            break;
+                        }
+                    }
+                }
+                
+                if (manualTechGrade && functionality && !manualTechGrade.value) {
+                    // Trova l'opzione corrispondente e selezionala
+                    for (let i = 0; i < manualTechGrade.options.length; i++) {
+                        if (manualTechGrade.options[i].value === functionality) {
+                            manualTechGrade.selectedIndex = i;
+                            break;
+                        }
+                    }
+                }
+                
+                if (manualProblems && problems && !manualProblems.value) {
+                    manualProblems.value = problems;
+                }
+            }
+            
+            // Aggiungi campi nascosti per i valori estratti
+            const form = document.querySelector('form');
+            const hiddenFields = document.createElement('div');
+            hiddenFields.style.display = 'none';
+            hiddenFields.innerHTML = `
+                <input type="hidden" id="extracted_visual_grade" name="extracted_visual_grade" value="">
+                <input type="hidden" id="extracted_tech_grade" name="extracted_tech_grade" value="">
+                <input type="hidden" id="extracted_problems" name="extracted_problems" value="">
+            `;
+            form.appendChild(hiddenFields);
+            
+            // Trova il campo Visual grade e analizzalo all'avvio
+            document.querySelectorAll('select[name="spec_params[]"]').forEach((select, index) => {
+                if (select.value === '_grade_special') {
+                    const specField = select.closest('tr').querySelector('td:first-child').textContent.trim();
+                    const specValue = select.closest('tr').querySelector('td:last-child').textContent.trim();
+                    
+                    if (specValue) {
+                        parseGradeInfo(specValue);
+                    }
+                }
+            });
+            
+            // Gestisci i campi di override manuali
+            document.querySelectorAll('[name="manual_visual_grade"], [name="manual_tech_grade"], [name="manual_problems"]').forEach(field => {
+                field.addEventListener('change', function() {
+                    // Se viene selezionato un valore manuale, sovrascrive quello auto-detected
+                    if (this.name === 'manual_visual_grade' && this.value) {
+                        document.getElementById('extracted_visual_grade').value = this.value;
+                    }
+                    if (this.name === 'manual_tech_grade' && this.value) {
+                        document.getElementById('extracted_tech_grade').value = this.value;
+                    }
+                    if (this.name === 'manual_problems') {
+                        document.getElementById('extracted_problems').value = this.value;
+                    }
+                });
+            });
+            
+            // Elabora automaticamente i campi "Not mapped" prima del submit
+            form.addEventListener('submit', function(e) {
+                // Per ogni select con valore vuoto, imposta automaticamente come parametro custom con lo stesso nome
+                document.querySelectorAll('select[name="spec_params[]"]').forEach((select, index) => {
+                    if (select.value === '') {
+                        const row = select.closest('tr');
+                        const specName = row.querySelector('td:first-child').textContent.trim();
+                        const specValue = row.querySelector('td:last-child').textContent.trim();
+                        
+                        // Se il valore della specifica non è vuoto, crea un parametro custom automatico
+                        if (specValue && specValue !== 'N/A') {
+                            select.value = 'custom';
+                            const customInput = select.nextElementSibling;
+                            customInput.value = specName;
+                            customInput.classList.remove('hidden');
+                        }
+                    }
+                });
+                
+                // Assicurati che sia impostato almeno quantity=1 se non è già mappato
+                let hasQuantity = false;
+                document.querySelectorAll('select[name="spec_params[]"]').forEach(select => {
+                    if (select.value === 'quantity') {
+                        hasQuantity = true;
+                    }
+                });
+                
+                if (!hasQuantity) {
+                    // Aggiungi un parametro aggiuntivo per quantity=1
+                    const additionalParamNames = document.querySelectorAll('input[name="additional_param_names[]"]');
+                    const additionalParamValues = document.querySelectorAll('input[name="additional_param_values[]"]');
+                    
+                    // Controlla se esiste già un campo vuoto per aggiungere il parametro
+                    let quantityAdded = false;
+                    for (let i = 0; i < additionalParamNames.length; i++) {
+                        if (additionalParamNames[i].value === '') {
+                            additionalParamNames[i].value = 'quantity';
+                            additionalParamValues[i].value = '1';
+                            quantityAdded = true;
+                            break;
+                        }
+                    }
+                    
+                    // Se non c'è un campo vuoto, aggiungi un nuovo parametro cliccando sul pulsante
+                    if (!quantityAdded && additionalParamNames.length > 0) {
+                        // Clicca sul pulsante per aggiungere un nuovo parametro
+                        document.querySelector('.add-param-btn').click();
+                        
+                        // Ora prendi l'ultimo parametro aggiunto
+                        const newParamNames = document.querySelectorAll('input[name="additional_param_names[]"]');
+                        const newParamValues = document.querySelectorAll('input[name="additional_param_values[]"]');
+                        
+                        // Imposta i valori
+                        newParamNames[newParamNames.length - 1].value = 'quantity';
+                        newParamValues[newParamValues.length - 1].value = '1';
+                    }
+                }
+            });
+
+            // Funzione per aggiornare gli stili in base allo stato di mapping
+            function updateMappingStyles() {
+                const selects = document.querySelectorAll('.mapping-select');
+                const rows = document.querySelectorAll('.field-mapping-row');
+                let mappedCount = 0;
+                
+                selects.forEach((select, index) => {
+                    const row = rows[index];
+                    if (select.value && select.value !== '') {
+                        row.classList.add('bg-green-50');
+                        row.classList.remove('bg-gray-50');
+                        mappedCount++;
+                    } else {
+                        row.classList.remove('bg-green-50');
+                        row.classList.add('bg-gray-50');
+                    }
+                });
+                
+                // Aggiorna il conteggio visualizzato
+                document.getElementById('mapped-count').textContent = mappedCount;
+                document.getElementById('total-count').textContent = selects.length;
+            }
+            
+            // Esegui l'aggiornamento degli stili all'avvio
+            updateMappingStyles();
+            
+            // Aggiungi listener per aggiornare gli stili quando un select cambia
+            document.querySelectorAll('.mapping-select').forEach(select => {
+                select.addEventListener('change', updateMappingStyles);
             });
         });
     </script>

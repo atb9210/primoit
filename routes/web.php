@@ -102,6 +102,8 @@ Route::middleware(['auth', 'verified', \App\Http\Middleware\AdminMiddleware::cla
     Route::post('batches/{batch}/add-product', [AdminBatchController::class, 'addProduct'])->name('batches.add-product');
     Route::delete('batches/{batch}/remove-product/{index}', [AdminBatchController::class, 'removeProduct'])->name('batches.remove-product');
     Route::get('batches/{batch}/print-label', [AdminBatchController::class, 'printLabel'])->name('batches.print-label');
+    Route::get('batches/{batch}/print-product-labels', [AdminBatchController::class, 'printProductLabels'])->name('batches.print-product-labels');
+    Route::get('batches/{batch}/download-product-labels', [AdminBatchController::class, 'downloadProductLabelsPdf'])->name('batches.download-product-labels');
     
     // Categories
     Route::resource('categories', AdminCategoryController::class);
@@ -114,6 +116,7 @@ Route::middleware(['auth', 'verified', \App\Http\Middleware\AdminMiddleware::cla
     // ITSale Scraper
     Route::get('itsale/scraper/{supplier?}', [AdminITSaleScraperController::class, 'index'])->name('itsale.scraper');
     Route::get('itsale/scraper/{supplier?}/{listSlug}', [AdminITSaleScraperController::class, 'showList'])->name('itsale.scraper.show-list');
+    Route::get('itsale/scraper/{supplier?}/{listSlug}/import-batch', [AdminITSaleScraperController::class, 'showImportForm'])->name('itsale.scraper.show-import-form');
     Route::post('itsale/scraper/{supplier?}/{listSlug}/import-batch', [AdminITSaleScraperController::class, 'importAsBatch'])->name('itsale.scraper.import-batch');
     
     // Orders
@@ -125,3 +128,4 @@ Route::middleware(['auth', 'verified', \App\Http\Middleware\AdminMiddleware::cla
     // Users
     Route::resource('users', AdminUserController::class);
 });
+
