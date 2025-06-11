@@ -22,6 +22,8 @@ use App\Http\Controllers\InquiryController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Admin\ITSaleScraperController as AdminITSaleScraperController;
 use App\Http\Controllers\Admin\ITSaleScraperController as ITSaleScraperController;
+use App\Http\Controllers\Admin\FoxwayApiController as AdminFoxwayApiController;
+use App\Http\Controllers\CatalogController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -44,6 +46,10 @@ Route::get('/terms', [HomeController::class, 'terms'])->name('terms');
 Route::get('/privacy', [HomeController::class, 'privacy'])->name('privacy');
 Route::get('/cookies', [HomeController::class, 'cookies'])->name('cookies');
 Route::post('/contact', [InquiryController::class, 'store'])->name('contact.store');
+
+// Catalogs routes
+Route::get('/catalog/{supplier}', [CatalogController::class, 'show'])->name('catalog.show');
+Route::get('/catalog/{supplier}/{listSlug}', [CatalogController::class, 'show'])->name('catalog.show.list');
 
 // Batches routes
 Route::get('/batches', [App\Http\Controllers\BatchesController::class, 'index'])->name('batches.index');
@@ -113,12 +119,16 @@ Route::middleware(['auth', 'verified', \App\Http\Middleware\AdminMiddleware::cla
     Route::resource('suppliers', AdminThirdPartySupplierController::class);
     Route::get('suppliers/{supplier}/configure', [AdminThirdPartySupplierController::class, 'configureCredentials'])->name('suppliers.configure');
     Route::post('suppliers/{supplier}/configure', [AdminThirdPartySupplierController::class, 'updateCredentials'])->name('suppliers.update-credentials');
+    Route::get('suppliers/{supplier}/generate-catalog', [CatalogController::class, 'generate'])->name('suppliers.generate-catalog');
     
     // ITSale Scraper
     Route::get('itsale/scraper/{supplier?}', [AdminITSaleScraperController::class, 'index'])->name('itsale.scraper');
     Route::get('itsale/scraper/{supplier?}/{listSlug}', [AdminITSaleScraperController::class, 'showList'])->name('itsale.scraper.show-list');
     Route::get('itsale/scraper/{supplier?}/{listSlug}/import-batch', [AdminITSaleScraperController::class, 'showImportForm'])->name('itsale.scraper.show-import-form');
     Route::post('itsale/scraper/{supplier?}/{listSlug}/import-batch', [AdminITSaleScraperController::class, 'importAsBatch'])->name('itsale.scraper.import-batch');
+    
+    // Foxway.shop API
+    Route::get('foxway/api/{supplier?}', [AdminFoxwayApiController::class, 'index'])->name('foxway.api');
     
     // Orders
     Route::resource('orders', AdminOrderController::class);
@@ -129,4 +139,11 @@ Route::middleware(['auth', 'verified', \App\Http\Middleware\AdminMiddleware::cla
     // Users
     Route::resource('users', AdminUserController::class);
 });
+
+// Foxway.shop API routes
+Route::get('/admin/foxway/api/{supplier?}', [App\Http\Controllers\Admin\FoxwayApiController::class, 'index'])->name('admin.foxway.api');
+
+// Foxway.shop Web Scraper routes (per il fornitore foxway-shop-scraper)
+Route::get('/admin/foxway-scraper/{supplier?}', [App\Http\Controllers\Admin\FoxwayScraperController::class, 'index'])->name('admin.foxway-scraper');
+Route::post('/admin/foxway-scraper/import', [App\Http\Controllers\Admin\FoxwayScraperController::class, 'importProducts'])->name('admin.foxway-scraper.import');
 

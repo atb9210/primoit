@@ -11,10 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('batches', function (Blueprint $table) {
-            $table->json('products')->nullable()->after('specifications')
-                ->comment('Array JSON di prodotti all\'interno del batch');
-        });
+        // Verifica se la tabella batches esiste prima di tentare di modificarla
+        if (Schema::hasTable('batches')) {
+            Schema::table('batches', function (Blueprint $table) {
+                if (!Schema::hasColumn('batches', 'products')) {
+                    $table->json('products')->nullable()->comment('Array JSON di prodotti all\'interno del batch')->after('specifications');
+                }
+            });
+        }
     }
 
     /**
@@ -22,8 +26,13 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('batches', function (Blueprint $table) {
-            $table->dropColumn('products');
-        });
+        // Verifica se la tabella batches esiste prima di tentare di modificarla
+        if (Schema::hasTable('batches')) {
+            Schema::table('batches', function (Blueprint $table) {
+                if (Schema::hasColumn('batches', 'products')) {
+                    $table->dropColumn('products');
+                }
+            });
+        }
     }
 }; 

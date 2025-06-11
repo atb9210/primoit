@@ -1227,6 +1227,8 @@ class ITSaleScraperController extends Controller
                 'shipping_cost' => 'nullable|numeric|min:0',
                 'tax_amount' => 'nullable|numeric|min:0',
                 'total_cost' => 'nullable|numeric|min:0', // Modificato da required a nullable
+                'profit_margin' => 'nullable|numeric|min:0',
+                'sale_price' => 'nullable|numeric|min:0',
                 'spec_fields' => 'required|array',
                 'spec_params' => 'required|array',
                 'spec_custom_params' => 'nullable|array',
@@ -1336,6 +1338,18 @@ class ITSaleScraperController extends Controller
             $batch->shipping_cost = (float)($request->shipping_cost ?? 0);
             $batch->tax_amount = (float)($request->tax_amount ?? 0);
             $batch->total_cost = (float)$request->total_cost; // Ora utilizzerà il valore calcolato automaticamente se non fornito
+            
+            // Imposta profit_margin e sale_price
+            if ($request->has('profit_margin') && $request->profit_margin != null) {
+                $batch->profit_margin = (int)$request->profit_margin;
+            }
+            
+            if ($request->has('sale_price') && $request->sale_price != null) {
+                $batch->sale_price = (float)$request->sale_price;
+            } else if ($batch->profit_margin > 0 && $batch->total_cost > 0) {
+                // Calcola il sale_price in base al margine se non è stato fornito
+                $batch->sale_price = $batch->total_cost * (1 + ($batch->profit_margin / 100));
+            }
             
             // Prepara l'array di prodotti da salvare nel batch
             $batchProducts = [];

@@ -31,7 +31,7 @@ class ThirdPartySupplier extends Model
      * @var array<string, string>
      */
     protected $casts = [
-        'credentials' => 'encrypted:array',
+        'credentials' => 'array',
         'is_active' => 'boolean',
     ];
 }

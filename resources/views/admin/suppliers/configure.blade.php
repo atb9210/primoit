@@ -6,12 +6,135 @@
             </h2>
             <div class="flex space-x-2">
                 @if($supplier->name == 'ITSale.pl')
-                <a href="{{ route('admin.suppliers.itsale-scraper', $supplier) }}" class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition ease-in-out duration-150">
+                <a href="{{ route('admin.itsale.scraper', $supplier) }}" class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition ease-in-out duration-150">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                     </svg>
                     {{ __('Open ITSale Scraper') }}
                 </a>
+                <a href="{{ route('admin.suppliers.generate-catalog', $supplier) }}" target="_blank" class="inline-flex items-center px-4 py-2 bg-green-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-green-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition ease-in-out duration-150">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3" />
+                    </svg>
+                    {{ __('Generate Catalog') }}
+                </a>
+                @elseif($supplier->name == 'Foxway.shop')
+                    <a href="{{ route('admin.foxway.api', $supplier) }}" class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-500 focus:bg-indigo-500 active:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+                        </svg>
+                        {{ __('Open Foxway API') }}
+                    </a>
+                    <a href="{{ route('admin.foxway-scraper', $supplier) }}" class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-500 focus:bg-indigo-500 active:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                        </svg>
+                        {{ __('Open Foxway Scraper') }}
+                    </a>
+                    <a href="{{ route('admin.suppliers.generate-catalog', $supplier) }}" target="_blank" class="inline-flex items-center px-4 py-2 bg-green-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-green-500 focus:bg-green-500 active:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition ease-in-out duration-150">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3" />
+                        </svg>
+                        {{ __('Generate Catalog') }}
+                    </a>
+                @elseif($supplier->name == 'Foxway.shop Scraper')
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label for="credentials[username]" class="block text-sm font-medium text-gray-700">Username</label>
+                            <input type="text" name="credentials[username]" id="credentials[username]" 
+                                value="{{ old('credentials.username', $supplier->credentials['username'] ?? 'zarosrls@gmail.com') }}" 
+                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                        </div>
+                        
+                        <div>
+                            <label for="credentials[password]" class="block text-sm font-medium text-gray-700">Password</label>
+                            <div class="relative">
+                                <input type="password" name="credentials[password]" id="credentials[password]" 
+                                    value="{{ old('credentials.password', $supplier->credentials['password'] ?? 'Logistica24') }}" 
+                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                                <div id="passwordFeedback" class="hidden absolute top-1/2 right-2 transform -translate-y-1/2 text-green-500">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                                    </svg>
+                                </div>
+                            </div>
+                            <p class="mt-1 text-xs text-gray-500">Inserisci la password dell'account Foxway.shop</p>
+                        </div>
+                        
+                        <div>
+                            <label for="credentials[login_url]" class="block text-sm font-medium text-gray-700">Login URL</label>
+                            <input type="url" name="credentials[login_url]" id="credentials[login_url]" 
+                                value="{{ old('credentials.login_url', $supplier->credentials['login_url'] ?? 'https://foxway.shop/Identity/Account/Login') }}" 
+                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                        </div>
+                    </div>
+                    
+                    <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-md mt-4">
+                        <div class="flex">
+                            <div class="flex-shrink-0">
+                                <svg class="h-5 w-5 text-yellow-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                                </svg>
+                            </div>
+                            <div class="ml-3">
+                                <p class="text-sm text-yellow-700">
+                                    This integration uses web scraping to access Foxway.shop products. You need valid account credentials to use this feature. The credentials are stored securely and only used to access the platform.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                @else
+                    <div class="grid grid-cols-1 gap-6">
+                        @if($supplier->integration_type == 'api')
+                            <div>
+                                <label for="credentials[api_key]" class="block text-sm font-medium text-gray-700">API Key</label>
+                                <input type="text" name="credentials[api_key]" id="credentials[api_key]" 
+                                    value="{{ old('credentials.api_key', $supplier->credentials['api_key'] ?? '') }}" 
+                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                            </div>
+                            
+                            <div>
+                                <label for="credentials[api_secret]" class="block text-sm font-medium text-gray-700">API Secret (optional)</label>
+                                <input type="password" name="credentials[api_secret]" id="credentials[api_secret]" 
+                                    value="{{ old('credentials.api_secret', $supplier->credentials['api_secret'] ?? '') }}" 
+                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                            </div>
+                            
+                            <div>
+                                <label for="credentials[api_url]" class="block text-sm font-medium text-gray-700">API URL</label>
+                                <input type="url" name="credentials[api_url]" id="credentials[api_url]" 
+                                    value="{{ old('credentials.api_url', $supplier->credentials['api_url'] ?? '') }}" 
+                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                            </div>
+                        @elseif($supplier->integration_type == 'scraping')
+                            <div>
+                                <label for="credentials[username]" class="block text-sm font-medium text-gray-700">Username</label>
+                                <input type="text" name="credentials[username]" id="credentials[username]" 
+                                    value="{{ old('credentials.username', $supplier->credentials['username'] ?? '') }}" 
+                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                            </div>
+                            
+                            <div>
+                                <label for="credentials[password]" class="block text-sm font-medium text-gray-700">Password</label>
+                                <input type="password" name="credentials[password]" id="credentials[password]" 
+                                    value="{{ old('credentials.password', $supplier->credentials['password'] ?? '') }}" 
+                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                            </div>
+                            
+                            <div>
+                                <label for="credentials[login_url]" class="block text-sm font-medium text-gray-700">Login URL</label>
+                                <input type="url" name="credentials[login_url]" id="credentials[login_url]" 
+                                    value="{{ old('credentials.login_url', $supplier->credentials['login_url'] ?? '') }}" 
+                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                            </div>
+                        @else
+                            <div>
+                                <label for="credentials[notes]" class="block text-sm font-medium text-gray-700">Integration Notes</label>
+                                <textarea name="credentials[notes]" id="credentials[notes]" rows="3" 
+                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">{{ old('credentials.notes', $supplier->credentials['notes'] ?? '') }}</textarea>
+                            </div>
+                        @endif
+                    </div>
                 @endif
                 <a href="{{ route('admin.suppliers.index') }}" class="inline-flex items-center px-4 py-2 bg-gray-100 border border-gray-300 rounded-md font-semibold text-xs text-gray-700 uppercase tracking-widest hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition ease-in-out duration-150">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -243,6 +366,38 @@
                                                 Auto-publish imported products
                                             </label>
                                             <p class="ml-2 text-xs text-gray-500">(If unchecked, imported products will need manual approval)</p>
+                                        </div>
+
+                                        <!-- Catalog Settings -->
+                                        <div class="pt-4 border-t border-gray-200">
+                                            <h3 class="text-lg font-medium text-gray-900">Public Catalog Settings</h3>
+                                            <p class="text-sm text-gray-500 mt-1">Configure the public catalog with custom margins and WhatsApp integration.</p>
+                                            
+                                            <div class="mt-4 space-y-4">
+                                                <div>
+                                                    <label for="credentials[margin]" class="block text-sm font-medium text-gray-700">Margin (%)</label>
+                                                    <div class="mt-1 relative rounded-md shadow-sm">
+                                                        <input type="number" name="credentials[margin]" id="credentials[margin]" min="0" max="100" step="0.5"
+                                                            value="{{ old('credentials.margin', $supplier->credentials['margin'] ?? 20) }}"
+                                                            class="block w-full rounded-md border-gray-300 pl-3 pr-12 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                                                        <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                                                            <span class="text-gray-500 sm:text-sm">%</span>
+                                                        </div>
+                                                    </div>
+                                                    <p class="mt-1 text-xs text-gray-500">This margin will be added to product prices in the public catalog.</p>
+                                                </div>
+                                                
+                                                <div>
+                                                    <label for="credentials[whatsapp]" class="block text-sm font-medium text-gray-700">WhatsApp Contact Number</label>
+                                                    <div class="mt-1">
+                                                        <input type="tel" name="credentials[whatsapp]" id="credentials[whatsapp]" 
+                                                            value="{{ old('credentials.whatsapp', $supplier->credentials['whatsapp'] ?? '') }}" 
+                                                            placeholder="+39 123 456 7890"
+                                                            class="block w-full rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                                                    </div>
+                                                    <p class="mt-1 text-xs text-gray-500">Include the country code (e.g. +39 for Italy)</p>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>

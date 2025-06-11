@@ -12,11 +12,37 @@ class BatchController extends Controller
     /**
      * Display a listing of the batches.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $batches = Batch::paginate(15);
+        $query = Batch::query();
+        
+        // Apply filters
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+        
+        if ($request->filled('category_id')) {
+            $query->where('category_id', $request->category_id);
+        }
+        
+        if ($request->filled('source_type')) {
+            $query->where('source_type', $request->source_type);
+        }
+        
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('reference_code', 'like', "%{$search}%")
+                  ->orWhere('product_model', 'like', "%{$search}%")
+                  ->orWhere('product_manufacturer', 'like', "%{$search}%")
+                  ->orWhere('description', 'like', "%{$search}%");
+            });
+        }
         
         // Aggiorna total_quantity per ogni batch
+        $batches = $query->paginate(12);
+        
         foreach ($batches as $batch) {
             // Verifica se ci sono prodotti e aggiorna total_quantity
             if (is_array($batch->products) && count($batch->products) > 0) {
@@ -78,6 +104,8 @@ class BatchController extends Controller
             'shipping_cost' => 'nullable|numeric|min:0',
             'tax_amount' => 'nullable|numeric|min:0',
             'total_cost' => 'nullable|numeric|min:0',
+            'sale_price' => 'nullable|numeric|min:0',
+            'profit_margin' => 'nullable|integer|min:0',
         ]);
 
         // Nella creazione iniziale, tipicamente non ci sono prodotti,
@@ -142,6 +170,8 @@ class BatchController extends Controller
             'shipping_cost' => $validated['shipping_cost'],
             'tax_amount' => $validated['tax_amount'],
             'total_cost' => $validated['total_cost'],
+            'sale_price' => $validated['sale_price'] ?? null,
+            'profit_margin' => $validated['profit_margin'] ?? null,
         ]);
 
         return redirect()->route('admin.batches.index')
@@ -207,6 +237,8 @@ class BatchController extends Controller
             'shipping_cost' => 'nullable|numeric|min:0',
             'tax_amount' => 'nullable|numeric|min:0',
             'total_cost' => 'nullable|numeric|min:0',
+            'sale_price' => 'nullable|numeric|min:0',
+            'profit_margin' => 'nullable|integer|min:0',
         ]);
 
         // Calcola la quantità totale dai prodotti se presenti
@@ -325,6 +357,8 @@ class BatchController extends Controller
             'shipping_cost' => $validated['shipping_cost'],
             'tax_amount' => $validated['tax_amount'],
             'total_cost' => $validated['total_cost'],
+            'sale_price' => $validated['sale_price'] ?? null,
+            'profit_margin' => $validated['profit_margin'] ?? null,
         ]);
 
         return redirect()->route('admin.batches.index')

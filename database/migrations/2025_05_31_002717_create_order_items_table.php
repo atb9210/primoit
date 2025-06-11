@@ -13,13 +13,13 @@ return new class extends Migration
     {
         Schema::create('order_items', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('order_id');
-            $table->foreign('order_id')->references('id')->on('orders')->onDelete('cascade');
-            $table->unsignedBigInteger('product_id');
-            $table->foreign('product_id')->references('id')->on('products')->onDelete('cascade');
+            $table->unsignedBigInteger('order_id'); // Rimossa la chiave esterna temporaneamente
+            $table->unsignedBigInteger('product_id')->nullable();
             $table->integer('quantity');
-            $table->decimal('price', 10, 2);
+            $table->decimal('price', 15, 2);
             $table->timestamps();
+            
+            // La chiave esterna verrà aggiunta in una migrazione successiva
         });
     }
 
@@ -30,4 +30,4 @@ return new class extends Migration
     {
         Schema::dropIfExists('order_items');
     }
-};
+}; 

@@ -104,6 +104,12 @@
                                                     </svg>
                                                     Scraper
                                                 </a>
+                                                <a href="{{ route('admin.suppliers.generate-catalog', $suppliers->where('name', 'ITSale.pl')->first()) }}" target="_blank" class="inline-flex items-center px-3 py-1.5 bg-green-100 border border-green-300 rounded text-xs font-medium text-green-700 hover:bg-green-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3" />
+                                                    </svg>
+                                                    Catalog
+                                                </a>
                                             @else
                                                 <a href="{{ route('admin.suppliers.create', ['preset' => 'itsale']) }}" class="inline-flex items-center px-3 py-1.5 bg-indigo-100 border border-indigo-300 rounded text-xs font-medium text-indigo-700 hover:bg-indigo-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
                                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -118,15 +124,15 @@
                             </div>
                             
                             <!-- Foxway.shop Card (Inactive/Coming Soon) -->
-                            <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow duration-200 opacity-75">
+                            <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow duration-200">
                                 <div class="h-32 bg-gray-50 p-4 flex items-center justify-center">
                                     <img src="{{ Storage::url($suppliers->where('name', 'Foxway.shop')->first()?->logo ?? 'images/suppliers/foxway-logo.png') }}" alt="Foxway.shop" class="max-h-full max-w-full object-contain">
                                 </div>
                                 <div class="p-4 border-t border-gray-100">
                                     <div class="flex justify-between items-start mb-2">
                                         <h3 class="text-lg font-medium text-gray-900">Foxway.shop</h3>
-                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                                            Coming Soon
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $suppliers->where('name', 'Foxway.shop')->first()?->is_active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800' }}">
+                                            {{ $suppliers->where('name', 'Foxway.shop')->first()?->is_active ? 'Active' : 'Inactive' }}
                                         </span>
                                     </div>
                                     <p class="text-sm text-gray-600 mb-4">Estonia-based IT hardware and refurbished equipment supplier with API access.</p>
@@ -137,19 +143,94 @@
                                             </span>
                                         </div>
                                         <div class="flex space-x-2">
-                                            <button disabled class="inline-flex items-center px-3 py-1.5 bg-gray-100 border border-gray-300 rounded text-xs font-medium text-gray-400 cursor-not-allowed">
-                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                                                </svg>
-                                                Coming Soon
-                                            </button>
+                                            @if($suppliers->where('name', 'Foxway.shop')->first())
+                                                <a href="{{ route('admin.suppliers.configure', $suppliers->where('name', 'Foxway.shop')->first()) }}" class="inline-flex items-center px-3 py-1.5 bg-indigo-100 border border-indigo-300 rounded text-xs font-medium text-indigo-700 hover:bg-indigo-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                    </svg>
+                                                    Configure
+                                                </a>
+                                                <a href="{{ route('admin.foxway.api', $suppliers->where('name', 'Foxway.shop')->first()) }}" class="inline-flex items-center px-3 py-1.5 bg-blue-100 border border-blue-300 rounded text-xs font-medium text-blue-700 hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
+                                                    </svg>
+                                                    API
+                                                </a>
+                                                <a href="{{ route('admin.suppliers.generate-catalog', $suppliers->where('name', 'Foxway.shop')->first()) }}" target="_blank" class="inline-flex items-center px-3 py-1.5 bg-green-100 border border-green-300 rounded text-xs font-medium text-green-700 hover:bg-green-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3" />
+                                                    </svg>
+                                                    Catalog
+                                                </a>
+                                            @else
+                                                <a href="{{ route('admin.suppliers.create') }}" class="inline-flex items-center px-3 py-1.5 bg-indigo-100 border border-indigo-300 rounded text-xs font-medium text-indigo-700 hover:bg-indigo-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                                                    </svg>
+                                                    Setup
+                                                </a>
+                                            @endif
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Foxway.shop Scraper Card -->
+                            <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow duration-200">
+                                <div class="h-32 bg-gray-50 p-4 flex items-center justify-center">
+                                    <img src="{{ Storage::url($suppliers->where('name', 'Foxway.shop Scraper')->first()?->logo ?? 'images/suppliers/foxway-logo.png') }}" alt="Foxway.shop Scraper" class="max-h-full max-w-full object-contain">
+                                </div>
+                                <div class="p-4 border-t border-gray-100">
+                                    <div class="flex justify-between items-start mb-2">
+                                        <h3 class="text-lg font-medium text-gray-900">Foxway.shop Scraper</h3>
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $suppliers->where('name', 'Foxway.shop Scraper')->first()?->is_active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800' }}">
+                                            {{ $suppliers->where('name', 'Foxway.shop Scraper')->first()?->is_active ? 'Active' : 'Inactive' }}
+                                        </span>
+                                    </div>
+                                    <p class="text-sm text-gray-600 mb-4">Web scraping integration for Foxway.shop WorkingPub interface.</p>
+                                    <div class="flex items-center justify-between">
+                                        <div>
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                                                Scraping
+                                            </span>
+                                        </div>
+                                        <div class="flex space-x-2">
+                                            @if($suppliers->where('name', 'Foxway.shop Scraper')->first())
+                                                <a href="{{ route('admin.suppliers.configure', $suppliers->where('name', 'Foxway.shop Scraper')->first()) }}" class="inline-flex items-center px-3 py-1.5 bg-indigo-100 border border-indigo-300 rounded text-xs font-medium text-indigo-700 hover:bg-indigo-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                    </svg>
+                                                    Configure
+                                                </a>
+                                                <a href="{{ route('admin.foxway-scraper', $suppliers->where('name', 'Foxway.shop Scraper')->first()) }}" class="inline-flex items-center px-3 py-1.5 bg-blue-100 border border-blue-300 rounded text-xs font-medium text-blue-700 hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                                                    </svg>
+                                                    Scraper
+                                                </a>
+                                                <a href="{{ route('admin.suppliers.generate-catalog', $suppliers->where('name', 'Foxway.shop Scraper')->first()) }}" target="_blank" class="inline-flex items-center px-3 py-1.5 bg-green-100 border border-green-300 rounded text-xs font-medium text-green-700 hover:bg-green-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3" />
+                                                    </svg>
+                                                    Catalog
+                                                </a>
+                                            @else
+                                                <a href="{{ route('admin.suppliers.create') }}" class="inline-flex items-center px-3 py-1.5 bg-indigo-100 border border-indigo-300 rounded text-xs font-medium text-indigo-700 hover:bg-indigo-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                                                    </svg>
+                                                    Setup
+                                                </a>
+                                            @endif
                                         </div>
                                     </div>
                                 </div>
                             </div>
                             
                             <!-- Custom Suppliers -->
-                            @foreach($suppliers->whereNotIn('name', ['ITSale.pl', 'Foxway.shop']) as $supplier)
+                            @foreach($suppliers->whereNotIn('name', ['ITSale.pl', 'Foxway.shop', 'Foxway.shop Scraper']) as $supplier)
                                 <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow duration-200">
                                     <div class="h-32 bg-gray-50 p-4 flex items-center justify-center">
                                         @if($supplier->logo)

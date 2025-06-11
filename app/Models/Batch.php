@@ -56,6 +56,8 @@ class Batch extends Model
         'shipping_cost',
         'tax_amount',
         'total_cost',
+        'sale_price',
+        'profit_margin',
     ];
 
     /**
@@ -77,6 +79,8 @@ class Batch extends Model
         'shipping_cost' => 'decimal:2',
         'tax_amount' => 'decimal:2',
         'total_cost' => 'decimal:2',
+        'sale_price' => 'decimal:2',
+        'profit_margin' => 'integer',
     ];
 
     /**
@@ -159,6 +163,17 @@ class Batch extends Model
             $this->total_price = $this->unit_price * $this->unit_quantity;
         }
         return $this->total_price;
+    }
+
+    /**
+     * Calcola il prezzo di vendita in base al margine di profitto
+     */
+    public function calculateSalePrice()
+    {
+        if ($this->total_cost && $this->profit_margin) {
+            $this->sale_price = $this->total_cost * (1 + ($this->profit_margin / 100));
+        }
+        return $this->sale_price;
     }
 
     /**

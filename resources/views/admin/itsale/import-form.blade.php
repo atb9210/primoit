@@ -170,6 +170,35 @@
                             </div>
                         </div>
 
+                        <!-- Sales Data -->
+                        <div>
+                            <h4 class="text-base font-semibold text-gray-900 mb-2 pb-1 border-b border-gray-200 flex items-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                Sales Data
+                            </h4>
+                            
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                                <div>
+                                    <label for="profit_margin" class="block text-xs font-medium text-gray-700 mb-1">Profit Margin (%)</label>
+                                    <input type="number" step="1" min="0" name="profit_margin" id="profit_margin" value="16" class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md">
+                                </div>
+                                <div>
+                                    <label for="sale_price" class="block text-xs font-medium text-gray-700 mb-1">Sale Price (€)</label>
+                                    <input type="number" step="0.01" name="sale_price" id="sale_price" class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md">
+                                </div>
+                                <div class="flex items-end">
+                                    <button type="button" id="calculate-sale-price" class="mt-5 inline-flex justify-center items-center px-3 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                                        </svg>
+                                        Calculate Sale Price
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
                         <!-- Field Mapping -->
                         <div>
                             <h4 class="text-base font-semibold text-gray-900 mb-2 pb-1 border-b border-gray-200 flex items-center">
@@ -669,6 +698,9 @@
                     total += value;
                 });
                 totalCostInput.value = total.toFixed(2);
+                
+                // Aggiorniamo automaticamente anche il sale price quando cambia il total cost
+                calculateSalePrice();
             }
             
             // Calcola il costo totale iniziale
@@ -681,6 +713,41 @@
             
             // Pulsante per calcolare il costo totale
             document.getElementById('calculate-cost').addEventListener('click', calculateTotalCost);
+            
+            // Calcolo del prezzo di vendita
+            const profitMarginInput = document.getElementById('profit_margin');
+            const salePriceInput = document.getElementById('sale_price');
+            
+            function calculateSalePrice() {
+                const totalCost = parseFloat(totalCostInput.value) || 0;
+                const profitMargin = parseFloat(profitMarginInput.value) || 0;
+                
+                if (totalCost > 0 && profitMargin > 0) {
+                    const salePrice = totalCost * (1 + (profitMargin / 100));
+                    salePriceInput.value = salePrice.toFixed(2);
+                }
+            }
+            
+            // Calcola il prezzo di vendita iniziale
+            calculateSalePrice();
+            
+            // Aggiorna il prezzo di vendita quando cambia il margine di profitto
+            profitMarginInput.addEventListener('input', calculateSalePrice);
+            
+            // Pulsante per calcolare il prezzo di vendita
+            document.getElementById('calculate-sale-price').addEventListener('click', calculateSalePrice);
+            
+            // Permetti l'inserimento manuale del prezzo di vendita
+            salePriceInput.addEventListener('input', function() {
+                // Se viene inserito manualmente un prezzo di vendita, calcoliamo il margine corrispondente
+                const totalCost = parseFloat(totalCostInput.value) || 0;
+                const salePrice = parseFloat(this.value) || 0;
+                
+                if (totalCost > 0 && salePrice > 0) {
+                    const margin = ((salePrice / totalCost) - 1) * 100;
+                    profitMarginInput.value = margin.toFixed(0);
+                }
+            });
             
             // Popolamento dinamico dei parametri in base alla categoria selezionata
             const categorySelect = document.getElementById('category_id');
@@ -720,9 +787,9 @@
                     // Estrai Visual Grade
                     if (gradeText.match(/Grade\s+([A-D])/i)) {
                         visualGrade = gradeText.match(/Grade\s+([A-D])/i)[1];
-                    } else if (gradeText.match(/Visual\s+grade:\s*([A-D])/i)) {
+                    } elseif (gradeText.match(/Visual\s+grade:\s*([A-D])/i)) {
                         visualGrade = gradeText.match(/Visual\s+grade:\s*([A-D])/i)[1];
-                    } else if (gradeText.match(/[^a-zA-Z]([A-D])(?:\s+Grade|\s+Quality|\s+Condition)/i)) {
+                    } elseif (gradeText.match(/[^a-zA-Z]([A-D])(?:\s+Grade|\s+Quality|\s+Condition)/i)) {
                         visualGrade = gradeText.match(/[^a-zA-Z]([A-D])(?:\s+Grade|\s+Quality|\s+Condition)/i)[1];
                     }
                     
@@ -732,208 +799,7 @@
                     } elseif (gradeText.match(/Working(?:\*)?/i)) {
                         if (gradeText.match(/Not\s+working/i)) {
                             functionality = 'Not working';
-                        } else if (gradeText.match(/Working\*/i)) {
-                            functionality = 'Working*';
-                        } else {
-                            functionality = 'Working';
-                        }
-                    }
-                    
-                    // Estrai Problems - solo il testo dopo "Problems:"
-                    if (gradeText.match(/Problems:\s+([^\n.,:;]+)/i)) {
-                        problems = gradeText.match(/Problems:\s+([^\n.,:;]+)/i)[1].trim();
-                    } elseif (gradeText.match(/(?:Issue|Problem)s?(?:\s+with|\s*:)?\s+([^\n.,:;]+)/i)) {
-                        problems = gradeText.match(/(?:Issue|Problem)s?(?:\s+with|\s*:)?\s+([^\n.,:;]+)/i)[1].trim();
-                    }
-                }
-                
-                // Verifica speciale per rimuovere il testo di grading dal campo problems
-                if (problems && (problems.includes('Grade') || problems.includes('Visual grade'))) {
-                    // Se problems contiene l'intera stringa di grading, estraiamo solo la parte dopo "Problems:"
-                    const problemsMatch = problems.match(/Problems:\s+([^\n.,:;]+)/i);
-                    if (problemsMatch) {
-                        problems = problemsMatch[1].trim();
-                    } else {
-                        // Se non troviamo "Problems:" nel testo, probabilmente non ci sono problemi
-                        problems = '';
-                    }
-                }
-                
-                // Aggiorna i campi nascosti per il form di importazione
-                document.getElementById('extracted_visual_grade').value = visualGrade;
-                document.getElementById('extracted_tech_grade').value = functionality;
-                document.getElementById('extracted_problems').value = problems;
-                
-                // Aggiorna anche i campi di visualizzazione
-                const visualGradeDisplay = document.getElementById('visual_grade_display');
-                const techGradeDisplay = document.getElementById('tech_grade_display');
-                const problemsDisplay = document.getElementById('problems_display');
-                
-                if (visualGradeDisplay) visualGradeDisplay.textContent = visualGrade || 'Not detected';
-                if (techGradeDisplay) techGradeDisplay.textContent = functionality || 'Not detected';
-                if (problemsDisplay) problemsDisplay.textContent = problems || 'Not detected';
-                
-                // Aggiorna i campi di override se esistono
-                const manualVisualGrade = document.getElementById('manual_visual_grade');
-                const manualTechGrade = document.getElementById('manual_tech_grade');
-                const manualProblems = document.getElementById('manual_problems');
-                
-                if (manualVisualGrade && visualGrade && !manualVisualGrade.value) {
-                    // Trova l'opzione corrispondente e selezionala
-                    for (let i = 0; i < manualVisualGrade.options.length; i++) {
-                        if (manualVisualGrade.options[i].value === visualGrade) {
-                            manualVisualGrade.selectedIndex = i;
-                            break;
-                        }
-                    }
-                }
-                
-                if (manualTechGrade && functionality && !manualTechGrade.value) {
-                    // Trova l'opzione corrispondente e selezionala
-                    for (let i = 0; i < manualTechGrade.options.length; i++) {
-                        if (manualTechGrade.options[i].value === functionality) {
-                            manualTechGrade.selectedIndex = i;
-                            break;
-                        }
-                    }
-                }
-                
-                if (manualProblems && problems && !manualProblems.value) {
-                    manualProblems.value = problems;
-                }
-            }
-            
-            // Aggiungi campi nascosti per i valori estratti
-            const form = document.querySelector('form');
-            const hiddenFields = document.createElement('div');
-            hiddenFields.style.display = 'none';
-            hiddenFields.innerHTML = `
-                <input type="hidden" id="extracted_visual_grade" name="extracted_visual_grade" value="">
-                <input type="hidden" id="extracted_tech_grade" name="extracted_tech_grade" value="">
-                <input type="hidden" id="extracted_problems" name="extracted_problems" value="">
-            `;
-            form.appendChild(hiddenFields);
-            
-            // Trova il campo Visual grade e analizzalo all'avvio
-            document.querySelectorAll('select[name="spec_params[]"]').forEach((select, index) => {
-                if (select.value === '_grade_special') {
-                    const specField = select.closest('tr').querySelector('td:first-child').textContent.trim();
-                    const specValue = select.closest('tr').querySelector('td:last-child').textContent.trim();
-                    
-                    if (specValue) {
-                        parseGradeInfo(specValue);
-                    }
-                }
-            });
-            
-            // Gestisci i campi di override manuali
-            document.querySelectorAll('[name="manual_visual_grade"], [name="manual_tech_grade"], [name="manual_problems"]').forEach(field => {
-                field.addEventListener('change', function() {
-                    // Se viene selezionato un valore manuale, sovrascrive quello auto-detected
-                    if (this.name === 'manual_visual_grade' && this.value) {
-                        document.getElementById('extracted_visual_grade').value = this.value;
-                    }
-                    if (this.name === 'manual_tech_grade' && this.value) {
-                        document.getElementById('extracted_tech_grade').value = this.value;
-                    }
-                    if (this.name === 'manual_problems') {
-                        document.getElementById('extracted_problems').value = this.value;
-                    }
-                });
-            });
-            
-            // Elabora automaticamente i campi "Not mapped" prima del submit
-            form.addEventListener('submit', function(e) {
-                // Per ogni select con valore vuoto, imposta automaticamente come parametro custom con lo stesso nome
-                document.querySelectorAll('select[name="spec_params[]"]').forEach((select, index) => {
-                    if (select.value === '') {
-                        const row = select.closest('tr');
-                        const specName = row.querySelector('td:first-child').textContent.trim();
-                        const specValue = row.querySelector('td:last-child').textContent.trim();
-                        
-                        // Se il valore della specifica non è vuoto, crea un parametro custom automatico
-                        if (specValue && specValue !== 'N/A') {
-                            select.value = 'custom';
-                            const customInput = select.nextElementSibling;
-                            customInput.value = specName;
-                            customInput.classList.remove('hidden');
-                        }
-                    }
-                });
-                
-                // Assicurati che sia impostato almeno quantity=1 se non è già mappato
-                let hasQuantity = false;
-                document.querySelectorAll('select[name="spec_params[]"]').forEach(select => {
-                    if (select.value === 'quantity') {
-                        hasQuantity = true;
-                    }
-                });
-                
-                if (!hasQuantity) {
-                    // Aggiungi un parametro aggiuntivo per quantity=1
-                    const additionalParamNames = document.querySelectorAll('input[name="additional_param_names[]"]');
-                    const additionalParamValues = document.querySelectorAll('input[name="additional_param_values[]"]');
-                    
-                    // Controlla se esiste già un campo vuoto per aggiungere il parametro
-                    let quantityAdded = false;
-                    for (let i = 0; i < additionalParamNames.length; i++) {
-                        if (additionalParamNames[i].value === '') {
-                            additionalParamNames[i].value = 'quantity';
-                            additionalParamValues[i].value = '1';
-                            quantityAdded = true;
-                            break;
-                        }
-                    }
-                    
-                    // Se non c'è un campo vuoto, aggiungi un nuovo parametro cliccando sul pulsante
-                    if (!quantityAdded && additionalParamNames.length > 0) {
-                        // Clicca sul pulsante per aggiungere un nuovo parametro
-                        document.querySelector('.add-param-btn').click();
-                        
-                        // Ora prendi l'ultimo parametro aggiunto
-                        const newParamNames = document.querySelectorAll('input[name="additional_param_names[]"]');
-                        const newParamValues = document.querySelectorAll('input[name="additional_param_values[]"]');
-                        
-                        // Imposta i valori
-                        newParamNames[newParamNames.length - 1].value = 'quantity';
-                        newParamValues[newParamValues.length - 1].value = '1';
-                    }
-                }
-            });
-
-            // Funzione per aggiornare gli stili in base allo stato di mapping
-            function updateMappingStyles() {
-                const selects = document.querySelectorAll('.mapping-select');
-                const rows = document.querySelectorAll('.field-mapping-row');
-                let mappedCount = 0;
-                
-                selects.forEach((select, index) => {
-                    const row = rows[index];
-                    if (select.value && select.value !== '') {
-                        row.classList.add('bg-green-50');
-                        row.classList.remove('bg-gray-50');
-                        mappedCount++;
-                    } else {
-                        row.classList.remove('bg-green-50');
-                        row.classList.add('bg-gray-50');
-                    }
-                });
-                
-                // Aggiorna il conteggio visualizzato
-                document.getElementById('mapped-count').textContent = mappedCount;
-                document.getElementById('total-count').textContent = selects.length;
-            }
-            
-            // Esegui l'aggiornamento degli stili all'avvio
-            updateMappingStyles();
-            
-            // Aggiungi listener per aggiornare gli stili quando un select cambia
-            document.querySelectorAll('.mapping-select').forEach(select => {
-                select.addEventListener('change', updateMappingStyles);
-            });
-        });
-    </script>
-</x-admin-layout>                         } else if (gradeText.match(/Working\*/i)) {
+                        } elseif (gradeText.match(/Working\*/i)) {
                             functionality = 'Working*';
                         } else {
                             functionality = 'Working';

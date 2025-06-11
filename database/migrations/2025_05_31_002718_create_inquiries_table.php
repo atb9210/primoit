@@ -19,8 +19,7 @@ return new class extends Migration
             $table->string('phone')->nullable();
             $table->text('message');
             $table->unsignedBigInteger('product_id')->nullable();
-            $table->foreign('product_id')->references('id')->on('products')->onDelete('set null');
-            $table->enum('status', ['new', 'in_progress', 'resolved'])->default('new');
+            $table->string('status')->default('pending');
             $table->timestamps();
         });
     }

@@ -244,6 +244,56 @@
                                     <input type="number" name="total_cost" id="total_cost" value="{{ old('total_cost', 0) }}" step="0.01" min="0" class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 bg-gray-100" readonly>
                                     <p class="text-xs text-gray-500 mt-1">This value is calculated automatically.</p>
                                 </div>
+                                
+                                <div x-data="{ 
+                                    profitMargin: {{ old('profit_margin', 16) }},
+                                    totalCost: {{ old('total_cost', 0) }},
+                                    salePrice: {{ old('sale_price', 0) }},
+                                    calculateSalePrice() {
+                                        if (this.totalCost > 0 && this.profitMargin > 0) {
+                                            this.salePrice = (this.totalCost * (1 + (this.profitMargin / 100))).toFixed(2);
+                                        }
+                                    },
+                                    calculateMargin() {
+                                        if (this.totalCost > 0 && this.salePrice > 0) {
+                                            this.profitMargin = (((this.salePrice / this.totalCost) - 1) * 100).toFixed(0);
+                                        }
+                                    }
+                                }" 
+                                x-init="
+                                    totalCost = parseFloat(document.getElementById('total_cost').value) || 0;
+                                    $watch('totalCost', value => calculateSalePrice());
+                                    $watch('profitMargin', value => calculateSalePrice());
+                                    $watch('salePrice', value => calculateMargin());
+                                    
+                                    // Aggiungi listener per aggiornare totalCost quando cambia il campo nel DOM
+                                    document.getElementById('total_cost').addEventListener('change', function() {
+                                        totalCost = parseFloat(this.value) || 0;
+                                        calculateSalePrice();
+                                    });
+                                ">
+                                    <label for="profit_margin" class="block text-sm font-medium text-gray-700 mb-1">Profit Margin (%)</label>
+                                    <input type="number" name="profit_margin" id="profit_margin" x-model="profitMargin" min="0" step="1" class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                                    @error('profit_margin')
+                                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                    @enderror
+                                </div>
+                                
+                                <div>
+                                    <label for="sale_price" class="block text-sm font-medium text-gray-700 mb-1">Sale Price (€)</label>
+                                    <input type="number" name="sale_price" id="sale_price" x-model="salePrice" min="0" step="0.01" class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                                    @error('sale_price')
+                                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                    @enderror
+                                    <div class="mt-2 flex justify-end">
+                                        <button type="button" @click="calculateSalePrice()" class="inline-flex items-center px-2 py-1 border border-transparent text-xs font-medium rounded text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2z" />
+                                            </svg>
+                                            Calculate
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                         

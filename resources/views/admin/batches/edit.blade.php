@@ -289,6 +289,75 @@
                                     <input type="number" name="total_cost" id="total_cost" value="{{ old('total_cost', $batch->total_cost ?? 0) }}" step="0.01" min="0" class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 bg-gray-100" readonly>
                                     <p class="text-xs text-gray-500 mt-1">This value is calculated automatically.</p>
                                 </div>
+                                
+                                <div x-data="{ 
+                                    profitMargin: {{ old('profit_margin', $batch->profit_margin ?? 16) }},
+                                    totalCost: {{ old('total_cost', $batch->total_cost ?? 0) }},
+                                    salePrice: {{ old('sale_price', $batch->sale_price ?? 0) }},
+                                    calculateSalePrice() {
+                                        if (this.totalCost > 0 && this.profitMargin > 0) {
+                                            this.salePrice = (this.totalCost * (1 + (this.profitMargin / 100))).toFixed(2);
+                                        }
+                                    },
+                                    calculateMargin() {
+                                        if (this.totalCost > 0 && this.salePrice > 0) {
+                                            this.profitMargin = (((this.salePrice / this.totalCost) - 1) * 100).toFixed(0);
+                                        }
+                                    }
+                                }" 
+                                x-init="
+                                    // Inizializza i valori dal database
+                                    profitMargin = {{ old('profit_margin', $batch->profit_margin ?? 16) }};
+                                    totalCost = {{ old('total_cost', $batch->total_cost ?? 0) }};
+                                    salePrice = {{ old('sale_price', $batch->sale_price ?? 0) }};
+                                    
+                                    // Imposta listener per i cambiamenti
+                                    $watch('totalCost', value => calculateSalePrice());
+                                    $watch('profitMargin', value => calculateSalePrice());
+                                    $watch('salePrice', value => calculateMargin());
+                                    
+                                    // Aggiungi listener per aggiornare totalCost quando cambia il campo nel DOM
+                                    document.getElementById('total_cost').addEventListener('change', function() {
+                                        totalCost = parseFloat(this.value) || 0;
+                                        calculateSalePrice();
+                                    });
+                                    
+                                    // Debug
+                                    console.log('Initializing with values:', {
+                                        profitMargin: profitMargin,
+                                        totalCost: totalCost,
+                                        salePrice: salePrice
+                                    });
+                                ">
+                                    <label for="profit_margin" class="block text-sm font-medium text-gray-700 mb-1">Profit Margin (%)</label>
+                                    <input type="number" name="profit_margin" id="profit_margin" x-model="profitMargin" min="0" step="1" class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                                    @error('profit_margin')
+                                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                    @enderror
+                                </div>
+                                
+                                <div>
+                                    <label for="sale_price" class="block text-sm font-medium text-gray-700 mb-1">Sale Price (€)</label>
+                                    <input type="number" name="sale_price" id="sale_price" x-model="salePrice" min="0" step="0.01" class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                                    <!-- Backup hidden field with the correct value -->
+                                    <input type="hidden" name="sale_price_backup" value="{{ old('sale_price', $batch->sale_price ?? 0) }}">
+                                    @error('sale_price')
+                                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                    @enderror
+                                    <div class="mt-2 flex justify-end">
+                                        <button type="button" @click="calculateSalePrice()" class="inline-flex items-center px-2 py-1 border border-transparent text-xs font-medium rounded text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2z" />
+                                            </svg>
+                                            Calculate
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Debug info - Remove in production -->
+                                <div class="col-span-2 text-xs text-gray-500 mt-1">
+                                    DB Sale Price: {{ $batch->sale_price ?? 'null' }}
+                                </div>
                             </div>
                         </div>
                         
@@ -484,8 +553,14 @@
                                     <p class="text-sm text-gray-500">Total batch value: <span id="batch-total" class="font-medium text-gray-900"></span></p>
                                     <p class="text-sm text-gray-500">Total units: <span id="batch-quantity" class="font-medium text-gray-900"></span></p>
                                 </div>
-                                <div>
-                                    <button type="submit" id="save-batch-btn" class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition ease-in-out duration-150">
+                                <div class="flex space-x-2">
+                                    <!-- Direct submit button as fallback -->
+                                    <button type="submit" class="inline-flex items-center px-4 py-2 bg-gray-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition ease-in-out duration-150">
+                                        Save Directly
+                                    </button>
+                                    
+                                    <!-- JavaScript-enhanced button -->
+                                    <button type="button" id="save-batch-btn" class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition ease-in-out duration-150">
                                         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                                         </svg>
@@ -820,6 +895,55 @@
                     }, 0);
                 }
             });
+
+            // Ensure we have default values for required fields before submitting
+            const saveButton = document.getElementById('save-batch-btn');
+            const batchForm = document.querySelector('form[action*="batches"]');
+            
+            if (saveButton && batchForm) {
+                // Remove any existing click event listeners
+                const newSaveButton = saveButton.cloneNode(true);
+                saveButton.parentNode.replaceChild(newSaveButton, saveButton);
+                
+                // Add new event listener that properly submits the form
+                newSaveButton.addEventListener('click', function(e) {
+                    // Set default values for required fields if they're empty
+                    if (!manufacturerInput.value) {
+                        manufacturerInput.value = "Apple"; // Default value
+                    }
+                    
+                    if (!modelInput.value) {
+                        modelInput.value = "iPhone"; // Default value
+                    }
+                    
+                    if (!gradeSelect.value) {
+                        gradeSelect.value = "A"; // Default value
+                    }
+                    
+                    // Ensure the sale_price is properly set
+                    const salePriceInput = document.getElementById('sale_price');
+                    if (salePriceInput && window.Alpine) {
+                        // Make sure the Alpine.js value is properly synced
+                        const alpineData = Alpine.raw(salePriceInput._x_dataStack[0]);
+                        if (alpineData && typeof alpineData.salePrice !== 'undefined') {
+                            salePriceInput.value = alpineData.salePrice;
+                        }
+                    }
+                    
+                    // If sale_price is still empty, use the backup value
+                    if (!salePriceInput.value || salePriceInput.value === '0') {
+                        const backupValue = document.querySelector('input[name="sale_price_backup"]')?.value;
+                        if (backupValue) {
+                            salePriceInput.value = backupValue;
+                        }
+                    }
+                    
+                    console.log("Submitting form with sale_price:", salePriceInput?.value);
+                    
+                    // Submit the form
+                    batchForm.submit();
+                });
+            }
         });
     </script>
     
@@ -1127,29 +1251,6 @@
                         // Update the hidden input
                         defaultImageIndex.value = this.dataset.index;
                     });
-                });
-            }
-            
-            // Ensure we have default values for required fields before submitting
-            const saveButton = document.getElementById('save-batch-btn');
-            
-            if (saveButton) {
-                saveButton.addEventListener('click', function(e) {
-                    // Impedisci l'invio del form se mancano valori nei campi nascosti obbligatori
-                    if (!manufacturerInput.value) {
-                        manufacturerInput.value = "Apple"; // Valore predefinito
-                    }
-                    
-                    if (!modelInput.value) {
-                        modelInput.value = "iPhone"; // Valore predefinito
-                    }
-                    
-                    if (!gradeSelect.value) {
-                        gradeSelect.value = "A"; // Valore predefinito
-                    }
-                    
-                    // Continua con l'invio del form
-                    return true;
                 });
             }
         });
