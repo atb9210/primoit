@@ -8,6 +8,9 @@
     <title>{{ config('app.name', 'PrimoIT') }} - {{ $title ?? 'Quality IT Hardware' }}</title>
     <meta name="description" content="{{ $description ?? 'PrimoIT offers premium refurbished IT hardware including laptops, desktops, and servers. Our quality products are perfect for businesses looking for reliable IT equipment at competitive prices.' }}">
 
+    <!-- Favicon -->
+    <x-favicon />
+    
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
