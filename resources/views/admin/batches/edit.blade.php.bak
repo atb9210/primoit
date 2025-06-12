@@ -109,11 +109,11 @@
                                         @error('unit_quantity')
                                             <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                                         @enderror
-                                    </div>
-                                    
-                                    <div>
+                            </div>
+                            
+                            <div>
                                         <label for="unit_price" class="block text-sm font-medium text-gray-700 mb-1">Unit Price (€) *</label>
-                                        <input type="number" name="unit_price" id="unit_price" value="{{ old('unit_price', (float)$batch->unit_price) }}" min="0" step="0.01" required class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 bg-gray-100" readonly>
+                                        <input type="number" name="unit_price" id="unit_price" value="{{ old('unit_price', (float)$batch->unit_price) }}" min="0" step="0.01" required class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
                                         @error('unit_price')
                                             <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                                         @enderror
@@ -290,10 +290,67 @@
                                     <p class="text-xs text-gray-500 mt-1">This value is calculated automatically.</p>
                                 </div>
                                 
-                                
-                                <div>
+                                <div x-data="{ 
+                                    profitMargin: {{ old('profit_margin', $batch->profit_margin ?? 16) }},
+                                    totalCost: {{ old('total_cost', $batch->total_cost ?? 0) }},
+                                    salePrice: {{ old('sale_price', $batch->sale_price ?? 0) }},
+                                    calculateSalePrice() {
+                                        if (this.totalCost > 0 && this.profitMargin > 0) {
+                                            this.salePrice = (this.totalCost * (1 + (this.profitMargin / 100))).toFixed(2);
+                                        }
+                                    },
+                                    calculateMargin() {
+                                        if (this.totalCost > 0 && this.salePrice > 0) {
+                                            this.profitMargin = (((this.salePrice / this.totalCost) - 1) * 100).toFixed(0);
+                                        }
+                                    },
+                                    calculateTotalCost() {
+                                        const batchCost = parseFloat(document.getElementById('batch_cost').value) || 0;
+                                        const shippingCost = parseFloat(document.getElementById('shipping_cost').value) || 0;
+                                        const taxAmount = parseFloat(document.getElementById('tax_amount').value) || 0;
+                                        
+                                        const total = batchCost + shippingCost + taxAmount;
+                                        document.getElementById('total_cost').value = total.toFixed(2);
+                                        this.totalCost = total;
+                                        this.calculateSalePrice();
+                                    
+                                        if (this.totalCost > 0 && this.salePrice > 0) {
+                                            this.profitMargin = (((this.salePrice / this.totalCost) - 1) * 100).toFixed(0);
+                                        }
+                                    }
+                                }" 
+                                x-init="
+                                    // Inizializza i valori dal database
+                                    profitMargin = {{ old('profit_margin', $batch->profit_margin ?? 16) }};
+                                    totalCost = {{ old('total_cost', $batch->total_cost ?? 0) }};
+                                    salePrice = {{ old('sale_price', $batch->sale_price ?? 0) }};
+                                    
+                                    // Imposta listener per i cambiamenti
+                                    $watch('totalCost', value => calculateSalePrice());
+                                    $watch('profitMargin', value => calculateSalePrice());
+                                    $watch('salePrice', value => calculateMargin());
+                                    
+                                    // Aggiungi listener per aggiornare totalCost quando cambia il campo nel DOM
+                                    document.getElementById('batch_cost').addEventListener('input', calculateTotalCost);
+                                    document.getElementById('shipping_cost').addEventListener('input', calculateTotalCost);
+                                    document.getElementById('tax_amount').addEventListener('input', calculateTotalCost);
+                                    document.getElementById('total_cost').addEventListener('change', function() {
+                                        totalCost = parseFloat(this.value) || 0;
+                                        calculateSalePrice();
+                                    });
+                                    
+                                    // Debug
+                                    console.log('Initializing with values:', {
+                                        profitMargin: profitMargin,
+                                        totalCost: totalCost,
+                                        salePrice: salePrice
+                                    });
+                                }"
+                                >
                                     <label for="profit_margin" class="block text-sm font-medium text-gray-700 mb-1">Profit Margin (%)</label>
-                                    <input type="number" name="profit_margin" id="profit_margin" value="{{ old('profit_margin', $batch->profit_margin ?? 16) }}" min="0" step="1" class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                                    <div class="flex">
+                                        <input type="number" name="profit_margin" id="profit_margin" x-model="profitMargin" @input="calculateSalePrice()" min="0" step="1" class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                                    </div>
                                     @error('profit_margin')
                                         <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                                     @enderror
@@ -301,12 +358,13 @@
                                 
                                 <div>
                                     <label for="sale_price" class="block text-sm font-medium text-gray-700 mb-1">Sale Price (€)</label>
-                                    <input type="number" name="sale_price" id="sale_price" value="{{ old('sale_price', $batch->sale_price ?? 0) }}" min="0" step="0.01" class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 bg-gray-100" readonly>
+                                    <input type="number" name="sale_price" id="sale_price" x-model="salePrice" min="0" step="0.01" class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 bg-gray-100" readonly>
                                     <!-- Backup hidden field with the correct value -->
                                     <input type="hidden" name="sale_price_backup" value="{{ old('sale_price', $batch->sale_price ?? 0) }}">
                                     @error('sale_price')
                                         <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                                     @enderror
+                                    <p class="text-xs text-gray-500 mt-1">This value is calculated based on the Total Cost and Profit Margin.</p>
                                 </div>
 
                                 <!-- Debug info - Remove in production -->
@@ -433,6 +491,81 @@
                                 </div>
                             </div>
                         </div>
+                        
+                        <!-- Products Section -->
+                        <div class="mt-8">
+                            <h3 class="text-lg font-semibold text-gray-800 mb-4">Products in this Batch</h3>
+                            
+                            <div class="mb-4 flex justify-between items-center">
+                                <div class="text-sm text-gray-500">
+                                    Current total: <span class="font-medium">@formatPrice($batch->total_price)</span> / 
+                                    <span class="font-medium">{{ $batch->total_quantity }}</span> units
+                                </div>
+                                <button type="button" id="add-product-row" class="inline-flex items-center px-3 py-2 bg-green-600 border border-transparent rounded-md font-medium text-xs text-white hover:bg-green-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                                    </svg>
+                                    Add Product
+                                </button>
+                            </div>
+                            
+                            <div class="overflow-x-auto">
+                                <table class="min-w-full divide-y divide-gray-200" id="products-table">
+                                    <thead class="bg-gray-50">
+                                        <tr>
+                                            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+                                            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Product</th>
+                                            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quantity</th>
+                                            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Unit Price</th>
+                                            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
+                                            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="bg-white divide-y divide-gray-200" id="product-rows">
+                                        @if(is_array($batch->products) && !empty($batch->products))
+                                            @foreach($batch->products as $index => $product)
+                                            @if(is_array($product) && isset($product['manufacturer']) && isset($product['model']) && isset($product['quantity']) && isset($product['price']))
+                                            <tr class="product-row">
+                                                <td class="px-4 py-3 text-sm font-medium text-gray-900">
+                                                    {{ $product['id'] ?? ($batch->reference_code . '-' . ($index + 1)) }}
+                                                    <input type="hidden" name="product_ids[]" value="{{ $product['id'] ?? ($batch->reference_code . '-' . ($index + 1)) }}">
+                                                </td>
+                                                <td class="px-4 py-3">
+                                                        <div class="text-sm text-gray-900">
+                                                            {{ $product['manufacturer'] }} {{ $product['model'] }}
+                                                        </div>
+                                                </td>
+                                                <td class="px-4 py-3">
+                                                        <input type="number" name="quantities[]" value="{{ $product['quantity'] }}" min="1" class="quantity-input w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" required>
+                                                </td>
+                                                <td class="px-4 py-3">
+                                                        <input type="number" name="unit_prices[]" value="{{ (float)$product['price'] }}" min="0" step="0.01" class="price-input w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" required>
+                                                </td>
+                                                <td class="px-4 py-3">
+                                                    <div class="product-total text-sm font-medium text-gray-900">
+                                                        @formatPrice($product['price'] * $product['quantity'])
+                                                    </div>
+                                                </td>
+                                                <td class="px-4 py-3">
+                                                    <button type="button" class="remove-product-row text-red-600 hover:text-red-900 font-medium">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                        </svg>
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                            @endif
+                                        @endforeach
+                                        @endif
+                                    </tbody>
+                                </table>
+                            </div>
+                            
+                            <div class="mt-6 flex justify-between items-center">
+                                <div>
+                                    <p class="text-sm text-gray-500">Total batch value: <span id="batch-total" class="font-medium text-gray-900"></span></p>
+                                    <p class="text-sm text-gray-500">Total units: <span id="batch-quantity" class="font-medium text-gray-900"></span></p>
+                                </div>
                                 <div class="flex space-x-2">
                                     <!-- Direct submit button as fallback -->
                                     <button type="submit" class="inline-flex items-center px-4 py-2 bg-gray-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition ease-in-out duration-150">
@@ -1135,155 +1268,4 @@
             }
         });
     </script>
-
-    <script>
-        document.addEventListener("DOMContentLoaded", function() {
-            const totalCostInput = document.getElementById("total_cost");
-            const profitMarginInput = document.getElementById("profit_margin");
-            const salePriceInput = document.getElementById("sale_price");
-            
-            // Function to calculate sale price
-            function calculateSalePrice() {
-                const totalCost = parseFloat(totalCostInput.value) || 0;
-                const profitMargin = parseFloat(profitMarginInput.value) || 0;
-                
-                if (totalCost > 0 && profitMargin > 0) {
-                    const salePrice = (totalCost * (1 + (profitMargin / 100))).toFixed(2);
-                    salePriceInput.value = salePrice;
-                }
-            }
-            
-            // Add event listeners
-            if (profitMarginInput) {
-                profitMarginInput.addEventListener("input", calculateSalePrice);
-            }
-            
-            if (totalCostInput) {
-                totalCostInput.addEventListener("change", calculateSalePrice);
-                // Triggerare l'evento change quando cambia batch_cost, shipping_cost e tax_amount
-                document.getElementById("batch_cost").addEventListener("input", function() {
-                    calculateTotalCost();
-                    setTimeout(calculateSalePrice, 50);
-                });
-                document.getElementById("shipping_cost").addEventListener("input", function() {
-                    calculateTotalCost();
-                    setTimeout(calculateSalePrice, 50);
-                });
-                document.getElementById("tax_amount").addEventListener("input", function() {
-                    calculateTotalCost();
-                    setTimeout(calculateSalePrice, 50);
-                });
-            }
-            
-            // Initialize on page load
-            calculateSalePrice();
-        });
-    </script>
-
-    <!-- Script per calcolare automaticamente il unit_price -->
-    <script>
-        document.addEventListener("DOMContentLoaded", function() {
-            const unitQuantityInput = document.getElementById("unit_quantity");
-            const unitPriceInput = document.getElementById("unit_price");
-            const salePriceInput = document.getElementById("sale_price");
-            
-            // Funzione per calcolare unit_price
-            function calculateUnitPrice() {
-                const salePrice = parseFloat(salePriceInput.value) || 0;
-                const quantity = parseFloat(unitQuantityInput.value) || 1; // Usa 1 come fallback per evitare divisioni per zero
-                
-                if (salePrice > 0 && quantity > 0) {
-                    const unitPrice = (salePrice / quantity).toFixed(2);
-                    unitPriceInput.value = unitPrice;
-                }
-            }
-            
-            // Aggiungi event listeners
-            if (unitQuantityInput) {
-                unitQuantityInput.addEventListener("input", calculateUnitPrice);
-            }
-            
-            if (salePriceInput) {
-                salePriceInput.addEventListener("input", calculateUnitPrice);
-                salePriceInput.addEventListener("change", calculateUnitPrice);
-                
-                // Quando profit_margin cambia, aspetta che sale_price venga aggiornato e poi calcola unit_price
-                const profitMarginInput = document.getElementById("profit_margin");
-                if (profitMarginInput) {
-                    profitMarginInput.addEventListener("input", function() {
-                        setTimeout(calculateUnitPrice, 100);
-                    });
-                }
-            }
-            
-            // Aggiungi event listeners per le variabili che influenzano indirettamente sale_price
-            const batchCostInput = document.getElementById("batch_cost");
-            const shippingCostInput = document.getElementById("shipping_cost");
-            const taxAmountInput = document.getElementById("tax_amount");
-            
-            if (batchCostInput) {
-                batchCostInput.addEventListener("input", function() {
-                    setTimeout(calculateUnitPrice, 200);
-                });
-            }
-            
-            if (shippingCostInput) {
-                shippingCostInput.addEventListener("input", function() {
-                    setTimeout(calculateUnitPrice, 200);
-                });
-            }
-            
-            if (taxAmountInput) {
-                taxAmountInput.addEventListener("input", function() {
-                    setTimeout(calculateUnitPrice, 200);
-                });
-            }
-            
-            // Calcola il prezzo unitario all'avvio
-            calculateUnitPrice();
-        });
-    </script>
-</x-admin-layout>                         <!-- Parameter Suggestions Based on Category -->
-                        <div class="mt-4 mb-6">
-                            <div class="bg-blue-50 p-4 rounded-lg">
-                                <h4 class="text-sm font-semibold text-blue-700 mb-2">Suggested Parameters</h4>
-                                <div id="suggested-params" class="text-sm text-blue-600">
-                                    <p>Select a category to see suggested parameters.</p>
-                                </div>
-                                <div class="mt-2">
-                                    <button type="button" id="add-suggested-params" class="text-xs text-blue-700 font-medium hover:text-blue-900 hidden">
-                                        <span class="underline">Add all suggested parameters</span>
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- Notes -->
-                        <div class="mt-6">
-                            <label for="notes" class="block text-sm font-medium text-gray-700 mb-1">Notes</label>
-                            <textarea name="notes" id="notes" rows="3" class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">{{ old('notes', $batch->notes) }}</textarea>
-                            @error('notes')
-                                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                            @enderror
-                        </div>
-                        
-                        <!-- Pulsanti di salvataggio -->
-                        <div class="mt-6 flex justify-end space-x-2">
-                            <!-- Direct submit button as fallback -->
-                            <button type="submit" class="inline-flex items-center px-4 py-2 bg-gray-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition ease-in-out duration-150">
-                                Save Changes
-                            </button>
-                            
-                            <!-- JavaScript-enhanced button -->
-                            <button type="button" id="save-batch-btn" class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition ease-in-out duration-150">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                                </svg>
-                                Save Batch
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div> 
+</x-admin-layout> 

@@ -27,7 +27,7 @@
         .company-name {
             font-size: 24px;
             font-weight: bold;
-            color: #1a2a36;
+            color: {{ $settings['document_primary_color'] }};
             margin: 0;
         }
         .company-details {
@@ -37,7 +37,7 @@
         .batch-title {
             font-size: 18px;
             font-weight: bold;
-            color: #1a2a36;
+            color: {{ $settings['document_primary_color'] }};
         }
         .batch-ref {
             font-size: 12px;
@@ -91,7 +91,7 @@
         .summary-value {
             font-size: 14px;
             font-weight: bold;
-            color: #1a2a36;
+            color: {{ $settings['document_primary_color'] }};
         }
         .products-table {
             width: 100%;
@@ -100,11 +100,11 @@
             max-width: calc(100% - 40px);
         }
         .products-table th {
-            background-color: #f1f3f4;
+            background-color: {{ $settings['document_primary_color'] }};
             padding: 4px 3px;
             text-align: center;
             font-size: 8px;
-            color: #5f6368;
+            color: #ffffff;
             text-transform: uppercase;
             border: 1px solid #eaeaea;
         }
@@ -194,12 +194,26 @@
 <body>
     <div class="header clearfix">
         <div class="company-info">
-            <img src="{{ public_path('img/logo.png') }}" alt="PrimoIT Logo" class="logo">
-            <div class="company-name">PrimoIT</div>
+            @if($settings['document_logo'])
+                <img src="{{ Storage::url($settings['document_logo']) }}" alt="{{ $settings['company_name'] }} Logo" class="logo">
+            @else
+                <img src="{{ public_path('img/logo.png') }}" alt="{{ $settings['company_name'] }} Logo" class="logo">
+            @endif
+            <div class="company-name">{{ $settings['company_name'] }}</div>
             <div class="company-details">
-                Wholesale IT Equipment<br>
-                www.primoit.it<br>
-                info@primoit.it
+                {{ $settings['company_legal_name'] }}<br>
+                @if($settings['company_address'])
+                    {{ $settings['company_address'] }}, {{ $settings['company_zip'] }} {{ $settings['company_city'] }} ({{ $settings['company_province'] }})<br>
+                @endif
+                @if($settings['company_vat'])
+                    P.IVA: {{ $settings['company_vat'] }}<br>
+                @endif
+                @if($settings['contact_email'])
+                    {{ $settings['contact_email'] }}<br>
+                @endif
+                @if($settings['contact_phone'])
+                    {{ $settings['contact_phone'] }}
+                @endif
             </div>
         </div>
         <div class="batch-info">
@@ -425,5 +439,13 @@
         {{ $batch->notes }}
     </div>
     @endif
+
+    <div class="page-footer">
+        @if($settings['document_footer'])
+            {{ $settings['document_footer'] }}
+        @else
+            {{ $settings['company_name'] }} - {{ $settings['company_legal_name'] }} - P.IVA {{ $settings['company_vat'] }} - {{ $settings['contact_email'] }}
+        @endif
+    </div>
 </body>
 </html> 

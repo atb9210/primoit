@@ -24,6 +24,7 @@ use App\Http\Controllers\Admin\ITSaleScraperController as AdminITSaleScraperCont
 use App\Http\Controllers\Admin\ITSaleScraperController as ITSaleScraperController;
 use App\Http\Controllers\Admin\FoxwayApiController as AdminFoxwayApiController;
 use App\Http\Controllers\CatalogController;
+use App\Http\Controllers\Admin\SettingsController as AdminSettingsController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -99,6 +100,11 @@ Route::middleware('auth')->group(function () {
 Route::middleware(['auth', 'verified', \App\Http\Middleware\AdminMiddleware::class])->prefix('admin')->name('admin.')->group(function () {
     // Dashboard
     Route::get('/', [AdminDashboardController::class, 'index'])->name('dashboard');
+    
+    // Settings
+    Route::get('settings', [AdminSettingsController::class, 'index'])->name('settings.index');
+    Route::get('settings/{group}', [AdminSettingsController::class, 'edit'])->name('settings.edit');
+    Route::post('settings/{group}', [AdminSettingsController::class, 'update'])->name('settings.update');
     
     // Batches
     Route::resource('batches', AdminBatchController::class);

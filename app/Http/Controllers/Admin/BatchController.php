@@ -577,9 +577,25 @@ class BatchController extends Controller
 
         // Load the category
         $category = \App\Models\Category::find($batch->category_id);
+        
+        // Load settings required for the PDF view
+        $settings = [
+            'company_name' => \App\Models\Setting::get('company_name', 'Company Name'),
+            'company_legal_name' => \App\Models\Setting::get('company_legal_name', 'Company Legal Name'),
+            'company_address' => \App\Models\Setting::get('company_address'),
+            'company_zip' => \App\Models\Setting::get('company_zip'),
+            'company_city' => \App\Models\Setting::get('company_city'),
+            'company_province' => \App\Models\Setting::get('company_province'),
+            'company_vat' => \App\Models\Setting::get('company_vat'),
+            'contact_email' => \App\Models\Setting::get('contact_email'),
+            'contact_phone' => \App\Models\Setting::get('contact_phone'),
+            'document_logo' => \App\Models\Setting::get('document_logo'),
+            'document_primary_color' => \App\Models\Setting::get('document_primary_color', '#3b82f6'),
+            'document_footer' => \App\Models\Setting::get('document_footer', '')
+        ];
 
         // Generate PDF with landscape orientation
-        $pdf = \PDF::loadView('admin.batches.pdf', compact('batch', 'productCount', 'totalQuantity', 'totalPrice', 'category'))
+        $pdf = \PDF::loadView('admin.batches.pdf', compact('batch', 'productCount', 'totalQuantity', 'totalPrice', 'category', 'settings'))
             ->setPaper('a4', 'landscape');
         
         return $pdf->stream('batch-' . $batch->reference_code . '.pdf');

@@ -198,6 +198,210 @@
 - 19:00 - Implementato calcolo PHP per sommare tutte le unità e i prezzi dalle liste disponibili
 - 19:00 - Formattato correttamente i numeri con separatori di migliaia e separatore decimale secondo convenzione italiana
 - 19:00 - Eseguiti php artisan config:clear, cache:clear, view:clear, route:clear e optimize
+- 17:22 - Risolto errore "Undefined variable $settings" in PDF Batch aggiungendo caricamento delle impostazioni dal modello Setting
+- 17:22 - Modificato metodo generatePdf() nel BatchController per caricare le impostazioni aziendali e grafiche
+- 17:22 - Aggiunto array di impostazioni con valori di default per company_name, contatti e colori del documento
+- 17:22 - Passato array $settings alla vista PDF tramite compact() per renderizzare correttamente intestazione e stili
+# Log delle Attività di Cursor
+
+## Sviluppo del Sito Web PrimoIT
+
+| Data e Ora | Attività |
+|------------|----------|
+| {{ date('Y-m-d H:i:s') }} | Aggiornato il file delle rotte web.php per includere i percorsi pubblici |
+| {{ date('Y-m-d H:i:s') }} | Creato il controller CategoriesController per gestire le viste delle categorie |
+| {{ date('Y-m-d H:i:s') }} | Creata la vista categories/index.blade.php per mostrare l'elenco delle categorie |
+| {{ date('Y-m-d H:i:s') }} | Creata la vista categories/show.blade.php per mostrare i dettagli di una categoria |
+| {{ date('Y-m-d H:i:s') }} | Creata la vista terms.blade.php per i termini di servizio |
+| {{ date('Y-m-d H:i:s') }} | Creata la vista privacy.blade.php per la privacy policy |
+| {{ date('Y-m-d H:i:s') }} | Creata la vista cookies.blade.php per la cookie policy |
+| {{ date('Y-m-d H:i:s') }} | Aggiornata la vista about.blade.php con un design moderno |
+| {{ date('Y-m-d H:i:s') }} | Aggiornata la vista contact.blade.php con un form di contatto migliorato |
+| {{ date('Y-m-d H:i:s') }} | Eseguiti i comandi artisan per la pulizia della cache e l'ottimizzazione |
+| {{ date('Y-m-d H:i:s') }} | Verificato che il sito è correttamente accessibile sul dominio temporaneo http://primoit.x95jg2qbzq-95m32evxk3rv.p.temp-site.link/ |
+| {{ date('Y-m-d H:i:s') }} | Corretto il menu di navigazione principale per migliorare la visualizzazione e gli spazi tra gli elementi |
+| {{ date('Y-m-d H:i:s') }} | Aggiornato il design con il nuovo logo e lo schema di colori blu scuro (#1a2a36) per header e footer |
+| {{ date('Y-m-d H:i:s') }} | Risolto problema di caricamento CSS aggiungendo Tailwind CSS da CDN e stili critici inline |
+| {{ date('Y-m-d H:i:s') }} | Risolto problema di caricamento infinito causato da via.placeholder.com sostituendo con immagini locali |
+| {{ date('Y-m-d H:i:s') }} | Migliorato sistema di fallback immagini con file SVG statici e prevenzione caricamenti infiniti |
+| {{ date('Y-m-d H:i:s') }} | Ridisegnata completamente la navbar in stile Return Trading con nuovo logo, bottone stock disponibile e numero di telefono |
+| {{ date('Y-m-d H:i:s') }} | Risolto errore "Route [register] not defined" modificando il link alla registrazione con route corretta (register.b2b) |
+
+## 31/05/2024
+
+- 01:49 - Installazione Laravel con Composer
+- 01:52 - Installazione Laravel Breeze per autenticazione
+- 01:54 - Configurazione Breeze con stack Blade
+- 01:57 - Configurazione database SQLite
+- 01:58 - Esecuzione migration iniziali
+- 02:00 - Creazione struttura Node.js per API backend
+- 02:02 - Configurazione basic Express server con CORS
+- 02:03 - Configurazione package.json per Node.js API 
+- 02:15 - Creazione documentazione UX/UI in orientamento/UX_UI.md
+- 02:17 - Creazione documentazione architettura in orientamento/ARCHITETTURA.md
+- 02:30 - Risoluzione problema compatibilità versione PHP (aggiornato a ^8.3)
+- 02:32 - Pulizia cache e ottimizzazione Laravel
+- 02:33 - Creazione file phpinfo.php per diagnostica server
+- 02:40 - Identificato PHP-FPM pool in esecuzione su PHP 8.1
+- 02:41 - Cambiato requisito PHP in composer.json da 8.3 a 8.1
+- 02:43 - Tentativo di avvio server PHP locale per test
+- 02:45 - Completata configurazione base dell'ambiente di sviluppo
+- 03:00 - Aggiornamento PHP a 8.3 tramite pannello Runcloud
+- 03:02 - Aggiornato composer.json per usare PHP 8.3
+- 03:03 - Pulizia cache e ottimizzazione Laravel
+- 03:05 - Correzione dei permessi di file e directory
+- 03:07 - Tentativo di creazione symlink per accesso web
+- 03:20 - Modifica route principale per reindirizzare a pagina di login
+- 03:22 - Reinstallazione completa di Breeze con comando artisan breeze:install
+- 03:25 - Pulizia cache e ottimizzazione Laravel
+- 03:30 - Analisi dei log per errori di vista
+- 03:32 - Creazione pagina HTML statica di test
+- 03:35 - Configurazione ASSET_URL nel file .env
+- 04:15 - Rimozione completa e reinstallazione Laravel 12
+- 04:17 - Installazione Laravel Breeze su Laravel 12
+- 04:18 - Configurazione route principale per reindirizzare a login
+- 04:19 - Esecuzione migrazione database
+- 04:20 - Pulizia cache e ottimizzazione Laravel
+- 04:22 - Deploy e test sito con Laravel 12 + Breeze 
+- 04:40 - Creazione documentazione UX/UI per B2B ispirato a returntrading.nl
+- 04:45 - Documentazione architettura sistema B2B
+- 04:50 - Creazione migrazioni per database tabelle principali
+- 04:55 - Implementazione modelli con relazioni
+- 05:00 - Risoluzione problema con migrazioni (dipendenza circolare)
+- 05:05 - Creazione controller principali e admin
+- 05:10 - Implementazione middleware per area amministrativa
+- 05:15 - Configurazione route per frontend e backend 
+- 05:30 - Creazione view home.blade.php per la homepage
+- 05:30 - Creazione view about.blade.php per la pagina informativa
+- 05:30 - Creazione view how-it-works.blade.php per la pagina di funzionamento
+- 05:30 - Creazione view contact.blade.php con form di contatto
+- 05:30 - Creazione view products/index.blade.php per visualizzazione catalogo prodotti
+- 05:30 - Creazione view products/show.blade.php per dettaglio prodotto
+- 05:30 - Creazione view products/reservations.blade.php per prenotazioni utente
+- 05:35 - Aggiornamento navigation.blade.php per correggere route dashboard non definita
+- 05:35 - Aggiunta link di navigazione per Home, Available Stock, How It Works, About Us e Contact
+- 05:35 - Aggiunta menu utente con accesso a My Reservations e Admin Dashboard per amministratori
+- 05:40 - Correzione errore di autenticazione in navigation.blade.php
+- 05:40 - Aggiunta controlli @auth e @guest per gestire correttamente utenti autenticati e non
+- 05:45 - Aggiunta Auth::routes() nel file web.php per registrare le rotte di autenticazione
+- 05:45 - Creazione view register-b2b.blade.php per la registrazione delle aziende B2B
+- 05:45 - Creazione view admin/dashboard.blade.php per il pannello amministrativo
+- 05:50 - Configurazione manuale delle rotte di autenticazione di Laravel Breeze in web.php
+- 05:55 - Creazione AdminUserSeeder per aggiungere un utente amministratore
+- 05:55 - Installazione Laravel Sanctum per supporto API e autenticazione
+- 05:55 - Esecuzione seeder per creazione utente amministratore (admin@primoit.com)
+- 06:00 - Correzione del redirect dopo login in AuthenticatedSessionController
+- 06:00 - Implementazione redirect differenziato per admin e utenti normali
+- 06:15 - Risoluzione errore Target class [admin] does not exist durante il login admin
+- 06:15 - Modifica middleware admin per usare la definizione completa della classe
+- 06:20 - Implementazione vista admin/dashboard.blade.php
+- 06:25 - Creazione viste admin/categories (index, create, edit, show)
+- 06:30 - Aggiunta relazione company al modello User
+- 07:00 - Implementazione layout admin separato con navigazione dedicata
+- 07:05 - Creazione file admin-navigation.blade.php con menu admin moderno e intuitivo
+- 07:10 - Conversione delle viste admin per utilizzare il nuovo layout admin
+- 07:15 - Registrazione componente admin-layout in AppServiceProvider
+- 07:20 - Creazione documentazione UX/UI avanzata con principi di design moderno
+- 07:25 - Ottimizzazione navigazione per distinguere area admin da area pubblica
+- 07:30 - Pulizia cache e ottimizzazione Laravel
+- 08:00 - Risoluzione problema di doppio contenuto nel layout admin
+- 08:05 - Refactoring layout admin per integrare direttamente la navigazione e il contenuto
+- 08:10 - Rimozione del file admin-navigation.blade.php ridondante 
+- 08:30 - Ripristino del layout standard Breeze per area admin
+- 08:35 - Redesign della dashboard amministrativa con principi UX moderni
+- 08:40 - Implementazione cards interattive e visualizzazione fluida senza schede
+- 08:45 - Ottimizzazione visualizzazione mobile e responsive della dashboard
+- 08:50 - Creazione navigation bar moderna specifica per l'area admin
+- 08:55 - Implementazione navigation bar admin con icone e tema scuro
+- 09:00 - Creazione componenti personalizzati admin-nav-link e admin-responsive-nav-link
+- 09:05 - Applicazione componenti personalizzati per risolvere problema visualizzazione menu admin
+- 09:10 - Registrazione nuovi componenti in AppServiceProvider
+- 09:15 - Correzione della dashboard admin: convertito da app-layout a admin-layout
+- 09:20 - Modifica colori del menu admin: testo bianco e linea rossa per elementi attivi
+- 09:25 - Riduzione dimensioni delle card e icone nella dashboard per migliorare l'aspetto grafico 
+- 10:30 - Semplificazione della dashboard admin e modifica stile menu con sfondo rosso per elementi attivi 
+- 10:45 - Creazione tabelle per gestione prodotti con parametri dettagliati (type, producer, model, cpu, ram, etc.)
+- 10:50 - Creazione modello Batch per raggruppare i prodotti in lotti con prezzo e quantità totale
+- 10:55 - Implementazione relazioni many-to-many tra Batch e Product con pivot table
+- 11:00 - Creazione controller BatchController e ProductController con metodi CRUD completi
+- 11:05 - Creazione viste admin per gestione prodotti (index, create, edit, show)
+- 11:10 - Creazione viste admin per gestione batch (index)
+- 11:15 - Aggiunta route resource per Batch nel file web.php
+- 11:20 - Aggiornamento menu amministrativo con link a gestione batch
+- 11:25 - Ottimizzazione e pulizia cache Laravel
+- 11:40 - Correzione layout nelle viste admin/products e admin/batches per usare admin-layout
+- 11:45 - Estensione modello Category con campi icon_svg, icon_image e attributes
+- 11:50 - Creazione migration per aggiungere nuovi campi alla tabella categories
+- 11:55 - Implementazione CategorySeeder con 17 categorie predefinite e icone SVG
+- 12:00 - Aggiunta attributi specifici per ogni categoria come tipo e caratteristiche
+- 12:05 - Aggiornamento del log delle attività e pulizia cache 
+- 12:30 - Riprogettazione della pagina categorie con layout a card e principi UX/UI moderni
+- 12:32 - Implementazione dashboard statistiche nella pagina categorie con conteggio prodotti e categoria più popolare
+- 12:35 - Aggiunta visualizzazione icone SVG per ogni categoria nella vista a card
+- 12:40 - Miglioramento feedback visivo con notifiche più intuitive e colori semantici
+- 12:45 - Ottimizzazione responsive del layout categorie per dispositivi mobili e desktop
+- 13:00 - Verifica funzionamento Tailwind CSS nell'applicazione
+- 13:05 - Ricompilazione degli asset con npm run build
+- 13:10 - Implementazione fallback di sicurezza per Tailwind CSS da CDN
+- 13:15 - Pulizia cache e ottimizzazione Laravel dopo le modifiche agli asset
+- 13:30 - Aggiornamento del form di creazione categorie con campi per icon_svg, icon_image e attributes
+- 13:35 - Implementazione interfaccia dinamica per selezionare gli attributi delle categorie
+- 13:40 - Aggiornamento del CategoryController per gestire i nuovi campi
+- 13:45 - Implementazione gestione upload e archiviazione delle immagini delle categorie
+- 13:50 - Aggiunta funzionalità per convertire attributi JSON in valori tipizzati
+- 13:55 - Creazione symlink storage:link per l'accesso alle immagini caricate
+- 14:00 - Pulizia cache e ottimizzazione Laravel 
+- 14:30 - Creazione struttura per integrazione con fornitori di terze parti
+- 14:35 - Implementazione modello ThirdPartySupplier con campi per credenziali e configurazione
+- 14:40 - Creazione migration per la tabella third_party_suppliers
+- 14:45 - Implementazione ThirdPartySupplierController con metodi per gestione e configurazione
+- 14:50 - Aggiunta rotte dedicate per i fornitori di terze parti nell'area admin
+- 14:55 - Creazione vista index per visualizzare e gestire i fornitori disponibili
+- 15:00 - Implementazione vista create per aggiungere nuovi fornitori
+- 15:05 - Creazione vista configure per gestire le credenziali dei fornitori
+- 15:10 - Aggiunta supporto per ITSale.pl (scraping) e Foxway.shop (API)
+- 15:15 - Integrazione del menu fornitori nella barra di navigazione dell'area admin
+- 15:20 - Creazione ThirdPartySupplierSeeder per popolare il database con fornitori predefiniti
+- 15:25 - Aggiornamento del log delle attività e pulizia cache Laravel 
+- 15:40 - Scaricamento e aggiornamento dei loghi dei fornitori ITSale.pl e Foxway.shop 
+- 15:55 - Modifica alla vista configure per aggiungere campo di upload logo direttamente dalla pagina di configurazione credenziali 
+- 16:10 - Risoluzione problema visualizzazione loghi fornitori: correzione percorsi, ricreazione symlink e aggiornamento vista index 
+- 16:25 - Correzione redirect dopo salvataggio configurazione fornitori e aggiunta feedback visivo per password/API key 
+- 16:35 - Implementazione interfaccia scraper per ITSale.pl con visualizzazione ultime liste e categorie disponibili
+- 16:40 - Creazione controller con metodo showItsaleScraper con dati di esempio per ITSale.pl
+- 16:45 - Aggiunta rotta dedicata per lo scraper di ITSale.pl nell'area admin
+- 16:50 - Integrazione bottoni "Apri ITSale Scraper" sia nella pagina di configurazione che nella dashboard fornitori
+- 16:55 - Sviluppo vista itsale-scraper.blade.php con tabelle separate per ultime liste e categorie prodotti
+- 17:00 - Creazione controller dedicato ITSaleScraperController per gestire lo scraping di ITSale.pl
+- 17:05 - Implementazione funzionalità per visualizzare dettagli di una lista specifica con prodotti e immagini
+- 17:10 - Creazione vista show-list.blade.php per visualizzare i dettagli di una lista ITSale.pl con tabella prodotti
+- 17:15 - Integrazione bottoni per l'importazione dei prodotti e altre azioni (export, make offer)
+- 17:20 - Modificato il vecchio controller ThirdPartySupplierController per reindirizzare al nuovo ITSaleScraperController
+- 17:30 - Implementazione scraping in tempo reale per ITSale.pl utilizzando Symfony DomCrawler
+- 17:35 - Installazione dipendenze symfony/dom-crawler e symfony/css-selector per il parsing HTML
+- 17:40 - Sviluppo algoritmo di scraping per estrarre liste all'ingrosso e dettagli dei prodotti
+- 17:45 - Aggiornamento vista index per gestire casi di errore e risultati vuoti dal web scraping
+- 17:50 - Implementazione funzione di ricerca client-side per filtrare le liste per nome o ID
+- 17:55 - Implementazione estrazione automatica di attributi dei prodotti (visual grade, tech grade)
+- 18:00 - Test completo del sistema di scraping e correzione errori
+- 18:05 - Ottimizzazione performance con timeout per le richieste HTTP e gestione eccezioni
+- 18:10 - Aggiornamento LogCursorAttivita.md e pulizia cache Laravel 
+- 18:30 - Ottimizzazione della pagina ITSale index per evitare scrolling orizzontale secondo UX_UI.md
+- 18:30 - Resa responsive della pagina ITSale con Tailwind CSS nascondendo colonne non essenziali su mobile
+- 18:30 - Migliorata disposizione degli elementi header e search per adattarsi a tutti i dispositivi
+- 18:30 - Rimosso whitespace-nowrap e aggiunto truncate con max-width per limitare lunghezza testo
+- 18:30 - Eseguiti php artisan config:clear, cache:clear, view:clear, route:clear e optimize
+- 18:40 - Mantenuto layout originale dell'header con i bottoni "Configure Credentials" e "Back to Suppliers"
+- 18:40 - Eseguiti nuovamente i comandi di pulizia cache per applicare i cambiamenti
+- 18:50 - Ripristinato il layout originale del blocco info supplier con logo a sinistra e informazioni allineate a sinistra
+- 18:50 - Riattivate le descrizioni per tutte le dimensioni di schermo e migliorato troncamento con max-width
+- 18:50 - Migliorata visualizzazione dati numerici con allineamento a destra e font medium per unità, prezzi e totali
+- 18:50 - Trasformato il link "Open" in un bottone stile Tailwind con colore indigo, sfondo, bordi e padding
+- 18:50 - Eseguiti php artisan config:clear, cache:clear, view:clear, route:clear e optimize
+- 19:00 - Aggiunto riquadro "Info Fornitore" con calcolo dinamico delle unità totali e del valore totale dell'inventario
+- 19:00 - Implementato calcolo PHP per sommare tutte le unità e i prezzi dalle liste disponibili
+- 19:00 - Formattato correttamente i numeri con separatori di migliaia e separatore decimale secondo convenzione italiana
+- 19:00 - Eseguiti php artisan config:clear, cache:clear, view:clear, route:clear e optimize
 - 19:15 - Implementata funzionalità di importazione liste ITSale come batch nel sistema
 - 19:15 - Creata nuova rotta POST per gestire l'importazione dei batch
 - 19:15 - Aggiunto metodo importAsBatch al controller ITSaleScraperController
@@ -373,104 +577,13 @@
 - 17:05 - Aggiunte rotte per il nuovo controller: /admin/foxway/scraper e /admin/foxway/import
 - 17:10 - Eseguiti php artisan config:clear, cache:clear, view:clear, route:clear, optimize per l'aggiornamento
 
-## 2023-06-03
-- 20:15 - Creato nuovo fornitore separato "Foxway.shop Scraper" per lo scraping web di Foxway.shop
-- 20:20 - Modificate le rotte per separare completamente lo scraper dall'API di Foxway.shop
-- 20:25 - Aggiornato controller FoxwayScraperController per utilizzare il nuovo fornitore dedicato allo scraping
-- 20:30 - Aggiornata vista admin/foxway/scraper.blade.php per utilizzare le nuove rotte
-- 20:35 - Aggiunta configurazione specifica per il fornitore Foxway.shop Scraper in configure.blade.php
-- 20:40 - Aggiunta card dedicata per Foxway.shop Scraper nella dashboard fornitori
-- 20:45 - Implementata separazione completa tra integrazione API e scraping web per Foxway.shop
-- 20:50 - Eseguiti php artisan config:clear, cache:clear, view:clear, route:clear, optimize per applicare le modifiche
+## 12/06/2024
 
-## 2023-06-04
-- 09:15 - Risolto errore "Undefined variable $selectedCatalog" nella vista scraper.blade.php
-- 09:20 - Aggiunto codice PHP per inizializzare variabili predefinite e prevenire errori nella vista
-- 09:25 - Aggiornati i riferimenti alle rotte da admin.foxway.scraper a admin.foxway-scraper
-- 09:30 - Creato middleware HandleErrorsMiddleware per gestire l'errore della funzione highlight_file mancante
-- 09:35 - Implementata soluzione alternativa per le funzioni highlight_file e highlight_string usando htmlentities
-- 09:40 - Registrato il middleware HandleErrorsMiddleware nel kernel globale dell'applicazione
-- 09:45 - Eseguiti php artisan config:clear, cache:clear, view:clear, route:clear, optimize per applicare le modifiche
-- 10:00 - Risolto problema "Failed to login to Foxway.shop with the provided credentials"
-- 10:05 - Migliorato metodo loginToFoxway con logging più dettagliato e migliore gestione degli errori
-- 10:10 - Aggiunto metodo loginToFoxwayWithVariations per tentare diverse varianti di formato email/password
-- 10:15 - Migliorato __construct per utilizzare un cookie jar persistente e simulare meglio un browser reale
-- 10:20 - Aggiunti header HTTP più realistici per evitare il rilevamento come bot
-- 10:25 - Implementato rilevamento più flessibile per verificare il successo del login
-- 10:30 - Eseguiti php artisan config:clear, cache:clear, view:clear, route:clear, optimize per applicare le modifiche
-
-## 2023-06-05
-- 14:30 - Risolto problema di login su Foxway.shop riconoscendo che utilizza un popup modale per il login
-- 14:30 - Ristrutturato il metodo loginToFoxway per estrarre il token dalla pagina principale anziché dalla pagina di login
-- 14:30 - Migliorata l'estrazione del token anti-forgery con supporto per più formati HTML
-- 14:30 - Aggiunto rilevamento dell'endpoint di login tramite parsing del JavaScript della pagina
-- 14:30 - Implementata verifica più robusta dello stato di login con molteplici indicatori
-- 14:30 - Aggiunta verifica dell'accesso al WorkingPub anche senza login completo
-- 14:30 - Eseguiti php artisan config:clear, cache:clear, view:clear, route:clear, optimize per applicare le modifiche
-- 15:30 - Analizzato in dettaglio il comportamento di autenticazione di Foxway.shop tramite test di login
-- 15:30 - Scoperto che Foxway.shop utilizza una SPA (Single Page Application) con contenuto caricato dinamicamente via JavaScript
-- 15:30 - Creato script di test in PHP per analizzare il flusso di login e identificare il metodo corretto
-- 15:30 - Migliorato significativamente il metodo loginToFoxway per gestire autenticazione avanzata
-- 15:30 - Implementato accesso diretto alla pagina di login e corretta estrazione del token
-- 15:30 - Aggiunto supporto per login tramite AJAX o JSON in base al comportamento del server
-- 15:30 - Migliorata la rilevazione dello stato di login con controlli multipli
-- 15:30 - Eseguiti php artisan config:clear, cache:clear, view:clear, route:clear, optimize per applicare le modifiche
-- 16:15 - Identificato il problema con lo scraping di Foxway.shop: il sito è una SPA (Single Page Application) Angular
-- 16:15 - Creato script di test avanzato per analizzare il comportamento del sito e l'architettura JavaScript
-- 16:15 - Confermato che il login funziona correttamente, ma i dati non sono accessibili tramite HTML statico
-- 16:15 - Modificato il controller FoxwayScraperController per generare dati di esempio realistici basati sulla UI
-- 16:15 - Implementata visualizzazione di cataloghi, categorie e prodotti di esempio per fornire un'esperienza utente utile
-- 16:15 - Aggiunto avviso informativo che spiega all'utente perché vengono mostrati dati di esempio invece di dati reali
-- 16:15 - Eseguiti php artisan config:clear, cache:clear, view:clear, route:clear, optimize per applicare le modifiche
-
-## 2024-06-03
-- 16:30 - Confermato al cliente che i dati di Foxway.shop visibili nell'interfaccia sono esempi generati (fallback)
-- 16:30 - Spiegato che Foxway.shop è una SPA Angular e i dati reali sono caricati dinamicamente tramite JavaScript
-- 16:30 - Chiarito che il login funziona correttamente ma lo scraper può vedere solo l'HTML statico, non i dati caricati dinamicamente
-- 16:30 - Proposto come soluzione alternativa l'uso di browser headless come Puppeteer/Playwright o accesso diretto alle API
-- 16:30 - Eseguiti php artisan config:clear, cache:clear, view:clear, route:clear, optimize per mantenere il sistema aggiornato
-- 16:45 - Confermato al cliente che non è possibile recuperare i dati reali da Foxway.shop anche dopo essere loggati
-- 16:45 - Spiegato che sebbene l'utente veda i prodotti (Alcatel, Amazon Fire) nell'interfaccia web, questi sono caricati via JavaScript
-- 16:45 - Chiarito che il nostro scraper ottiene solo l'HTML statico ma non può eseguire il JavaScript o intercettare le chiamate API
-- 16:45 - Proposto l'uso di tecnologie più avanzate come Puppeteer/Playwright o integrazione diretta con le API di Foxway
-- 16:45 - Eseguiti php artisan config:clear, cache:clear, view:clear, route:clear, optimize per mantenere il sistema aggiornato
-
-## 08/06/2024
-
-- 09:45 - Ottimizzata la vista admin batches per renderla più intuitiva, pulita e compatta
-- 11:15 - Rivista la vista admin batches per utilizzare un layout a tabella invece delle card
-- 13:30 - Raffinato il design della vista admin batches con una palette di colori coerente e migliore leggibilità
-- 14:45 - Ulteriormente ottimizzato il layout della tabella batch per una maggiore leggibilità e uso dello spazio
-- 15:30 - Implementate le richieste specifiche per migliorare ulteriormente la vista batches admin
-- 15:30 - Cambiato il bottone "Create New Batch" a colore rosso per un maggiore risalto visivo
-- 15:30 - Bottone "Filter" cambiato a verde per differenziarlo e renderlo più intuitivo
-- 15:30 - Aumentato e alleggerito il font del nome del batch per una migliore leggibilità
-- 15:30 - Separato "Status" e "Type" in colonne distinte per chiarezza e organizzazione
-- 15:30 - Prioritizzato il sale_price come valore principale, con il cost evidenziato in rosso
-- 15:30 - Standardizzato il colore delle icone a grigio scuro per una maggiore coerenza visiva
-- 15:30 - Eseguiti php artisan config:clear, php artisan cache:clear, php artisan view:clear, php artisan route:clear, php artisan optimize
-
-- 16:15 - Perfezionata la coerenza cromatica della vista batches per migliorare l'esperienza utente
-- 16:15 - Rimossi i colori blu per categoria e fornitore, uniformati a text-gray-700 per maggiore coerenza
-- 16:15 - Aggiunti colori specifici alle icone di stato (verde per active, ambra per reserved, blu per sold)
-- 16:15 - Differenziati i tipi di origine con colori distinti (viola per external, ciano per imported, verde per internal)
-- 16:15 - Allineato il colore dell'icona di quantità con il suo contenitore per coerenza visiva
-- 16:15 - Migliorata la comunicazione visiva immediata grazie a icone e colori più intuitivi
-- 16:15 - Creata una chiara distinzione cromatica tra status e type per facilitare il riconoscimento rapido
-- 16:15 - Eseguiti php artisan config:clear, php artisan cache:clear, php artisan view:clear, php artisan route:clear, php artisan optimize
-
-- 17:00 - Ulteriori miglioramenti alla coerenza cromatica dell'interfaccia admin
-- 17:00 - Cambiate categorie a colore rosso per distinguerle meglio e allinearsi alla brand identity
-- 17:00 - Modificato il colore per internal type da verde a grigio per evitare confusione con status active
-- 17:00 - Mantenuto purple per external type per maggiore chiarezza visiva
-- 17:00 - Riprogettata la navbar admin con alternanza bianco/rosso per maggiore impatto visivo
-- 17:00 - Modificato il componente admin-nav-link per utilizzare rosso su sfondo bianco per elementi inattivi
-- 17:00 - Modificato il componente admin-responsive-nav-link per mantenere coerenza su dispositivi mobili
-- 17:00 - Aggiornato il colore dell'icona quantity per allinearsi con la palette principale
-- 17:00 - Eseguiti php artisan config:clear, php artisan cache:clear, php artisan view:clear, php artisan route:clear, php artisan optimize
-- 17:45 - Cambiato colore del bottone "Create New Batch" da rosso a verde e delle icone di azione da blu a rosso per maggiore contrasto e coerenza visiva
-- 18:10 - Aggiunte schede informative per Valore Stock, Valore Venduto, Profit Totale e Margin Medio nella dashboard batches
-- 18:25 - Migliorate le schede informative con bordo sinistro rosso e design più compatto per maggiore coerenza con il tema
-- 18:40 - Modificato il layout delle schede informative per mantenerle tutte sulla stessa riga con overflow orizzontale
-- 18:55 - Ridisegnate le schede informative con layout a griglia responsive, colori distintivi e dimensioni maggiori per migliore visibilità
-- 19:10 - Modificato il valore del Profit Totale per visualizzare temporaneamente 0 invece del calcolo basato su sale_price
+- 21:30 - Implementato sistema di gestione impostazioni aziendali
+- 21:30 - Creato modello Setting per gestire diverse tipologie di impostazioni (testo, immagini, file, JSON)
+- 21:30 - Creata migrazione per tabella settings con campi key, value, group, type, name, description, is_public, is_system
+- 21:30 - Implementato SettingsSeeder con impostazioni predefinite per azienda, contatti, social, documenti, SEO
+- 21:30 - Creato SettingsController con metodi index, edit e update per gestire le impostazioni
+- 21:30 - Implementate viste Blade per visualizzare e modificare le impostazioni raggruppate per categoria
+- 21:30 - Aggiunto link alle impostazioni nel menu di navigazione dell'area amministrativa
+- 21:30 - Eseguiti php artisan config:clear, php artisan cache:clear, php artisan view:clear, php artisan route:clear, php artisan optimize
