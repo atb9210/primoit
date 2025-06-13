@@ -263,6 +263,13 @@
 - 21:45 - Modificato il redirect dopo l'aggiunta di un prodotto per tornare alla pagina di visualizzazione del batch
 - 22:00 - Migliorato formato ID prodotti: ora include il numero del batch seguito da un ID sequenziale (es. 19-001)
 - 22:15 - Semplificato formato ID prodotti: ora utilizza il formato completo del batch seguito da un numero sequenziale (es. 0019-1)
+- 22:30 - Uniformato formato ID prodotti anche nell'importazione batch da ITSale per garantire consistenza
+- 23:00 - Reso opzionale il campo reference code nel form di importazione batch da ITSale
+- 23:00 - Aggiunto pulsante per svuotare il campo reference code nel form di importazione
+- 23:00 - Implementata generazione automatica di reference code se non specificato dall'utente
+- 23:15 - Migliorata generazione automatica del reference code utilizzando l'ID del batch invece di un conteggio sequenziale
+- 23:30 - Corretto il formato degli ID dei prodotti importati da ITSale per evitare ID che iniziano con un trattino
+- 23:45 - Risolto problema di colonna ID duplicata nella tabella dei prodotti del batch
 
 ## 06/06/2024
 

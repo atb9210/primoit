@@ -82,8 +82,14 @@
                                     <input type="text" name="batch_name" id="batch_name" value="{{ $listDetails['name'] }}" class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md">
                                 </div>
                                 <div>
-                                    <label for="batch_reference" class="block text-xs font-medium text-gray-700 mb-1">Reference Code</label>
-                                    <input type="text" name="batch_reference" id="batch_reference" value="ITSALE-{{ strtoupper($listSlug) }}" class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md">
+                                    <label for="batch_reference" class="block text-xs font-medium text-gray-700 mb-1">Reference Code <span class="text-gray-400 font-normal">(optional)</span></label>
+                                    <div class="flex">
+                                        <input type="text" name="batch_reference" id="batch_reference" value="ITSALE-{{ strtoupper($listSlug) }}" class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md">
+                                        <button type="button" onclick="document.getElementById('batch_reference').value = ''" class="ml-2 inline-flex items-center px-2.5 py-1.5 border border-gray-300 shadow-sm text-xs font-medium rounded text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                                            Clear
+                                        </button>
+                                    </div>
+                                    <p class="mt-1 text-xs text-gray-500">Leave empty to generate automatically</p>
                                 </div>
                                 <div>
                                     <label for="batch_status" class="block text-xs font-medium text-gray-700 mb-1">Status</label>

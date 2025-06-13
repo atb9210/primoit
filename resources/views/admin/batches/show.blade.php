@@ -215,7 +215,7 @@
                                     
                                     @if(is_array($batch->specifications))
                                         @foreach($batch->specifications as $key => $value)
-                                            @if(!in_array($key, ['grade', 'visual_grade', 'tech_grade', 'original_specs']))
+                                            @if(!in_array($key, ['grade', 'visual_grade', 'tech_grade', 'original_specs', 'id']))
                                                 <th class="px-3 py-2 bg-gray-50 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">{{ ucfirst(str_replace('_', ' ', $key)) }}</th>
                                             @endif
                                         @endforeach
@@ -253,7 +253,7 @@
                                     
                                     @if(is_array($batch->specifications))
                                         @foreach($batch->specifications as $key => $value)
-                                            @if(!in_array($key, ['grade', 'visual_grade', 'tech_grade', 'original_specs']))
+                                            @if(!in_array($key, ['grade', 'visual_grade', 'tech_grade', 'original_specs', 'id']))
                                             <td class="px-3 py-2 whitespace-nowrap text-gray-900">
                                                 @if(isset($product[$key]))
                                                     @if(is_array($product[$key]))

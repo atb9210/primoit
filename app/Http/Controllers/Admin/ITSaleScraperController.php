@@ -1520,7 +1520,7 @@ class ITSaleScraperController extends Controller
             // Validazione dei dati di input
             $validatedData = $request->validate([
                 'batch_name' => 'required|string|max:255',
-                'batch_reference' => 'required|string|max:255',
+                'batch_reference' => 'nullable|string|max:255', // Modificato da required a nullable
                 'batch_description' => 'nullable|string',
                 'batch_status' => 'required|string|in:active,pending,sold,reserved',
                 'category_id' => 'required|exists:categories,id',
@@ -1530,7 +1530,7 @@ class ITSaleScraperController extends Controller
                 'batch_cost' => 'required|numeric|min:0',
                 'shipping_cost' => 'nullable|numeric|min:0',
                 'tax_amount' => 'nullable|numeric|min:0',
-                'total_cost' => 'nullable|numeric|min:0', // Modificato da required a nullable
+                'total_cost' => 'nullable|numeric|min:0',
                 'profit_margin' => 'nullable|numeric|min:0',
                 'sale_price' => 'nullable|numeric|min:0',
                 'spec_fields' => 'required|array',
@@ -1626,7 +1626,17 @@ class ITSaleScraperController extends Controller
             $batch = new \App\Models\Batch();
             $batch->name = $request->batch_name;
             $batch->slug = \Illuminate\Support\Str::slug($request->batch_name);
-            $batch->reference_code = $request->batch_reference;
+            
+            // Genera automaticamente un reference code se non è stato fornito
+            if (empty($request->batch_reference)) {
+                // Ottieni l'ultimo batch per determinare il prossimo ID
+                $lastBatch = \App\Models\Batch::orderBy('id', 'desc')->first();
+                $nextId = $lastBatch ? $lastBatch->id + 1 : 1;
+                $batch->reference_code = 'BATCH-' . str_pad($nextId, 4, '0', STR_PAD_LEFT);
+            } else {
+                $batch->reference_code = $request->batch_reference;
+            }
+            
             $batch->description = $request->batch_description;
             $batch->status = $request->batch_status;
             $batch->category_id = $request->category_id;
@@ -2064,7 +2074,18 @@ class ITSaleScraperController extends Controller
                 $productData['original_specs'] = $product['specs'] ?? [];
                 
                 // Aggiungi ID univoco al prodotto
-                $productData['id'] = $request->batch_reference . '-' . ($index + 1);
+                if (!empty($request->batch_reference)) {
+                    // Estrai il numero dal batch_reference, rimuovendo qualsiasi prefisso (BT-, BATCH-, ecc.)
+                    $batchNumber = preg_replace('/[^0-9]/', '', $request->batch_reference);
+                } else {
+                    // Se batch_reference è vuoto, usa l'ID del batch che verrà creato
+                    $lastBatch = \App\Models\Batch::orderBy('id', 'desc')->first();
+                    $nextId = $lastBatch ? $lastBatch->id + 1 : 1;
+                    $batchNumber = str_pad($nextId, 4, '0', STR_PAD_LEFT);
+                }
+                
+                // Formato: XXXX-Y (es. 0023-1)
+                $productData['id'] = $batchNumber . '-' . ($index + 1);
                 
                 // Aggiungi il prodotto all'array
                 $batchProducts[] = $productData;
