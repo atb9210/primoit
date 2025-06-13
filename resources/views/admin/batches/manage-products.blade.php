@@ -52,7 +52,7 @@
                 <div class="p-6 border-b border-gray-200">
                     <h3 class="text-lg font-semibold text-gray-800 mb-4">Add New Product</h3>
                     
-                    <form action="{{ route('admin.batches.add-product', $batch) }}" method="POST" enctype="multipart/form-data">
+                    <form id="add-product-form" action="{{ route('admin.batches.add-product', $batch) }}" method="POST" enctype="multipart/form-data">
                         @csrf
                         
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -179,7 +179,7 @@
                         </div>
                         
                         <div class="flex justify-end mt-4">
-                            <button type="submit" class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition ease-in-out duration-150">
+                            <button type="button" id="submit-product-btn" class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition ease-in-out duration-150">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                                 </svg>

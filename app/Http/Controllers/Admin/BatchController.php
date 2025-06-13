@@ -483,6 +483,12 @@ class BatchController extends Controller
      */
     public function addProduct(Request $request, Batch $batch)
     {
+        // Debug per tracciare i dati ricevuti
+        \Log::debug('BatchController@addProduct - Inizio');
+        \Log::debug('Request all: ' . json_encode($request->all()));
+        \Log::debug('Request files: ' . json_encode($request->allFiles()));
+        \Log::debug('Batch ID: ' . $batch->id);
+        
         $validated = $request->validate([
             'manufacturer' => 'required|string|max:100',
             'model' => 'required|string|max:100',
@@ -498,6 +504,10 @@ class BatchController extends Controller
             'product_images.*' => 'nullable|image|max:2048', // Validazione per le immagini del prodotto
             'product_default_image' => 'nullable|integer', // Indice dell'immagine predefinita
         ]);
+        
+        // Debug per verificare la validazione
+        \Log::debug('Validazione superata');
+        \Log::debug('Validated data: ' . json_encode($validated));
         
         // Prepara i parametri del prodotto
         $productParams = [];

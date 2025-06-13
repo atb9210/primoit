@@ -253,6 +253,11 @@
 - 20:15 - Aggiunto pulsante per comprimere automaticamente le immagini che superano i 2MB
 - 20:15 - Integrata libreria browser-image-compression per compressione client-side
 - 20:15 - Migliorata UX con barra di progresso e feedback durante la compressione
+- 21:30 - Aggiunto pulsante "Add Product" nella pagina di visualizzazione batch per aggiungere prodotti direttamente
+- 21:30 - Implementato modal con form completo per aggiungere prodotti senza dover navigare alla pagina di gestione prodotti
+- 21:30 - Integrato compressore di immagini nel modal di aggiunta prodotti con verifica dimensioni >2MB
+- 21:30 - Aggiunto supporto per drag and drop delle immagini nel modal di aggiunta prodotti
+- 21:30 - Implementato invio asincrono del form con feedback visivo durante il caricamento
 
 ## 06/06/2024
 
