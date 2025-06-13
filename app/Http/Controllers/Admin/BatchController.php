@@ -536,9 +536,17 @@ class BatchController extends Controller
             }
         }
         
+        // Recupera i prodotti esistenti o inizializza un array vuoto
+        $products = $batch->products ?? [];
+        
+        // Calcola il prossimo ID sequenziale basato sul batch
+        $batchNumber = preg_replace('/[^0-9]/', '', $batch->reference_code); // Estrae solo i numeri dal reference_code
+        $nextSequentialId = count($products) + 1;
+        $productId = $batchNumber . '-' . str_pad($nextSequentialId, 3, '0', STR_PAD_LEFT); // Formato: BATCHNUMBER-001
+        
         // Crea un array che rappresenta il prodotto (in un formato JSON)
         $product = [
-            'id' => time() . rand(1000, 9999), // Aggiungo un ID univoco basato su timestamp + numero casuale
+            'id' => $productId, // ID formato da numero batch + ID sequenziale
             'manufacturer' => $validated['manufacturer'],
             'model' => $validated['model'],
             'grade' => $validated['grade'],
@@ -565,9 +573,6 @@ class BatchController extends Controller
                 }
             }
         }
-        
-        // Recupera i prodotti esistenti o inizializza un array vuoto
-        $products = $batch->products ?? [];
         
         // Aggiungi il nuovo prodotto
         $products[] = $product;

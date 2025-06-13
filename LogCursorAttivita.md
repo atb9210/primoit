@@ -261,6 +261,7 @@
 - 21:45 - Corretto problema con ID prodotti mancanti aggiungendo generazione automatica di ID univoci
 - 21:45 - Risolto problema con parametri aggiuntivi (OS, CPU, RAM, ecc.) che non venivano visualizzati nella tabella
 - 21:45 - Modificato il redirect dopo l'aggiunta di un prodotto per tornare alla pagina di visualizzazione del batch
+- 22:00 - Migliorato formato ID prodotti: ora include il numero del batch seguito da un ID sequenziale (es. 19-001)
 
 ## 06/06/2024
 
