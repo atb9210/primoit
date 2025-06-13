@@ -258,6 +258,9 @@
 - 21:30 - Integrato compressore di immagini nel modal di aggiunta prodotti con verifica dimensioni >2MB
 - 21:30 - Aggiunto supporto per drag and drop delle immagini nel modal di aggiunta prodotti
 - 21:30 - Implementato invio asincrono del form con feedback visivo durante il caricamento
+- 21:45 - Corretto problema con ID prodotti mancanti aggiungendo generazione automatica di ID univoci
+- 21:45 - Risolto problema con parametri aggiuntivi (OS, CPU, RAM, ecc.) che non venivano visualizzati nella tabella
+- 21:45 - Modificato il redirect dopo l'aggiunta di un prodotto per tornare alla pagina di visualizzazione del batch
 
 ## 06/06/2024
 

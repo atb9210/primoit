@@ -509,19 +509,6 @@ class BatchController extends Controller
         \Log::debug('Validazione superata');
         \Log::debug('Validated data: ' . json_encode($validated));
         
-        // Prepara i parametri del prodotto
-        $productParams = [];
-        if ($request->has('param_keys') && $request->has('param_values')) {
-            $keys = $request->param_keys;
-            $values = $request->param_values;
-            
-            foreach ($keys as $index => $key) {
-                if (!empty($key) && isset($values[$index])) {
-                    $productParams[$key] = $values[$index];
-                }
-            }
-        }
-        
         // Gestione delle immagini del prodotto
         $productImages = [];
         $defaultImageIndex = (int)$request->input('product_default_image', 0);
@@ -551,13 +538,13 @@ class BatchController extends Controller
         
         // Crea un array che rappresenta il prodotto (in un formato JSON)
         $product = [
+            'id' => time() . rand(1000, 9999), // Aggiungo un ID univoco basato su timestamp + numero casuale
             'manufacturer' => $validated['manufacturer'],
             'model' => $validated['model'],
             'grade' => $validated['grade'],
             'price' => (float)$validated['price'],
             'quantity' => (int)$validated['quantity'],
             'tech_grade' => $validated['tech_grade'],
-            'parameters' => $productParams,
             'images' => $productImages,
             'created_at' => now()->toDateTimeString()
         ];
@@ -565,6 +552,18 @@ class BatchController extends Controller
         // Aggiungi il campo problems solo se tech_grade è Working* o Not Working
         if (in_array($validated['tech_grade'], ['Working*', 'Not Working']) && isset($request->problems)) {
             $product['problems'] = $request->problems;
+        }
+        
+        // Aggiungi i parametri direttamente all'oggetto prodotto invece di metterli in un campo separato
+        if ($request->has('param_keys') && $request->has('param_values')) {
+            $keys = $request->param_keys;
+            $values = $request->param_values;
+            
+            foreach ($keys as $index => $key) {
+                if (!empty($key) && isset($values[$index]) && !empty($values[$index])) {
+                    $product[$key] = $values[$index];
+                }
+            }
         }
         
         // Recupera i prodotti esistenti o inizializza un array vuoto
@@ -590,7 +589,7 @@ class BatchController extends Controller
         
         $batch->save();
         
-        return redirect()->route('admin.batches.manage-products', $batch)
+        return redirect()->route('admin.batches.show', $batch)
             ->with('success', 'Product added to batch successfully.');
     }
     
