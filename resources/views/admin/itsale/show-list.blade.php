@@ -350,6 +350,21 @@
                             </svg>
                             Export to Excel
                         </button>
+                        @if(!isset($loadImages) || !$loadImages)
+                        <a href="{{ route('admin.itsale.scraper.show-list', ['supplier' => $supplier, 'listSlug' => $listSlug, 'loadImages' => 'true']) }}" class="inline-flex justify-center items-center px-6 py-2 bg-purple-600 border border-transparent rounded-md font-semibold text-sm text-white uppercase tracking-widest hover:bg-purple-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 transition ease-in-out duration-150">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                            </svg>
+                            Load Images
+                        </a>
+                        @else
+                        <a href="{{ route('admin.itsale.scraper.show-list', ['supplier' => $supplier, 'listSlug' => $listSlug]) }}" class="inline-flex justify-center items-center px-6 py-2 bg-gray-100 border border-gray-300 rounded-md font-semibold text-sm text-gray-700 uppercase tracking-widest hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition ease-in-out duration-150">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                            Hide Images
+                        </a>
+                        @endif
                     </div>
 
                     <!-- Tabs Navigation (only for products now) -->
@@ -386,11 +401,29 @@
                                         @foreach($listDetails['items'] as $index => $item)
                                             <tr class="{{ $index % 2 == 0 ? 'bg-white' : 'bg-gray-50' }} hover:bg-indigo-50">
                                                 <td class="px-3 py-4 whitespace-nowrap">
-                                                    <div class="flex-shrink-0 h-20 w-20 rounded-md overflow-hidden">
-                                                        @if(isset($item['photo_url']))
-                                                            <img src="{{ $item['photo_url'] }}" alt="{{ $item['producer'] ?? '' }} {{ $item['model'] ?? '' }}" class="h-full w-full object-cover">
+                                                    <div class="flex-shrink-0 h-20 w-20 rounded-md overflow-hidden cursor-pointer" onclick="openImageModal(this, {{ $index }})">
+                                                        @if(isset($item['image']) && !empty($item['image']))
+                                                            <img src="{{ $item['image'] }}" alt="{{ $item['producer'] ?? '' }} {{ $item['model'] ?? '' }}" class="h-full w-full object-contain" loading="lazy" data-full-img="{{ str_replace('product_thumbnails', 'product_imgs', $item['image']) }}" @if(isset($item['alternative_image'])) data-alt-img="{{ str_replace('product_thumbnails', 'product_imgs', $item['alternative_image']) }}" @endif @if(isset($item['product_id'])) data-product-id="{{ $item['product_id'] }}" @endif onerror="this.onerror=null; @if(isset($item['alternative_image'])) this.src='{{ $item['alternative_image'] }}'; @else this.parentNode.innerHTML='<div class=\'h-full w-full flex items-center justify-center bg-gray-200 text-gray-500\'>No Image</div>'; @endif">
+                                                        @elseif(isset($item['photo_url']) && !empty($item['photo_url']))
+                                                            <img src="{{ $item['photo_url'] }}" alt="{{ $item['producer'] ?? '' }} {{ $item['model'] ?? '' }}" class="h-full w-full object-contain" loading="lazy" data-full-img="{{ str_replace(['/t_', '_thumbnail', '_small', '_medium'], ['/', '', '', ''], $item['photo_url']) }}" onerror="this.onerror=null;this.parentNode.innerHTML='<div class=\'h-full w-full flex items-center justify-center bg-gray-200 text-gray-500\'>No Image</div>';">
+                                                        @elseif(isset($item['img_url']) && !empty($item['img_url']))
+                                                            <img src="{{ $item['img_url'] }}" alt="{{ $item['producer'] ?? '' }} {{ $item['model'] ?? '' }}" class="h-full w-full object-contain" loading="lazy" data-full-img="{{ str_replace(['/t_', '_thumbnail', '_small', '_medium'], ['/', '', '', ''], $item['img_url']) }}" onerror="this.onerror=null;this.parentNode.innerHTML='<div class=\'h-full w-full flex items-center justify-center bg-gray-200 text-gray-500\'>No Image</div>';">
                                                         @else
                                                             <div class="h-full w-full flex items-center justify-center bg-gray-200 text-gray-500">No Image</div>
+                                                        @endif
+                                                        
+                                                        @if(isset($item['additional_images']) && count($item['additional_images']) > 0)
+                                                            <div class="absolute bottom-0 right-0 bg-blue-500 text-white text-xs font-bold px-1 rounded-tl">+{{ count($item['additional_images']) }}</div>
+                                                            <div class="hidden">
+                                                                @foreach($item['additional_images'] as $idx => $addImg)
+                                                                    <span 
+                                                                        data-idx="{{ $idx + 1 }}" 
+                                                                        data-thumbnail="{{ $addImg['thumbnail'] }}" 
+                                                                        data-fullsize="{{ $addImg['fullsize'] }}" 
+                                                                        data-alternate="{{ $addImg['alternate'] }}">
+                                                                    </span>
+                                                                @endforeach
+                                                            </div>
                                                         @endif
                                                     </div>
                                                 </td>
@@ -615,6 +648,375 @@
                     
                     document.getElementById(tabId).classList.remove('hidden');
                 });
+            });
+        });
+    </script>
+
+    <!-- Image Modal -->
+    <div id="imageModal" class="fixed inset-0 z-50 flex items-center justify-center hidden" style="background-color: rgba(0,0,0,0.8);">
+        <div class="relative w-full max-w-4xl mx-auto">
+            <!-- Close button -->
+            <button id="closeImageModal" class="absolute top-4 right-4 text-white z-20 hover:text-gray-300">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+            
+            <!-- Previous button -->
+            <button id="prevImage" class="absolute left-4 top-1/2 transform -translate-y-1/2 text-white z-20 hover:text-gray-300 bg-black bg-opacity-30 rounded-full p-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                </svg>
+            </button>
+            
+            <!-- Next button -->
+            <button id="nextImage" class="absolute right-4 top-1/2 transform -translate-y-1/2 text-white z-20 hover:text-gray-300 bg-black bg-opacity-30 rounded-full p-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                </svg>
+            </button>
+            
+            <!-- Image container -->
+            <div class="bg-white p-2 rounded-lg">
+                <div id="modalImageContainer" class="flex items-center justify-center h-[80vh] w-full relative">
+                    <!-- Loading indicator -->
+                    <div id="modalImageLoading" class="absolute inset-0 flex items-center justify-center bg-gray-200 bg-opacity-50 z-10">
+                        <svg class="animate-spin h-12 w-12 text-indigo-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                    </div>
+                    <img id="modalImage" src="" alt="Product Image" class="max-h-full max-w-full object-contain">
+                </div>
+                
+                <!-- Thumbnails navigation -->
+                <div id="imageThumbnails" class="flex overflow-x-auto p-2 gap-2 bg-gray-100 max-w-full">
+                    <!-- Thumbnails will be added here dynamically -->
+                </div>
+                
+                <div class="p-4 bg-gray-100">
+                    <div id="imageCaption" class="text-center text-gray-700 font-medium"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Array per memorizzare le immagini disponibili
+        let productImages = [];
+        let currentImageIndex = 0;
+        let currentProductId = null;
+
+        // Funzione per ottenere l'URL dell'immagine a piena risoluzione
+        function getFullSizeImageUrl(thumbnailUrl) {
+            if (!thumbnailUrl) return '';
+            
+            // Verifica se l'URL contiene un ID prodotto di ITSale
+            const itsaleProductMatch = thumbnailUrl.match(/product[_-](?:thumbnails|imgs)[\/\\\\](\d+)_(\d+)\.(jpg|png|webp)/i);
+            if (itsaleProductMatch) {
+                const productId = itsaleProductMatch[1];
+                const imageIndex = itsaleProductMatch[2];
+                // Preferisci WebP ma offri anche JPG come alternativa
+                return `https://itsale.pl/product_imgs/${productId}_${imageIndex}.webp`;
+            }
+            
+            // Altrimenti procedi con le sostituzioni standard
+            let fullUrl = thumbnailUrl
+                // Rimuovi parametri di dimensione comuni
+                .replace(/(\?|&)(width|height|size|w|h|resize)=[^&]+/gi, '')
+                // Rimuovi suffissi comuni per thumbnail
+                .replace(/(_|\-)(thumbnail|thumb|small|medium|preview|t_|s_|m_)\./gi, '.')
+                // Rimuovi cartelle thumbnail
+                .replace(/(\/|\\)(thumbnails|thumbs|small|t_|preview)(\/|\\)/gi, '/')
+                // Prova a sostituire le cartelle specifiche di ITSale
+                .replace('/product_thumbnails/', '/product_imgs/')
+                .replace('/thumbs/', '/full/')
+                .replace('/small/', '/large/');
+            
+            // Rimuovi eventuali parametri di query
+            const queryIndex = fullUrl.indexOf('?');
+            if (queryIndex !== -1) {
+                fullUrl = fullUrl.substring(0, queryIndex);
+            }
+            
+            return fullUrl;
+        }
+
+        // Funzione per raccogliere le immagini aggiuntive per un prodotto
+        function collectAdditionalImages(element, productId) {
+            const additionalImages = [];
+            
+            // Cerca eventuali elementi nascosti con dati sulle immagini aggiuntive
+            const hiddenImgContainer = element.querySelector('.hidden');
+            if (hiddenImgContainer) {
+                const imgDataElements = hiddenImgContainer.querySelectorAll('span[data-idx]');
+                imgDataElements.forEach(el => {
+                    additionalImages.push({
+                        index: parseInt(el.getAttribute('data-idx')),
+                        thumbnailSrc: el.getAttribute('data-thumbnail'),
+                        src: el.getAttribute('data-fullsize'),
+                        altSrc: el.getAttribute('data-alternate'),
+                        alt: `Additional image ${el.getAttribute('data-idx')}`,
+                        productId: productId
+                    });
+                });
+            }
+            
+            // Se non ci sono immagini aggiuntive specificate negli elementi span,
+            // proviamo a generare i possibili URL in base al productId
+            if (additionalImages.length === 0 && productId) {
+                for (let i = 2; i <= 5; i++) { // Verifica immagini 2-5
+                    additionalImages.push({
+                        index: i,
+                        thumbnailSrc: `https://itsale.pl/product_thumbnails/${productId}_${i}.webp`,
+                        src: `https://itsale.pl/product_imgs/${productId}_${i}.webp`,
+                        altSrc: `https://itsale.pl/product_imgs/${productId}_${i}.jpg`,
+                        alt: `Additional image ${i}`,
+                        productId: productId
+                    });
+                }
+            }
+            
+            return additionalImages;
+        }
+
+        // Funzione per aprire il modal
+        function openImageModal(element, productIndex) {
+            // Verifica se l'elemento contiene un'immagine
+            const imgElement = element.querySelector('img');
+            if (!imgElement) return;
+
+            // Ottieni il product ID se disponibile
+            currentProductId = imgElement.getAttribute('data-product-id');
+            
+            // Raccogli tutte le immagini disponibili nella tabella
+            productImages = [];
+            
+            // Immagine principale
+            const thumbnailSrc = imgElement.getAttribute('src');
+            const fullSrc = imgElement.getAttribute('data-full-img');
+            const altSrc = imgElement.getAttribute('data-alt-img');
+            
+            // Utilizza l'URL data-full-img se disponibile, altrimenti prova a generare l'URL per l'immagine originale
+            const originalSrc = fullSrc || getFullSizeImageUrl(thumbnailSrc);
+            
+            productImages.push({
+                src: originalSrc,
+                thumbnailSrc: thumbnailSrc, // Salva anche l'URL della miniatura come fallback
+                altSrc: altSrc, // URL alternativo se l'immagine principale non si carica
+                alt: imgElement.getAttribute('alt'),
+                index: 0,
+                productId: currentProductId
+            });
+            
+            // Aggiungi le immagini aggiuntive se disponibili
+            if (currentProductId) {
+                const additionalImages = collectAdditionalImages(element, currentProductId);
+                productImages = productImages.concat(additionalImages);
+            }
+
+            // Se non ci sono immagini, esci
+            if (productImages.length === 0) return;
+
+            // Imposta l'indice corrente alla prima immagine
+            currentImageIndex = 0;
+
+            // Aggiorna l'immagine nel modal
+            updateModalImage();
+            
+            // Aggiorna le thumbnail nel modal
+            updateThumbnailsNavigation();
+
+            // Mostra il modal
+            const modal = document.getElementById('imageModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+
+            // Disabilita lo scroll della pagina quando il modal è aperto
+            document.body.style.overflow = 'hidden';
+        }
+
+        // Funzione per chiudere il modal
+        function closeImageModal() {
+            const modal = document.getElementById('imageModal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+            document.body.style.overflow = 'auto';
+        }
+
+        // Funzione per aggiornare l'immagine nel modal
+        function updateModalImage() {
+            const modalImage = document.getElementById('modalImage');
+            const imageCaption = document.getElementById('imageCaption');
+            const loadingIndicator = document.getElementById('modalImageLoading');
+            
+            if (productImages.length > 0 && currentImageIndex >= 0 && currentImageIndex < productImages.length) {
+                const currentImage = productImages[currentImageIndex];
+                
+                // Mostra l'indicatore di caricamento
+                if (loadingIndicator) loadingIndicator.classList.remove('hidden');
+                
+                // Imposta l'URL della miniatura come src temporaneo per un caricamento più veloce
+                modalImage.src = currentImage.thumbnailSrc || '';
+                
+                // Crea un nuovo oggetto Image per precaricare l'immagine a piena risoluzione
+                const fullImg = new Image();
+                fullImg.onload = function() {
+                    // Quando l'immagine è caricata, sostituisci con l'immagine a piena risoluzione
+                    modalImage.src = currentImage.src;
+                    // Nascondi l'indicatore di caricamento
+                    if (loadingIndicator) loadingIndicator.classList.add('hidden');
+                };
+                
+                fullImg.onerror = function() {
+                    console.log('Errore nel caricamento dell\'immagine principale, tentativo con alternativa');
+                    
+                    // Se abbiamo un URL alternativo, proviamo quello
+                    if (currentImage.altSrc) {
+                        const altImg = new Image();
+                        altImg.onload = function() {
+                            modalImage.src = currentImage.altSrc;
+                            if (loadingIndicator) loadingIndicator.classList.add('hidden');
+                        };
+                        
+                        altImg.onerror = function() {
+                            // Se anche l'immagine alternativa fallisce, usa la miniatura
+                            console.log('Anche l\'immagine alternativa ha fallito, usando la miniatura');
+                            modalImage.src = currentImage.thumbnailSrc || '';
+                            if (loadingIndicator) loadingIndicator.classList.add('hidden');
+                        };
+                        
+                        altImg.src = currentImage.altSrc;
+                    } else {
+                        // Se non abbiamo un'alternativa, usa la miniatura
+                        modalImage.src = currentImage.thumbnailSrc || '';
+                        if (loadingIndicator) loadingIndicator.classList.add('hidden');
+                    }
+                };
+                
+                // Inizia il caricamento dell'immagine a piena risoluzione
+                fullImg.src = currentImage.src;
+                
+                modalImage.alt = currentImage.alt;
+                imageCaption.textContent = currentImage.alt || `Image ${currentImageIndex + 1} of ${productImages.length}`;
+                
+                // Aggiorna le thumbnail attiva
+                const thumbnails = document.querySelectorAll('#imageThumbnails .thumbnail');
+                thumbnails.forEach((thumb, idx) => {
+                    if (idx === currentImageIndex) {
+                        thumb.classList.add('border-blue-500', 'border-2');
+                    } else {
+                        thumb.classList.remove('border-blue-500', 'border-2');
+                    }
+                });
+            }
+
+            // Mostra/nascondi i pulsanti di navigazione in base al numero di immagini
+            const prevButton = document.getElementById('prevImage');
+            const nextButton = document.getElementById('nextImage');
+            
+            if (productImages.length <= 1) {
+                prevButton.classList.add('hidden');
+                nextButton.classList.add('hidden');
+            } else {
+                prevButton.classList.remove('hidden');
+                nextButton.classList.remove('hidden');
+            }
+        }
+
+        // Funzione per aggiornare la navigazione delle thumbnail
+        function updateThumbnailsNavigation() {
+            const thumbnailsContainer = document.getElementById('imageThumbnails');
+            
+            // Svuota il container
+            thumbnailsContainer.innerHTML = '';
+            
+            // Se c'è solo un'immagine, nascondi il container
+            if (productImages.length <= 1) {
+                thumbnailsContainer.classList.add('hidden');
+                return;
+            }
+            
+            // Mostra il container
+            thumbnailsContainer.classList.remove('hidden');
+            
+            // Aggiungi thumbnail per ogni immagine
+            productImages.forEach((image, index) => {
+                const thumbnail = document.createElement('div');
+                thumbnail.className = 'thumbnail h-16 w-16 flex-shrink-0 cursor-pointer border border-gray-300 rounded overflow-hidden';
+                if (index === currentImageIndex) {
+                    thumbnail.classList.add('border-blue-500', 'border-2');
+                }
+                
+                // Crea elemento immagine
+                const img = document.createElement('img');
+                img.src = image.thumbnailSrc;
+                img.alt = `Thumbnail ${index + 1}`;
+                img.className = 'h-full w-full object-contain';
+                
+                // Gestisci errore se l'immagine non può essere caricata
+                img.onerror = function() {
+                    this.onerror = null;
+                    this.parentNode.innerHTML = `<div class="h-full w-full flex items-center justify-center bg-gray-200 text-gray-500 text-xs">${index + 1}</div>`;
+                };
+                
+                // Aggiungi evento click
+                thumbnail.addEventListener('click', function() {
+                    currentImageIndex = index;
+                    updateModalImage();
+                });
+                
+                // Aggiungi immagine al thumbnail
+                thumbnail.appendChild(img);
+                
+                // Aggiungi thumbnail al container
+                thumbnailsContainer.appendChild(thumbnail);
+            });
+        }
+
+        // Funzione per passare all'immagine precedente
+        function showPreviousImage() {
+            if (productImages.length <= 1) return;
+            currentImageIndex = (currentImageIndex - 1 + productImages.length) % productImages.length;
+            updateModalImage();
+        }
+
+        // Funzione per passare all'immagine successiva
+        function showNextImage() {
+            if (productImages.length <= 1) return;
+            currentImageIndex = (currentImageIndex + 1) % productImages.length;
+            updateModalImage();
+        }
+
+        // Aggiungi event listener quando il DOM è caricato
+        document.addEventListener('DOMContentLoaded', function() {
+            // Event listener per chiudere il modal
+            document.getElementById('closeImageModal').addEventListener('click', closeImageModal);
+            
+            // Event listener per passare all'immagine precedente
+            document.getElementById('prevImage').addEventListener('click', showPreviousImage);
+            
+            // Event listener per passare all'immagine successiva
+            document.getElementById('nextImage').addEventListener('click', showNextImage);
+            
+            // Event listener per chiudere il modal quando si clicca fuori dall'immagine
+            document.getElementById('imageModal').addEventListener('click', function(event) {
+                if (event.target === this) {
+                    closeImageModal();
+                }
+            });
+            
+            // Event listener per la navigazione con i tasti della tastiera
+            document.addEventListener('keydown', function(event) {
+                if (document.getElementById('imageModal').classList.contains('hidden')) return;
+                
+                if (event.key === 'Escape') {
+                    closeImageModal();
+                } else if (event.key === 'ArrowLeft') {
+                    showPreviousImage();
+                } else if (event.key === 'ArrowRight') {
+                    showNextImage();
+                }
             });
         });
     </script>

@@ -81,6 +81,23 @@
                                     @enderror
                                 </div>
                                 
+                                <div class="mb-4 grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label for="product_manufacturer" class="block text-sm font-medium text-gray-700 mb-1">Manufacturer *</label>
+                                        <input type="text" name="product_manufacturer" id="product_manufacturer" value="{{ old('product_manufacturer', $batch->product_manufacturer) }}" required class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                                        @error('product_manufacturer')
+                                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                        @enderror
+                                    </div>
+                                    <div>
+                                        <label for="product_model" class="block text-sm font-medium text-gray-700 mb-1">Model *</label>
+                                        <input type="text" name="product_model" id="product_model" value="{{ old('product_model', $batch->product_model) }}" required class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                                        @error('product_model')
+                                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                        @enderror
+                                    </div>
+                                </div>
+                                
                                 <div class="mb-4">
                                     <label for="description" class="block text-sm font-medium text-gray-700 mb-1">Description</label>
                                     <textarea name="description" id="description" rows="4" class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">{{ old('description', $batch->description) }}</textarea>
@@ -339,8 +356,6 @@
                             
                             <!-- Fixed Parameters Input (Hidden) -->
                             <div class="hidden">
-                                <input type="text" name="product_manufacturer" id="product_manufacturer" value="{{ old('product_manufacturer', $batch->product_manufacturer) }}" required>
-                                <input type="text" name="product_model" id="product_model" value="{{ old('product_model', $batch->product_model) }}" required>
                                 <select name="condition_grade" id="condition_grade">
                                     <option value="">None</option>
                                     <option value="A" {{ old('condition_grade', $batch->condition_grade) == 'A' ? 'selected' : '' }}>A</option>
@@ -349,7 +364,7 @@
                                     <option value="D" {{ old('condition_grade', $batch->condition_grade) == 'D' ? 'selected' : '' }}>D</option>
                                 </select>
                                 <input type="number" name="price" id="price" value="{{ old('price', $batch->unit_price) }}" step="0.01" min="0">
-                                <input type="number" name="quantity" id="quantity" value="{{ old('quantity', $batch->unit_quantity) }}" min="1">
+                                <input type="number" name="quantity" id="quantity" value="{{ old('quantity', $batch->unit_quantity) }}" min="0">
                                 <select name="tech_grade" id="tech_grade">
                                     <option value="Working" {{ old('tech_grade', $batch->visual_grade) == 'Working' ? 'selected' : '' }}>Working</option>
                                     <option value="Working*" {{ old('tech_grade', $batch->visual_grade) == 'Working*' ? 'selected' : '' }}>Working*</option>
@@ -433,21 +448,16 @@
                                 </div>
                             </div>
                         </div>
-                                <div class="flex space-x-2">
-                                    <!-- Direct submit button as fallback -->
-                                    <button type="submit" class="inline-flex items-center px-4 py-2 bg-gray-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition ease-in-out duration-150">
-                                        Save Directly
-                                    </button>
-                                    
-                                    <!-- JavaScript-enhanced button -->
-                                    <button type="button" id="save-batch-btn" class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition ease-in-out duration-150">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                                        </svg>
-                                        Save Batch
-                                    </button>
-                                </div>
-                            </div>
+                        
+                        <!-- Pulsanti di salvataggio -->
+                        <div class="mt-6 flex justify-end space-x-2">
+                            <!-- Direct submit button as fallback -->
+                            <button type="submit" class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition ease-in-out duration-150">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                </svg>
+                                Save Changes
+                            </button>
                         </div>
                     </form>
                 </div>
@@ -1243,47 +1253,4 @@
             calculateUnitPrice();
         });
     </script>
-</x-admin-layout>                         <!-- Parameter Suggestions Based on Category -->
-                        <div class="mt-4 mb-6">
-                            <div class="bg-blue-50 p-4 rounded-lg">
-                                <h4 class="text-sm font-semibold text-blue-700 mb-2">Suggested Parameters</h4>
-                                <div id="suggested-params" class="text-sm text-blue-600">
-                                    <p>Select a category to see suggested parameters.</p>
-                                </div>
-                                <div class="mt-2">
-                                    <button type="button" id="add-suggested-params" class="text-xs text-blue-700 font-medium hover:text-blue-900 hidden">
-                                        <span class="underline">Add all suggested parameters</span>
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- Notes -->
-                        <div class="mt-6">
-                            <label for="notes" class="block text-sm font-medium text-gray-700 mb-1">Notes</label>
-                            <textarea name="notes" id="notes" rows="3" class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">{{ old('notes', $batch->notes) }}</textarea>
-                            @error('notes')
-                                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                            @enderror
-                        </div>
-                        
-                        <!-- Pulsanti di salvataggio -->
-                        <div class="mt-6 flex justify-end space-x-2">
-                            <!-- Direct submit button as fallback -->
-                            <button type="submit" class="inline-flex items-center px-4 py-2 bg-gray-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition ease-in-out duration-150">
-                                Save Changes
-                            </button>
-                            
-                            <!-- JavaScript-enhanced button -->
-                            <button type="button" id="save-batch-btn" class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition ease-in-out duration-150">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                                </svg>
-                                Save Batch
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div> 
+</x-admin-layout> 

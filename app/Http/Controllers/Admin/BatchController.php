@@ -76,37 +76,89 @@ class BatchController extends Controller
      */
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'reference_code' => 'nullable|string|max:255',
-            'description' => 'nullable|string',
-            'category_id' => 'required|exists:categories,id',
-            'product_manufacturer' => 'required|string|max:100',
-            'product_model' => 'required|string|max:100',
-            'unit_quantity' => 'required|integer|min:0',
-            'unit_price' => 'required|numeric|min:0',
-            'status' => 'required|in:draft,active,reserved,sold',
-            'available_from' => 'nullable|date',
-            'available_until' => 'nullable|date',
-            'condition_grade' => 'nullable|string|max:50',
-            'visual_grade' => 'nullable|string|max:50',
-            'notes' => 'nullable|string',
-            'param_keys' => 'nullable|array',
-            'param_keys.*' => 'string|max:100',
-            'param_values' => 'nullable|array',
-            'param_values.*' => 'nullable|string|max:255',
-            'images.*' => 'nullable|image|max:2048', // Validazione per il caricamento di immagini
-            'default_image_index' => 'nullable|integer',
-            'source_type' => 'nullable|string|in:internal,external,imported',
-            'supplier' => 'nullable|string|max:255',
-            'source_reference' => 'nullable|string|max:255',
-            'batch_cost' => 'nullable|numeric|min:0',
-            'shipping_cost' => 'nullable|numeric|min:0',
-            'tax_amount' => 'nullable|numeric|min:0',
-            'total_cost' => 'nullable|numeric|min:0',
-            'sale_price' => 'nullable|numeric|min:0',
-            'profit_margin' => 'nullable|integer|min:0',
-        ]);
+        // Debug per upload immagini
+        \Log::debug('BatchController@store - Inizio');
+        \Log::debug('Request has file images: ' . ($request->hasFile('images') ? 'SI' : 'NO'));
+        \Log::debug('Request all: ' . json_encode($request->all()));
+        \Log::debug('Request files: ' . json_encode($request->allFiles()));
+        
+        // Verifica permessi directory
+        $uploadPath = storage_path('app/public/batches');
+        \Log::debug('Upload path: ' . $uploadPath);
+        \Log::debug('Upload path exists: ' . (file_exists($uploadPath) ? 'SI' : 'NO'));
+        \Log::debug('Upload path is writable: ' . (is_writable($uploadPath) ? 'SI' : 'NO'));
+        \Log::debug('Upload path permissions: ' . substr(sprintf('%o', fileperms($uploadPath)), -4));
+        
+        // Verifica errori di upload prima della validazione
+        $hasUploadErrors = false;
+        $uploadErrors = [];
+        
+        if ($request->hasFile('images')) {
+            \Log::debug('Numero di immagini: ' . count($request->file('images')));
+            foreach ($request->file('images') as $index => $image) {
+                \Log::debug('Immagine ' . $index . ' - Nome: ' . $image->getClientOriginalName());
+                \Log::debug('Immagine ' . $index . ' - Dimensione: ' . $image->getSize());
+                \Log::debug('Immagine ' . $index . ' - Tipo: ' . $image->getMimeType());
+                \Log::debug('Immagine ' . $index . ' - Validità: ' . ($image->isValid() ? 'SI' : 'NO'));
+                
+                // Verifica dimensione massima (2MB = 2048KB = 2097152 bytes)
+                if ($image->getSize() > 2097152) {
+                    $hasUploadErrors = true;
+                    $uploadErrors[] = 'L\'immagine ' . $image->getClientOriginalName() . ' supera la dimensione massima di 2MB.';
+                    \Log::debug('Immagine ' . $index . ' - Errore: Dimensione superiore a 2MB');
+                }
+                
+                if (!$image->isValid()) {
+                    $hasUploadErrors = true;
+                    $uploadErrors[] = 'L\'immagine ' . $image->getClientOriginalName() . ' non è valida.';
+                    \Log::debug('Immagine ' . $index . ' - Errore: ' . $image->getError());
+                }
+            }
+        }
+        
+        // Se ci sono errori di upload, ritorna alla pagina con gli errori
+        if ($hasUploadErrors) {
+            return redirect()->back()
+                ->withInput()
+                ->withErrors(['upload_errors' => $uploadErrors]);
+        }
+        
+        try {
+            $validated = $request->validate([
+                'name' => 'required|string|max:255',
+                'reference_code' => 'nullable|string|max:255',
+                'description' => 'nullable|string',
+                'category_id' => 'required|exists:categories,id',
+                'product_manufacturer' => 'required|string|max:100',
+                'product_model' => 'required|string|max:100',
+                'unit_quantity' => 'required|integer|min:0',
+                'unit_price' => 'required|numeric|min:0',
+                'status' => 'required|in:draft,active,reserved,sold',
+                'available_from' => 'nullable|date',
+                'available_until' => 'nullable|date',
+                'condition_grade' => 'nullable|string|max:50',
+                'visual_grade' => 'nullable|string|max:50',
+                'notes' => 'nullable|string',
+                'param_keys' => 'nullable|array',
+                'param_keys.*' => 'string|max:100',
+                'param_values' => 'nullable|array',
+                'param_values.*' => 'nullable|string|max:255',
+                'images.*' => 'nullable|image|max:2048', // Validazione per il caricamento di immagini
+                'default_image_index' => 'nullable|integer',
+                'source_type' => 'nullable|string|in:internal,external,imported',
+                'supplier' => 'nullable|string|max:255',
+                'source_reference' => 'nullable|string|max:255',
+                'batch_cost' => 'nullable|numeric|min:0',
+                'shipping_cost' => 'nullable|numeric|min:0',
+                'tax_amount' => 'nullable|numeric|min:0',
+                'total_cost' => 'nullable|numeric|min:0',
+                'sale_price' => 'nullable|numeric|min:0',
+                'profit_margin' => 'nullable|integer|min:0',
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            \Log::debug('Errore di validazione: ' . json_encode($e->errors()));
+            throw $e;
+        }
 
         // Nella creazione iniziale, tipicamente non ci sono prodotti,
         // quindi useremo i valori di input
@@ -117,18 +169,32 @@ class BatchController extends Controller
         $imagesPaths = [];
         $defaultImageIndex = $request->input('default_image_index', 0);
         
+        \Log::debug('BatchController@store - Prima di processare le immagini');
+        \Log::debug('Default Image Index: ' . $defaultImageIndex);
+        
         if ($request->hasFile('images')) {
+            \Log::debug('Processando le immagini...');
             foreach ($request->file('images') as $index => $image) {
-                $path = $image->store('batches', 'public');
-                
-                // Se questa è l'immagine default, salva le informazioni
-                if ((int)$defaultImageIndex === $index) {
-                    $imagesPaths['default'] = $path;
+                try {
+                    $path = $image->store('batches', 'public');
+                    \Log::debug('Immagine ' . $index . ' salvata in: ' . $path);
+                    
+                    // Se questa è l'immagine default, salva le informazioni
+                    if ((int)$defaultImageIndex === $index) {
+                        $imagesPaths['default'] = $path;
+                        \Log::debug('Impostata come default: ' . $path);
+                    }
+                    
+                    $imagesPaths[] = $path;
+                } catch (\Exception $e) {
+                    \Log::error('Errore nel salvataggio dell\'immagine: ' . $e->getMessage());
                 }
-                
-                $imagesPaths[] = $path;
             }
+        } else {
+            \Log::debug('Nessuna immagine da processare');
         }
+        
+        \Log::debug('ImagesPaths: ' . json_encode($imagesPaths));
 
         // Prepara le specifiche dinamiche
         $specifications = [];
@@ -146,7 +212,7 @@ class BatchController extends Controller
         // Crea il batch con tutti i campi
         $batch = Batch::create([
             'name' => $validated['name'],
-            'reference_code' => $validated['reference_code'] ?? Str::slug($validated['name'] . '-' . now()->format('YmdHis')),
+            'reference_code' => $validated['reference_code'] ?? null, // Temporaneamente null, lo aggiorneremo dopo
             'description' => $validated['description'],
             'category_id' => $validated['category_id'],
             'product_manufacturer' => $validated['product_manufacturer'],
@@ -173,6 +239,16 @@ class BatchController extends Controller
             'sale_price' => $validated['sale_price'] ?? null,
             'profit_margin' => $validated['profit_margin'] ?? null,
         ]);
+
+        // Se non è stato fornito un reference_code, generalo nel formato BT-0001 + ID
+        if (empty($validated['reference_code'])) {
+            $batch->reference_code = 'BT-' . str_pad($batch->id, 4, '0', STR_PAD_LEFT);
+            $batch->save();
+        }
+
+        \Log::debug('BatchController@store - Batch creato con ID: ' . $batch->id);
+        \Log::debug('BatchController@store - Reference code: ' . $batch->reference_code);
+        \Log::debug('BatchController@store - Immagini salvate: ' . json_encode($imagesPaths));
 
         return redirect()->route('admin.batches.index')
             ->with('success', 'Batch created successfully.');
@@ -208,6 +284,14 @@ class BatchController extends Controller
      */
     public function update(Request $request, Batch $batch)
     {
+        // Debug per verificare i dati ricevuti
+        \Log::debug('BatchController@update - Inizio');
+        \Log::debug('Request all: ' . json_encode($request->all()));
+        \Log::debug('Batch ID: ' . $batch->id);
+        \Log::debug('Batch name: ' . $batch->name);
+        \Log::debug('Batch manufacturer: ' . $batch->product_manufacturer);
+        \Log::debug('Batch model: ' . $batch->product_model);
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'reference_code' => 'nullable|string|max:255',

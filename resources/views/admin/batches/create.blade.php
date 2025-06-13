@@ -47,6 +47,27 @@
                 </div>
             @endif
 
+            <!-- Errori di upload delle immagini -->
+            @if ($errors->has('upload_errors'))
+                <div class="mb-4 bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded shadow-sm" role="alert">
+                    <div class="flex">
+                        <div class="flex-shrink-0">
+                            <svg class="h-5 w-5 text-red-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                            </svg>
+                        </div>
+                        <div class="ml-3">
+                            <p class="font-medium text-red-700 mb-1">Errori nel caricamento delle immagini:</p>
+                            <ul class="list-disc pl-5 space-y-1">
+                                @foreach($errors->get('upload_errors') as $error)
+                                    <li class="text-sm">{{ $error }}</li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            @endif
+
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6">
                     <form action="{{ route('admin.batches.store') }}" method="POST" enctype="multipart/form-data">
@@ -67,7 +88,8 @@
                                 
                                 <div class="mb-4">
                                     <label for="reference_code" class="block text-sm font-medium text-gray-700 mb-1">Reference Code</label>
-                                    <input type="text" name="reference_code" id="reference_code" value="{{ old('reference_code') }}" class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                                    <input type="text" name="reference_code" id="reference_code" value="{{ old('reference_code') }}" class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" placeholder="Lascia vuoto per generazione automatica (BT-0001 + ID)">
+                                    <p class="text-xs text-gray-500 mt-1">Se lasciato vuoto, verrà generato automaticamente nel formato BT-0001 seguito dall'ID del batch.</p>
                                     @error('reference_code')
                                         <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                                     @enderror
@@ -105,7 +127,8 @@
                                     
                                     <div>
                                         <label for="unit_price" class="block text-sm font-medium text-gray-700 mb-1">Unit Price (€) *</label>
-                                        <input type="number" name="unit_price" id="unit_price" value="{{ old('unit_price', 0) }}" min="0" step="0.01" required class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                                        <input type="number" name="unit_price" id="unit_price" value="{{ old('unit_price', 0) }}" min="0" step="0.01" required class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 bg-gray-100" readonly>
+                                        <p class="text-xs text-gray-500 mt-1">Questo valore viene calcolato automaticamente in base al prezzo totale e alla quantità.</p>
                                         @error('unit_price')
                                             <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                                         @enderror
@@ -162,6 +185,30 @@
                                                 <p class="pl-1">or drag and drop</p>
                                             </div>
                                             <p class="text-xs text-gray-500">PNG, JPG, GIF up to 2MB</p>
+                                        </div>
+                                    </div>
+                                    <!-- Debug info per drag and drop -->
+                                    <div id="drag-drop-debug" class="mt-2 p-2 bg-gray-50 border border-gray-200 rounded text-sm">
+                                        <p class="font-medium text-gray-700">File selezionati:</p>
+                                        <div id="debug-info" class="text-xs text-gray-600 mt-1">Nessun file selezionato</div>
+                                    </div>
+                                    <!-- Controllo dimensione immagini e compressione -->
+                                    <div id="image-size-control" class="mt-3 hidden">
+                                        <div class="bg-yellow-50 p-3 rounded-md border border-yellow-200">
+                                            <p class="text-sm font-medium text-yellow-800">Attenzione: alcune immagini superano i 2MB</p>
+                                            <p class="text-xs text-yellow-700 mt-1">Le immagini troppo grandi potrebbero non essere caricate correttamente.</p>
+                                            <button type="button" id="compress-images" class="mt-2 inline-flex items-center px-3 py-1.5 border border-yellow-300 text-xs font-medium rounded-md text-yellow-700 bg-yellow-50 hover:bg-yellow-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                                                </svg>
+                                                Comprimi immagini
+                                            </button>
+                                            <div id="compression-progress" class="mt-2 hidden">
+                                                <div class="w-full bg-yellow-200 rounded-full h-1.5">
+                                                    <div id="compression-bar" class="bg-yellow-500 h-1.5 rounded-full" style="width: 0%"></div>
+                                                </div>
+                                                <p id="compression-status" class="text-xs text-yellow-700 mt-1">Compressione in corso...</p>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -281,18 +328,11 @@
                                 
                                 <div>
                                     <label for="sale_price" class="block text-sm font-medium text-gray-700 mb-1">Sale Price (€)</label>
-                                    <input type="number" name="sale_price" id="sale_price" x-model="salePrice" min="0" step="0.01" class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                                    <input type="number" name="sale_price" id="sale_price" x-model="salePrice" min="0" step="0.01" class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 bg-gray-100" readonly>
+                                    <input type="hidden" name="sale_price_backup" value="{{ old('sale_price', 0) }}">
                                     @error('sale_price')
                                         <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                                     @enderror
-                                    <div class="mt-2 flex justify-end">
-                                        <button type="button" @click="calculateSalePrice()" class="inline-flex items-center px-2 py-1 border border-transparent text-xs font-medium rounded text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
-                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2z" />
-                                            </svg>
-                                            Calculate
-                                        </button>
-                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -447,6 +487,380 @@
                             </button>
                         </div>
                     </template>
+                    
+                    <!-- Script per calcolare automaticamente il unit_price -->
+                    <script>
+                        document.addEventListener("DOMContentLoaded", function() {
+                            const unitQuantityInput = document.getElementById("unit_quantity");
+                            const unitPriceInput = document.getElementById("unit_price");
+                            const salePriceInput = document.getElementById("sale_price");
+                            
+                            // Funzione per calcolare unit_price
+                            function calculateUnitPrice() {
+                                const salePrice = parseFloat(salePriceInput.value) || 0;
+                                const quantity = parseFloat(unitQuantityInput.value) || 1; // Usa 1 come fallback per evitare divisioni per zero
+                                
+                                if (salePrice > 0 && quantity > 0) {
+                                    const unitPrice = (salePrice / quantity).toFixed(2);
+                                    unitPriceInput.value = unitPrice;
+                                }
+                            }
+                            
+                            // Aggiungi event listeners
+                            if (unitQuantityInput) {
+                                unitQuantityInput.addEventListener("input", calculateUnitPrice);
+                            }
+                            
+                            if (salePriceInput) {
+                                salePriceInput.addEventListener("input", calculateUnitPrice);
+                                salePriceInput.addEventListener("change", calculateUnitPrice);
+                                
+                                // Quando profit_margin cambia, aspetta che sale_price venga aggiornato e poi calcola unit_price
+                                const profitMarginInput = document.getElementById("profit_margin");
+                                if (profitMarginInput) {
+                                    profitMarginInput.addEventListener("input", function() {
+                                        setTimeout(calculateUnitPrice, 100);
+                                    });
+                                }
+                            }
+                            
+                            // Aggiungi event listeners per le variabili che influenzano indirettamente sale_price
+                            const batchCostInput = document.getElementById("batch_cost");
+                            const shippingCostInput = document.getElementById("shipping_cost");
+                            const taxAmountInput = document.getElementById("tax_amount");
+                            
+                            if (batchCostInput) {
+                                batchCostInput.addEventListener("input", function() {
+                                    setTimeout(calculateUnitPrice, 200);
+                                });
+                            }
+                            
+                            if (shippingCostInput) {
+                                shippingCostInput.addEventListener("input", function() {
+                                    setTimeout(calculateUnitPrice, 200);
+                                });
+                            }
+                            
+                            if (taxAmountInput) {
+                                taxAmountInput.addEventListener("input", function() {
+                                    setTimeout(calculateUnitPrice, 200);
+                                });
+                            }
+                            
+                            // Calcola il prezzo unitario all'avvio
+                            calculateUnitPrice();
+                        });
+                    </script>
+                    
+                    <!-- Script per calcolare automaticamente il sale price -->
+                    <script>
+                        document.addEventListener("DOMContentLoaded", function() {
+                            const totalCostInput = document.getElementById("total_cost");
+                            const profitMarginInput = document.getElementById("profit_margin");
+                            const salePriceInput = document.getElementById("sale_price");
+                            
+                            // Function to calculate sale price
+                            function calculateSalePrice() {
+                                const totalCost = parseFloat(totalCostInput.value) || 0;
+                                const profitMargin = parseFloat(profitMarginInput.value) || 0;
+                                
+                                if (totalCost > 0 && profitMargin > 0) {
+                                    const salePrice = (totalCost * (1 + (profitMargin / 100))).toFixed(2);
+                                    salePriceInput.value = salePrice;
+                                    
+                                    // Aggiorna anche il campo backup
+                                    document.querySelector('input[name="sale_price_backup"]').value = salePrice;
+                                }
+                            }
+                            
+                            // Add event listeners
+                            if (profitMarginInput) {
+                                profitMarginInput.addEventListener("input", calculateSalePrice);
+                            }
+                            
+                            if (totalCostInput) {
+                                totalCostInput.addEventListener("change", calculateSalePrice);
+                                
+                                // Triggerare l'evento change quando cambia batch_cost, shipping_cost e tax_amount
+                                document.getElementById("batch_cost").addEventListener("input", function() {
+                                    // Calcola il total_cost (questa funzione dovrebbe essere già definita altrove)
+                                    const batchCost = parseFloat(document.getElementById("batch_cost").value) || 0;
+                                    const shippingCost = parseFloat(document.getElementById("shipping_cost").value) || 0;
+                                    const taxAmount = parseFloat(document.getElementById("tax_amount").value) || 0;
+                                    
+                                    const total = batchCost + shippingCost + taxAmount;
+                                    totalCostInput.value = total.toFixed(2);
+                                    
+                                    setTimeout(calculateSalePrice, 50);
+                                });
+                                
+                                document.getElementById("shipping_cost").addEventListener("input", function() {
+                                    // Calcola il total_cost
+                                    const batchCost = parseFloat(document.getElementById("batch_cost").value) || 0;
+                                    const shippingCost = parseFloat(document.getElementById("shipping_cost").value) || 0;
+                                    const taxAmount = parseFloat(document.getElementById("tax_amount").value) || 0;
+                                    
+                                    const total = batchCost + shippingCost + taxAmount;
+                                    totalCostInput.value = total.toFixed(2);
+                                    
+                                    setTimeout(calculateSalePrice, 50);
+                                });
+                                
+                                document.getElementById("tax_amount").addEventListener("input", function() {
+                                    // Calcola il total_cost
+                                    const batchCost = parseFloat(document.getElementById("batch_cost").value) || 0;
+                                    const shippingCost = parseFloat(document.getElementById("shipping_cost").value) || 0;
+                                    const taxAmount = parseFloat(document.getElementById("tax_amount").value) || 0;
+                                    
+                                    const total = batchCost + shippingCost + taxAmount;
+                                    totalCostInput.value = total.toFixed(2);
+                                    
+                                    setTimeout(calculateSalePrice, 50);
+                                });
+                            }
+                            
+                            // Initialize on page load
+                            calculateSalePrice();
+                        });
+                    </script>
+                    
+                    <!-- Script per il debug del drag and drop -->
+                    <script>
+                        document.addEventListener('DOMContentLoaded', function() {
+                            const imageInput = document.getElementById('images');
+                            const debugInfo = document.getElementById('debug-info');
+                            const form = document.querySelector('form');
+                            const imageSizeControl = document.getElementById('image-size-control');
+                            
+                            // Array per tenere traccia delle immagini originali e compresse
+                            let selectedFiles = [];
+                            let compressedFiles = [];
+                            let oversizedImages = false;
+                            
+                            // Mostra info quando vengono selezionati i file
+                            imageInput.addEventListener('change', function(e) {
+                                if (this.files && this.files.length > 0) {
+                                    selectedFiles = Array.from(this.files);
+                                    updateFileInfo();
+                                } else {
+                                    debugInfo.innerHTML = 'Nessun file selezionato';
+                                    imageSizeControl.classList.add('hidden');
+                                    selectedFiles = [];
+                                    compressedFiles = [];
+                                    oversizedImages = false;
+                                }
+                            });
+                            
+                            function updateFileInfo() {
+                                let fileInfo = `<p class="text-green-600 font-medium">File selezionati: ${selectedFiles.length}</p>`;
+                                oversizedImages = false;
+                                
+                                selectedFiles.forEach((file, index) => {
+                                    const fileSizeKB = (file.size / 1024).toFixed(2);
+                                    const fileSizeMB = (file.size / (1024 * 1024)).toFixed(2);
+                                    const isOversized = file.size > 2 * 1024 * 1024; // 2MB
+                                    
+                                    if (isOversized) {
+                                        oversizedImages = true;
+                                        fileInfo += `<p>File ${index + 1}: ${file.name} <span class="text-red-600 font-medium">(${fileSizeMB} MB)</span></p>`;
+                                    } else {
+                                        fileInfo += `<p>File ${index + 1}: ${file.name} (${fileSizeKB} KB)</p>`;
+                                    }
+                                });
+                                
+                                debugInfo.innerHTML = fileInfo;
+                                
+                                // Mostra il controllo dimensione se ci sono immagini troppo grandi
+                                if (oversizedImages) {
+                                    imageSizeControl.classList.remove('hidden');
+                                } else {
+                                    imageSizeControl.classList.add('hidden');
+                                }
+                            }
+                            
+                            // Intercetta l'invio del form per mostrare info
+                            form.addEventListener('submit', function(e) {
+                                // Se ci sono immagini troppo grandi e non sono state compresse, blocca l'invio
+                                if (oversizedImages && compressedFiles.length === 0) {
+                                    e.preventDefault();
+                                    alert('Alcune immagini superano i 2MB. Per favore, comprimi le immagini prima di inviare il form.');
+                                    return false;
+                                }
+                                
+                                // Altrimenti continua normalmente
+                                const formData = new FormData(this);
+                                const hasImages = formData.getAll('images[]').some(file => file.name !== '');
+                                
+                                if (hasImages) {
+                                    debugInfo.innerHTML += `<p class="text-blue-600 font-medium mt-2">Form inviato con ${formData.getAll('images[]').filter(file => file.name !== '').length} immagini</p>`;
+                                    
+                                    // Verifica che l'elemento input file abbia effettivamente i file
+                                    if (imageInput.files && imageInput.files.length > 0) {
+                                        debugInfo.innerHTML += `<p class="text-green-600">Input file ha ${imageInput.files.length} file</p>`;
+                                    } else {
+                                        debugInfo.innerHTML += `<p class="text-red-600">ATTENZIONE: Input file è vuoto nonostante FormData contenga immagini!</p>`;
+                                    }
+                                } else {
+                                    debugInfo.innerHTML += `<p class="text-red-600 font-medium mt-2">Form inviato senza immagini</p>`;
+                                }
+                            });
+                            
+                            // Aggiungi supporto per il drag and drop
+                            const dropZone = document.querySelector('.border-dashed');
+                            
+                            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                                dropZone.addEventListener(eventName, preventDefaults, false);
+                            });
+                            
+                            function preventDefaults(e) {
+                                e.preventDefault();
+                                e.stopPropagation();
+                            }
+                            
+                            ['dragenter', 'dragover'].forEach(eventName => {
+                                dropZone.addEventListener(eventName, highlight, false);
+                            });
+                            
+                            ['dragleave', 'drop'].forEach(eventName => {
+                                dropZone.addEventListener(eventName, unhighlight, false);
+                            });
+                            
+                            function highlight() {
+                                dropZone.classList.add('border-indigo-500', 'bg-indigo-50');
+                                debugInfo.innerHTML = 'File in arrivo...';
+                            }
+                            
+                            function unhighlight() {
+                                dropZone.classList.remove('border-indigo-500', 'bg-indigo-50');
+                            }
+                            
+                            dropZone.addEventListener('drop', handleDrop, false);
+                            
+                            function handleDrop(e) {
+                                const dt = e.dataTransfer;
+                                const files = dt.files;
+                                
+                                if (files && files.length > 0) {
+                                    imageInput.files = files;
+                                    selectedFiles = Array.from(files);
+                                    updateFileInfo();
+                                }
+                            }
+                            
+                            // Gestione compressione immagini
+                            const compressButton = document.getElementById('compress-images');
+                            const compressionProgress = document.getElementById('compression-progress');
+                            const compressionBar = document.getElementById('compression-bar');
+                            const compressionStatus = document.getElementById('compression-status');
+                            
+                            compressButton.addEventListener('click', async function() {
+                                if (!selectedFiles.length || !oversizedImages) return;
+                                
+                                // Mostra la barra di progresso
+                                compressionProgress.classList.remove('hidden');
+                                compressButton.disabled = true;
+                                
+                                // Carica la libreria browser-image-compression dinamicamente
+                                if (!window.imageCompression) {
+                                    const script = document.createElement('script');
+                                    script.src = 'https://cdn.jsdelivr.net/npm/browser-image-compression@2.0.0/dist/browser-image-compression.js';
+                                    script.async = true;
+                                    
+                                    script.onload = function() {
+                                        compressImages();
+                                    };
+                                    
+                                    document.head.appendChild(script);
+                                } else {
+                                    compressImages();
+                                }
+                                
+                                async function compressImages() {
+                                    compressedFiles = [];
+                                    let processed = 0;
+                                    
+                                    // Opzioni di compressione
+                                    const options = {
+                                        maxSizeMB: 1.9, // Poco meno di 2MB per sicurezza
+                                        maxWidthOrHeight: 1920, // Limita anche la dimensione
+                                        useWebWorker: true,
+                                        fileType: 'image/jpeg' // Converti tutto in JPEG
+                                    };
+                                    
+                                    // Comprimi ogni immagine
+                                    for (let i = 0; i < selectedFiles.length; i++) {
+                                        const file = selectedFiles[i];
+                                        
+                                        // Salta i file che sono già abbastanza piccoli
+                                        if (file.size <= 2 * 1024 * 1024) {
+                                            compressedFiles.push(file);
+                                            processed++;
+                                            updateProgress(processed / selectedFiles.length * 100);
+                                            continue;
+                                        }
+                                        
+                                        try {
+                                            compressionStatus.textContent = `Compressione ${i+1}/${selectedFiles.length}: ${file.name}`;
+                                            const compressedFile = await window.imageCompression(file, options);
+                                            
+                                            // Crea un nuovo File con lo stesso nome ma formato .jpg
+                                            const fileName = file.name.replace(/\.[^/.]+$/, "") + ".jpg";
+                                            const newFile = new File([compressedFile], fileName, {
+                                                type: 'image/jpeg',
+                                                lastModified: new Date().getTime()
+                                            });
+                                            
+                                            compressedFiles.push(newFile);
+                                        } catch (error) {
+                                            console.error('Errore durante la compressione:', error);
+                                            // In caso di errore, usa il file originale
+                                            compressedFiles.push(file);
+                                        }
+                                        
+                                        processed++;
+                                        updateProgress(processed / selectedFiles.length * 100);
+                                    }
+                                    
+                                    // Aggiorna l'input file con i file compressi
+                                    updateFileInputWithCompressedFiles();
+                                }
+                            });
+                            
+                            function updateProgress(percent) {
+                                compressionBar.style.width = `${percent}%`;
+                            }
+                            
+                            function updateFileInputWithCompressedFiles() {
+                                if (!compressedFiles.length) return;
+                                
+                                // Crea un nuovo DataTransfer per aggiornare l'input file
+                                const dataTransfer = new DataTransfer();
+                                
+                                // Aggiungi tutti i file compressi
+                                compressedFiles.forEach(file => {
+                                    dataTransfer.items.add(file);
+                                });
+                                
+                                // Aggiorna l'input file
+                                imageInput.files = dataTransfer.files;
+                                
+                                // Aggiorna la UI
+                                selectedFiles = compressedFiles;
+                                oversizedImages = false;
+                                updateFileInfo();
+                                
+                                // Aggiorna lo stato della compressione
+                                compressionStatus.textContent = 'Compressione completata!';
+                                compressionBar.style.width = '100%';
+                                
+                                // Riabilita il pulsante dopo un po'
+                                setTimeout(() => {
+                                    compressButton.disabled = false;
+                                    compressionProgress.classList.add('hidden');
+                                }, 2000);
+                            }
+                        });
+                    </script>
                 </div>
             </div>
         </div>

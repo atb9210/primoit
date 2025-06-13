@@ -66,4 +66,4 @@ class OrderController extends Controller
         // Logica di eliminazione da implementare
         return redirect()->route('admin.orders.index')->with('success', 'Order deleted successfully.');
     }
-} 
+}

@@ -297,8 +297,15 @@ class ITSaleScraperController extends Controller
             // Check if we're forcing a refresh
             $forceRefresh = request()->has('refresh');
             
+            // Check if we should load images
+            $loadImages = request()->has('loadImages') || request()->get('loadImages') === 'true';
+            
             if ($forceRefresh) {
                 Log::info('Force refreshing data for list: ' . $listSlug);
+            }
+            
+            if ($loadImages) {
+                Log::info('Image loading enabled for list: ' . $listSlug);
             }
             
             // Fetch della pagina delle liste
@@ -809,7 +816,12 @@ class ITSaleScraperController extends Controller
             'tech_grade' => $techGradeStats
         ]);
         
-        return view('admin.itsale.show-list', compact('supplier', 'listDetails', 'listSlug'));
+        // If loadImages is set, try to extract image URLs for each item
+        if ($loadImages && count($items) > 0) {
+            $listDetails['items'] = $this->extractProductImages($listDetails['items'], $listHtml);
+        }
+        
+        return view('admin.itsale.show-list', compact('supplier', 'listDetails', 'listSlug', 'loadImages'));
         
     } catch (\Exception $e) {
         Log::error('Exception while scraping ITSale.pl list details: ' . $e->getMessage());
@@ -818,6 +830,298 @@ class ITSaleScraperController extends Controller
     }
 }
 
+    /**
+     * Extract product images from ITSale product listings
+     */
+    private function extractProductImages($items, $listHtml)
+    {
+        try {
+            $crawler = new Crawler($listHtml);
+            Log::info('Extracting product thumbnails from HTML');
+            
+            // Salva l'HTML per debugging
+            file_put_contents(storage_path('logs/itsale_list_for_images_' . time() . '.html'), $listHtml);
+            
+            // Identifica gli ID dei prodotti (se presenti)
+            $productIds = [];
+            foreach ($items as $index => $item) {
+                if (isset($item['id'])) {
+                    $productIds[$index] = $item['id'];
+                }
+            }
+            
+            // Estrai ID dei prodotti dal codice HTML se non già presenti
+            if (empty($productIds)) {
+                Log::info('Tentativo di estrazione ID prodotti dal HTML');
+                preg_match_all('/product_id["\s:]+([\d]+)/i', $listHtml, $idMatches);
+                preg_match_all('/product[_-](?:thumbnails|imgs)[\/\\\\](\d+)_/i', $listHtml, $imgIdMatches);
+                
+                // Combina tutti gli ID trovati
+                $foundIds = array_merge($idMatches[1] ?? [], $imgIdMatches[1] ?? []);
+                $foundIds = array_unique($foundIds);
+                
+                Log::info('ID prodotti trovati nell\'HTML: ' . json_encode($foundIds));
+                
+                // Associa gli ID trovati ai prodotti in base alla posizione
+                if (count($foundIds) > 0 && count($foundIds) >= count($items)) {
+                    foreach ($items as $index => $item) {
+                        if (isset($foundIds[$index])) {
+                            $productIds[$index] = $foundIds[$index];
+                        }
+                    }
+                }
+            }
+            
+            Log::info('Product IDs estratti: ' . json_encode($productIds));
+            
+            // Look for image elements in the page with more comprehensive selectors (solo per thumbnails)
+            $imageElements = $crawler->filter('
+                img.img-safe-table, 
+                img[src*="product_thumbnails"], 
+                img[src*="thumbnail"],
+                img[src*="small"],
+                img[src*="preview"],
+                .product-image img,
+                .product-thumbnail img,
+                .product-photo img,
+                .item-image img,
+                td img[src*="."]
+            ');
+            Log::info('Found ' . $imageElements->count() . ' potential product thumbnails');
+            
+            // Estrai tutti gli URL delle immagini (solo thumbnails)
+            $thumbnailUrls = [];
+            $productIdToThumbnailMap = []; // Per mappare ID prodotti a thumbnails
+            
+            $imageElements->each(function (Crawler $img, $index) use (&$thumbnailUrls, &$productIdToThumbnailMap) {
+                $src = $img->attr('src');
+                if ($src) {
+                    // Ensure URL is absolute
+                    if (!str_starts_with($src, 'http')) {
+                        $src = 'https://itsale.pl/' . ltrim($src, '/');
+                    }
+                    
+                    // Filter out common non-product images like icons, logos, etc.
+                    if (!preg_match('/(icon|logo|banner|button|bg-|background)/', $src)) {
+                        $thumbnailUrls[] = $src;
+                        
+                        // Cerca di identificare l'ID del prodotto dall'URL dell'immagine
+                        if (preg_match('/product[_-](?:thumbnails|imgs)[\/\\\\](\d+)_(\d+)\.(jpg|png|webp)/i', $src, $matches)) {
+                            $productId = $matches[1];
+                            $imageIndex = $matches[2];
+                            
+                            // Associa l'ID del prodotto con l'URL della thumbnail
+                            if (!isset($productIdToThumbnailMap[$productId])) {
+                                $productIdToThumbnailMap[$productId] = [];
+                            }
+                            $productIdToThumbnailMap[$productId][$imageIndex] = $src;
+                        }
+                    }
+                }
+            });
+            
+            Log::info('Extracted ' . count($thumbnailUrls) . ' valid thumbnail URLs');
+            
+            // Strategia 1: Usa gli ID dei prodotti per associare direttamente le thumbnails
+            $directMatches = 0;
+            foreach ($items as $index => $item) {
+                // Se abbiamo l'ID del prodotto e thumbnails corrispondenti
+                if (isset($productIds[$index]) && isset($productIdToThumbnailMap[$productIds[$index]])) {
+                    $productThumbnails = $productIdToThumbnailMap[$productIds[$index]];
+                    if (!empty($productThumbnails)) {
+                        // Prendi la prima thumbnail come principale
+                        $firstThumbnailIndex = min(array_keys($productThumbnails));
+                        $items[$index]['image'] = $productThumbnails[$firstThumbnailIndex];
+                        
+                        // Genera gli URL per le immagini ad alta qualità (da caricare on-demand)
+                        $productId = $productIds[$index];
+                        $items[$index]['product_id'] = $productId;
+                        
+                        // Verifica se esistono altre immagini (2, 3, ecc.)
+                        $additionalImages = [];
+                        foreach (range(1, 5) as $imgIndex) { // Controlla fino a 5 immagini per prodotto
+                            if ($imgIndex == $firstThumbnailIndex) continue; // Salta la thumbnail principale
+                            
+                            // Aggiungi info sulle possibili immagini aggiuntive
+                            $additionalImages[] = [
+                                'thumbnail' => "https://itsale.pl/product_thumbnails/{$productId}_{$imgIndex}.webp",
+                                'fullsize' => "https://itsale.pl/product_imgs/{$productId}_{$imgIndex}.webp",
+                                'alternate' => "https://itsale.pl/product_imgs/{$productId}_{$imgIndex}.jpg"
+                            ];
+                        }
+                        
+                        if (!empty($additionalImages)) {
+                            $items[$index]['additional_images'] = $additionalImages;
+                        }
+                        
+                        $directMatches++;
+                        Log::info('Directly matched thumbnail to product #' . $index . ' via ID: ' . $productIds[$index]);
+                    }
+                }
+            }
+            
+            Log::info('Matched ' . $directMatches . ' thumbnails to products via ID');
+            
+            // Se non abbiamo abbastanza match con gli ID, prova a costruire gli URL direttamente
+            if ($directMatches < count($items)) {
+                Log::info('Attempting to construct thumbnail URLs directly from product IDs');
+                
+                foreach ($items as $index => $item) {
+                    // Salta se l'immagine è già stata assegnata
+                    if (isset($items[$index]['image'])) continue;
+                    
+                    // Se abbiamo l'ID del prodotto, prova a costruire un URL di thumbnail
+                    if (isset($productIds[$index])) {
+                        $productId = $productIds[$index];
+                        
+                        // Costruisci URL per thumbnail
+                        $constructedUrl = "https://itsale.pl/product_thumbnails/{$productId}_1.webp";
+                        
+                        // Alternativa con JPG se WebP non funziona
+                        $alternativeUrl = "https://itsale.pl/product_thumbnails/{$productId}_1.jpg";
+                        
+                        $items[$index]['image'] = $constructedUrl;
+                        $items[$index]['alternative_image'] = $alternativeUrl;
+                        $items[$index]['product_id'] = $productId;
+                        
+                        // Aggiungi info sulle possibili immagini aggiuntive
+                        $additionalImages = [];
+                        foreach (range(2, 5) as $imgIndex) { // Controlla immagini 2-5
+                            $additionalImages[] = [
+                                'thumbnail' => "https://itsale.pl/product_thumbnails/{$productId}_{$imgIndex}.webp",
+                                'fullsize' => "https://itsale.pl/product_imgs/{$productId}_{$imgIndex}.webp",
+                                'alternate' => "https://itsale.pl/product_imgs/{$productId}_{$imgIndex}.jpg"
+                            ];
+                        }
+                        
+                        if (!empty($additionalImages)) {
+                            $items[$index]['additional_images'] = $additionalImages;
+                        }
+                        
+                        Log::info('Constructed thumbnail URL for product #' . $index . ': ' . $constructedUrl);
+                    }
+                }
+            }
+            
+            // Strategia 2: Per le immagini rimanenti, usa le strategie precedenti
+            if (count($thumbnailUrls) > 0) {
+                // Matching diretto tramite HTML
+                $productRows = $crawler->filter('tr, .product-item, .item, .product');
+                
+                if ($productRows->count() > 0) {
+                    Log::info('Attempting direct thumbnail matching with ' . $productRows->count() . ' product rows');
+                    
+                    $productRows->each(function (Crawler $row, $index) use (&$items, &$directMatches) {
+                        if ($index >= count($items)) return; // Skip if we're beyond our items array
+                        if (isset($items[$index]['image'])) return; // Skip if already has image
+                        
+                        $imgNode = $row->filter('img[src*=".jpg"], img[src*=".png"], img[src*=".webp"]');
+                        if ($imgNode->count() > 0) {
+                            $src = $imgNode->attr('src');
+                            if ($src) {
+                                // Ensure URL is absolute
+                                if (!str_starts_with($src, 'http')) {
+                                    $src = 'https://itsale.pl/' . ltrim($src, '/');
+                                }
+                                
+                                $items[$index]['image'] = $src;
+                                $directMatches++;
+                                Log::info('Directly matched thumbnail to product #' . $index . ': ' . $src);
+                                
+                                // Prova a estrarre l'ID del prodotto dall'URL
+                                if (preg_match('/product[_-](?:thumbnails|imgs)[\/\\\\](\d+)_/i', $src, $matches)) {
+                                    $productId = $matches[1];
+                                    $items[$index]['product_id'] = $productId;
+                                    
+                                    // Aggiungi info sulle possibili immagini aggiuntive
+                                    $additionalImages = [];
+                                    foreach (range(2, 5) as $imgIndex) { // Controlla immagini 2-5
+                                        $additionalImages[] = [
+                                            'thumbnail' => "https://itsale.pl/product_thumbnails/{$productId}_{$imgIndex}.webp",
+                                            'fullsize' => "https://itsale.pl/product_imgs/{$productId}_{$imgIndex}.webp",
+                                            'alternate' => "https://itsale.pl/product_imgs/{$productId}_{$imgIndex}.jpg"
+                                        ];
+                                    }
+                                    
+                                    if (!empty($additionalImages)) {
+                                        $items[$index]['additional_images'] = $additionalImages;
+                                    }
+                                }
+                            }
+                        }
+                    });
+                }
+                
+                // Per i prodotti rimanenti, assegna le thumbnails in sequenza
+                foreach ($items as $index => $item) {
+                    if (!isset($items[$index]['image']) && !empty($thumbnailUrls)) {
+                        $currentThumbnail = array_shift($thumbnailUrls);
+                        $items[$index]['image'] = $currentThumbnail;
+                        Log::info('Sequentially assigned thumbnail to product #' . $index . ': ' . $currentThumbnail);
+                        
+                        // Prova a estrarre l'ID del prodotto dall'URL
+                        if (preg_match('/product[_-](?:thumbnails|imgs)[\/\\\\](\d+)_/i', $currentThumbnail, $matches)) {
+                            $productId = $matches[1];
+                            $items[$index]['product_id'] = $productId;
+                            
+                            // Aggiungi info sulle possibili immagini aggiuntive
+                            $additionalImages = [];
+                            foreach (range(2, 5) as $imgIndex) { // Controlla immagini 2-5
+                                $additionalImages[] = [
+                                    'thumbnail' => "https://itsale.pl/product_thumbnails/{$productId}_{$imgIndex}.webp",
+                                    'fullsize' => "https://itsale.pl/product_imgs/{$productId}_{$imgIndex}.webp",
+                                    'alternate' => "https://itsale.pl/product_imgs/{$productId}_{$imgIndex}.jpg"
+                                ];
+                            }
+                            
+                            if (!empty($additionalImages)) {
+                                $items[$index]['additional_images'] = $additionalImages;
+                            }
+                        }
+                    }
+                }
+            }
+            
+            // Fallback: Se non abbiamo trovato immagini ma abbiamo ID prodotti, prova a generare URL diretti
+            foreach ($items as $index => $item) {
+                if (!isset($items[$index]['image']) && isset($productIds[$index])) {
+                    $productId = $productIds[$index];
+                    $items[$index]['image'] = "https://itsale.pl/product_thumbnails/{$productId}_1.webp";
+                    $items[$index]['product_id'] = $productId;
+                    
+                    // Aggiungi info sulle possibili immagini aggiuntive
+                    $additionalImages = [];
+                    foreach (range(2, 5) as $imgIndex) { // Controlla immagini 2-5
+                        $additionalImages[] = [
+                            'thumbnail' => "https://itsale.pl/product_thumbnails/{$productId}_{$imgIndex}.webp",
+                            'fullsize' => "https://itsale.pl/product_imgs/{$productId}_{$imgIndex}.webp",
+                            'alternate' => "https://itsale.pl/product_imgs/{$productId}_{$imgIndex}.jpg"
+                        ];
+                    }
+                    
+                    if (!empty($additionalImages)) {
+                        $items[$index]['additional_images'] = $additionalImages;
+                    }
+                    
+                    Log::info('Fallback to direct thumbnail URL construction for product #' . $index . ': ' . $items[$index]['image']);
+                }
+            }
+            
+            // Conta quanti prodotti hanno immagini
+            $itemsWithImages = 0;
+            foreach ($items as $item) {
+                if (isset($item['image'])) $itemsWithImages++;
+            }
+            Log::info('Final count: ' . $itemsWithImages . ' out of ' . count($items) . ' items have images');
+            
+            return $items;
+        } catch (\Exception $e) {
+            Log::error('Error extracting product thumbnails: ' . $e->getMessage());
+            Log::error('Stack trace: ' . $e->getTraceAsString());
+            return $items; // Return original items if there's an error
+        }
+    }
+    
     /**
      * Display the import form for mapping fields.
      */

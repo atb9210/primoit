@@ -394,3 +394,56 @@
 - 17:55 - Aggiornati tutti i layout (app, guest, admin, public, catalog) per utilizzare il componente favicon
 - 17:55 - Implementato fallback al favicon statico quando l'impostazione company_favicon non è definita
 - 17:55 - Eseguiti php artisan config:clear, php artisan cache:clear, php artisan view:clear, php artisan route:clear, php artisan optimize
+- 18:10 - Implementata funzionalità di caricamento immagini per i prodotti ITSale su richiesta
+- 18:10 - Aggiunto metodo extractProductImages() in ITSaleScraperController per estrarre URL delle immagini dai prodotti ITSale
+- 18:10 - Aggiunto pulsante "Load Images" nella vista show-list.blade.php per caricare le immagini dei prodotti
+- 18:10 - Migliorata gestione immagini con lazy loading e fallback in caso di errore di caricamento
+- 18:10 - Eseguiti php artisan config:clear, php artisan cache:clear, php artisan view:clear, php artisan route:clear, php artisan optimize
+- 22:41 - Risolto problema con il pulsante "Load Images" nella vista scraper di ITSale che non compariva nelle pagine dei prodotti. Corretto il parametro loadImages da 'true' a stringa "true" nella vista e aggiornato il controller per gestire correttamente i valori stringa.
+- 22:41 - Eseguiti comandi artisan per la pulizia della cache e l'ottimizzazione dell'applicazione: php artisan config:clear, php artisan cache:clear, php artisan view:clear, php artisan route:clear, php artisan optimize.
+- 23:10 - Migliorato il sistema di estrazione delle immagini per lo scraper ITSale. Risolto il problema del placeholder "No Image" che rimaneva anche dopo aver cliccato su "Load Images". Aggiunti selettori più completi per catturare tutte le immagini possibili e migliorata la logica di abbinamento tra immagini e prodotti.
+- 23:10 - Eseguiti comandi artisan per la pulizia della cache e l'ottimizzazione dell'applicazione: php artisan config:clear, php artisan cache:clear, php artisan view:clear, php artisan route:clear, php artisan optimize.
+- 23-11-2024 11:30 - Migliorato il sistema di visualizzazione immagini nel modal popup di ITSale: implementata visualizzazione ad alta risoluzione con caricamento progressivo, indicatore di caricamento e algoritmo per individuare versioni originali dalle miniature.
+- 23-11-2024 12:20 - Implementato sistema avanzato di recupero immagini ad alta qualità basato sugli ID prodotto di ITSale.pl. Le immagini vengono ora recuperate direttamente da /product_imgs/{id}_1.webp con fallback a versione JPG, garantendo una visualizzazione ottimale.
+- 2024-06-13 20:30 - Ottimizzato sistema di caricamento immagini in ITSale: modificato per caricare solo thumbnail inizialmente, con caricamento immagini ad alta qualità su richiesta tramite modal. Implementato indicatore di immagini multiple e galleria navigabile con miniature per prodotti con più immagini.
+- [2024-06-13 15:10] Controllato stato server Vite CSS: NON attivo
+- [2024-06-13 15:13] Avviato server Vite CSS in background con npm run dev
+- [2024-06-13 15:17] Creato e avviato script start-vite.sh per mantenere Vite sempre attivo in background
+- [2024-06-13 15:22] Analizzato bug duplicazione bottoni Save Batch/Save Directly su edit batch: trovate due sezioni con questi bottoni nel file edit.blade.php
+- [2024-06-13 15:25] Risolto bug duplicazione bottoni Save Batch/Save Directly su edit batch: rimossa la sezione duplicata in fondo al file e pulita la cache
+- [2024-06-13 15:31] Rimosso bottone Save Batch e mantenuto solo Save Changes nel form edit batch per risolvere problemi di funzionamento
+- [2024-06-13 15:40] Aggiornato form create batch con stessa logica di edit per Unit Price (readonly e calcolato automaticamente) e Sale Price (readonly e calcolato dal profit margin)
+- [2024-06-13 15:48] Aggiunto script mancante per calcolo automatico sale price nella pagina create batch, identico a quello presente nella pagina edit
+- [2024-06-13 15:55] Implementata generazione automatica reference_code nel formato BT-0001 + ID nel BatchController quando il campo è vuoto
+- [2024-06-13 16:15] Creata directory storage/app/public/batches mancante per l'upload delle immagini dei batch
+- [2024-06-13 16:20] Aggiunto codice di debug nel BatchController per tracciare il problema di upload immagini e creata directory storage/app/public/batches mancante
+
+## 13/06/2025 - 10:45
+- Aggiunto debug visivo per il caricamento delle immagini tramite drag and drop nella pagina create.blade.php
+- Aggiunto debug dettagliato nel BatchController per verificare il problema con l'upload delle immagini
+- Verificato che la directory storage/app/public/batches esiste ed è scrivibile
+- Verificato che il symlink public/storage è correttamente configurato
+- Eseguiti comandi di pulizia cache e ottimizzazione
+
+## 13/06/2025 - 11:15
+- Identificato il problema: le immagini superano il limite di dimensione di 2MB
+- Modificato il BatchController per gestire meglio gli errori di upload e mostrare messaggi appropriati
+- Aggiunto controllo esplicito sulla dimensione dei file prima della validazione
+- Aggiunta visualizzazione degli errori di upload nella pagina create.blade.php
+- Eseguiti comandi di pulizia cache e ottimizzazione
+
+## 13/06/2025 - 11:45
+- Rimosso il campo di upload backup non necessario
+- Implementato sistema di compressione immagini lato client utilizzando browser-image-compression
+- Aggiunto controllo automatico della dimensione delle immagini con feedback visivo
+- Aggiunto pulsante per comprimere automaticamente le immagini troppo grandi
+- Aggiunto blocco dell'invio del form se ci sono immagini non compresse maggiori di 2MB
+- Eseguiti comandi di pulizia cache e ottimizzazione
+
+## 13/06/2025
+
+- 09:15 - Risolto errore di sintassi in InquiryController.php che causava pagina bianca nell'admin
+- 09:17 - Rimosso codice duplicato in InquiryController.php che causava errore "unexpected token public"
+- 09:20 - Rigenerato OrderController.php per risolvere problemi di sintassi simili
+- 09:25 - Eseguiti php artisan config:clear, cache:clear, view:clear, route:clear, optimize
+- 09:30 - Risolto problema di caricamento CSS/JS nell'interfaccia admin ripristinando configurazione Vite originale
