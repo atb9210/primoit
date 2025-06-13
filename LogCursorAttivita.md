@@ -248,6 +248,11 @@
 - 18:45 - Corretto problema di salvataggio del sale_price nel database
 - 19:20 - Risolto problema con visualizzazione e salvataggio del sale_price nella pagina di modifica batch
 - 19:20 - Migliorata inizializzazione dei valori in Alpine.js per garantire che i dati vengano caricati correttamente
+- 20:15 - Aggiunto compressore e verificatore di immagini al form di modifica batch per immagini >2MB
+- 20:15 - Implementato controllo automatico della dimensione delle immagini con avviso visivo
+- 20:15 - Aggiunto pulsante per comprimere automaticamente le immagini che superano i 2MB
+- 20:15 - Integrata libreria browser-image-compression per compressione client-side
+- 20:15 - Migliorata UX con barra di progresso e feedback durante la compressione
 
 ## 06/06/2024
 

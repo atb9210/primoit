@@ -189,6 +189,31 @@
                                             <p class="text-xs text-gray-500">PNG, JPG, GIF up to 2MB</p>
                                         </div>
                                     </div>
+                                    
+                                    <!-- Debug info per drag and drop -->
+                                    <div id="drag-drop-debug" class="mt-2 p-2 bg-gray-50 border border-gray-200 rounded text-sm">
+                                        <p class="font-medium text-gray-700">File selezionati:</p>
+                                        <div id="debug-info" class="text-xs text-gray-600 mt-1">Nessun file selezionato</div>
+                                    </div>
+                                    <!-- Controllo dimensione immagini e compressione -->
+                                    <div id="image-size-control" class="mt-3 hidden">
+                                        <div class="bg-yellow-50 p-3 rounded-md border border-yellow-200">
+                                            <p class="text-sm font-medium text-yellow-800">Attenzione: alcune immagini superano i 2MB</p>
+                                            <p class="text-xs text-yellow-700 mt-1">Le immagini troppo grandi potrebbero non essere caricate correttamente.</p>
+                                            <button type="button" id="compress-images" class="mt-2 inline-flex items-center px-3 py-1.5 border border-yellow-300 text-xs font-medium rounded-md text-yellow-700 bg-yellow-50 hover:bg-yellow-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                                                </svg>
+                                                Comprimi immagini
+                                            </button>
+                                            <div id="compression-progress" class="mt-2 hidden">
+                                                <div class="w-full bg-yellow-200 rounded-full h-1.5">
+                                                    <div id="compression-bar" class="bg-yellow-500 h-1.5 rounded-full" style="width: 0%"></div>
+                                                </div>
+                                                <p id="compression-status" class="text-xs text-yellow-700 mt-1">Compressione in corso...</p>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                                 
                                 <div id="image-preview-container" class="mt-2 {{ count(is_array($batch->images) && !empty($batch->images) ? $batch->images : []) > 0 ? '' : 'hidden' }}">
@@ -1251,6 +1276,241 @@
             
             // Calcola il prezzo unitario all'avvio
             calculateUnitPrice();
+        });
+    </script>
+
+    <!-- Script per gestire il drag and drop, verificare le dimensioni e comprimere le immagini -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const imageInput = document.getElementById('images');
+            const debugInfo = document.getElementById('debug-info');
+            const form = document.querySelector('form');
+            const imageSizeControl = document.getElementById('image-size-control');
+            const dropZone = document.querySelector('.border-dashed');
+            
+            // Array per tenere traccia delle immagini originali e compresse
+            let selectedFiles = [];
+            let compressedFiles = [];
+            let oversizedImages = false;
+            
+            // Mostra info quando vengono selezionati i file
+            imageInput.addEventListener('change', function(e) {
+                if (this.files && this.files.length > 0) {
+                    selectedFiles = Array.from(this.files);
+                    updateFileInfo();
+                } else {
+                    debugInfo.innerHTML = 'Nessun file selezionato';
+                    imageSizeControl.classList.add('hidden');
+                    selectedFiles = [];
+                    compressedFiles = [];
+                    oversizedImages = false;
+                }
+            });
+            
+            function updateFileInfo() {
+                let fileInfo = `<p class="text-green-600 font-medium">File selezionati: ${selectedFiles.length}</p>`;
+                oversizedImages = false;
+                
+                selectedFiles.forEach((file, index) => {
+                    const fileSizeKB = (file.size / 1024).toFixed(2);
+                    const fileSizeMB = (file.size / (1024 * 1024)).toFixed(2);
+                    const isOversized = file.size > 2 * 1024 * 1024; // 2MB
+                    
+                    if (isOversized) {
+                        oversizedImages = true;
+                        fileInfo += `<p>File ${index + 1}: ${file.name} <span class="text-red-600 font-medium">(${fileSizeMB} MB)</span></p>`;
+                    } else {
+                        fileInfo += `<p>File ${index + 1}: ${file.name} (${fileSizeKB} KB)</p>`;
+                    }
+                });
+                
+                debugInfo.innerHTML = fileInfo;
+                
+                // Mostra il controllo dimensione se ci sono immagini troppo grandi
+                if (oversizedImages) {
+                    imageSizeControl.classList.remove('hidden');
+                } else {
+                    imageSizeControl.classList.add('hidden');
+                }
+            }
+            
+            // Intercetta l'invio del form per mostrare info
+            form.addEventListener('submit', function(e) {
+                // Se ci sono immagini troppo grandi e non sono state compresse, blocca l'invio
+                if (oversizedImages && compressedFiles.length === 0) {
+                    e.preventDefault();
+                    alert('Alcune immagini superano i 2MB. Per favore, comprimi le immagini prima di inviare il form.');
+                    return false;
+                }
+                
+                // Altrimenti continua normalmente
+                const formData = new FormData(this);
+                const hasImages = formData.getAll('images[]').some(file => file.name !== '');
+                
+                if (hasImages) {
+                    debugInfo.innerHTML += `<p class="text-blue-600 font-medium mt-2">Form inviato con ${formData.getAll('images[]').filter(file => file.name !== '').length} immagini</p>`;
+                    
+                    // Verifica che l'elemento input file abbia effettivamente i file
+                    if (imageInput.files && imageInput.files.length > 0) {
+                        debugInfo.innerHTML += `<p class="text-green-600">Input file ha ${imageInput.files.length} file</p>`;
+                    } else {
+                        debugInfo.innerHTML += `<p class="text-red-600">ATTENZIONE: Input file è vuoto nonostante FormData contenga immagini!</p>`;
+                    }
+                } else {
+                    debugInfo.innerHTML += `<p class="text-red-600 font-medium mt-2">Form inviato senza immagini</p>`;
+                }
+            });
+            
+            // Gestione drag and drop
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                dropZone.addEventListener(eventName, preventDefaults, false);
+            });
+            
+            function preventDefaults(e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+            
+            ['dragenter', 'dragover'].forEach(eventName => {
+                dropZone.addEventListener(eventName, highlight, false);
+            });
+            
+            ['dragleave', 'drop'].forEach(eventName => {
+                dropZone.addEventListener(eventName, unhighlight, false);
+            });
+            
+            function highlight() {
+                dropZone.classList.add('border-indigo-500', 'bg-indigo-50');
+            }
+            
+            function unhighlight() {
+                dropZone.classList.remove('border-indigo-500', 'bg-indigo-50');
+            }
+            
+            dropZone.addEventListener('drop', handleDrop, false);
+            
+            function handleDrop(e) {
+                const dt = e.dataTransfer;
+                const files = dt.files;
+                
+                if (files && files.length > 0) {
+                    imageInput.files = files;
+                    selectedFiles = Array.from(files);
+                    updateFileInfo();
+                }
+            }
+            
+            // Gestione compressione immagini
+            const compressButton = document.getElementById('compress-images');
+            const compressionProgress = document.getElementById('compression-progress');
+            const compressionBar = document.getElementById('compression-bar');
+            const compressionStatus = document.getElementById('compression-status');
+            
+            compressButton.addEventListener('click', async function() {
+                if (!selectedFiles.length || !oversizedImages) return;
+                
+                // Mostra la barra di progresso
+                compressionProgress.classList.remove('hidden');
+                compressButton.disabled = true;
+                
+                // Carica la libreria browser-image-compression dinamicamente
+                if (!window.imageCompression) {
+                    const script = document.createElement('script');
+                    script.src = 'https://cdn.jsdelivr.net/npm/browser-image-compression@2.0.0/dist/browser-image-compression.js';
+                    script.async = true;
+                    
+                    script.onload = function() {
+                        compressImages();
+                    };
+                    
+                    document.head.appendChild(script);
+                } else {
+                    compressImages();
+                }
+                
+                async function compressImages() {
+                    compressedFiles = [];
+                    let processed = 0;
+                    
+                    // Opzioni di compressione
+                    const options = {
+                        maxSizeMB: 1.9, // Poco meno di 2MB per sicurezza
+                        maxWidthOrHeight: 1920, // Limita anche la dimensione
+                        useWebWorker: true,
+                        fileType: 'image/jpeg' // Converti tutto in JPEG
+                    };
+                    
+                    // Comprimi ogni immagine
+                    for (let i = 0; i < selectedFiles.length; i++) {
+                        const file = selectedFiles[i];
+                        
+                        // Salta i file che sono già abbastanza piccoli
+                        if (file.size <= 2 * 1024 * 1024) {
+                            compressedFiles.push(file);
+                            processed++;
+                            updateProgress(processed / selectedFiles.length * 100);
+                            continue;
+                        }
+                        
+                        try {
+                            compressionStatus.textContent = `Compressione ${i+1}/${selectedFiles.length}: ${file.name}`;
+                            const compressedFile = await window.imageCompression(file, options);
+                            
+                            // Crea un nuovo File con lo stesso nome ma formato .jpg
+                            const fileName = file.name.replace(/\.[^/.]+$/, "") + ".jpg";
+                            const newFile = new File([compressedFile], fileName, {
+                                type: 'image/jpeg',
+                                lastModified: new Date().getTime()
+                            });
+                            
+                            compressedFiles.push(newFile);
+                            processed++;
+                            updateProgress(processed / selectedFiles.length * 100);
+                            
+                            // Aggiorna le info di debug con la nuova dimensione
+                            const originalSizeMB = (file.size / (1024 * 1024)).toFixed(2);
+                            const compressedSizeMB = (compressedFile.size / (1024 * 1024)).toFixed(2);
+                            const compressionRatio = ((1 - compressedFile.size / file.size) * 100).toFixed(1);
+                            
+                            debugInfo.innerHTML += `<p class="text-blue-600">Compresso: ${file.name} da ${originalSizeMB} MB a ${compressedSizeMB} MB (-${compressionRatio}%)</p>`;
+                            
+                        } catch (error) {
+                            console.error('Errore durante la compressione:', error);
+                            compressionStatus.textContent = `Errore durante la compressione di ${file.name}`;
+                            processed++;
+                            updateProgress(processed / selectedFiles.length * 100);
+                        }
+                    }
+                    
+                    // Aggiorna l'input file con i file compressi
+                    if (compressedFiles.length > 0) {
+                        const dataTransfer = new DataTransfer();
+                        compressedFiles.forEach(file => {
+                            dataTransfer.items.add(file);
+                        });
+                        
+                        imageInput.files = dataTransfer.files;
+                        selectedFiles = compressedFiles;
+                        
+                        // Aggiorna lo stato finale
+                        compressionStatus.textContent = `Compressione completata: ${compressedFiles.length} file pronti per l'upload`;
+                        
+                        // Nascondi l'avviso di immagini troppo grandi
+                        oversizedImages = false;
+                        imageSizeControl.classList.add('hidden');
+                        
+                        // Mostra il messaggio di successo
+                        debugInfo.innerHTML += `<p class="text-green-600 font-medium mt-2">Tutte le immagini sono state compresse con successo!</p>`;
+                    }
+                    
+                    // Riattiva il pulsante
+                    compressButton.disabled = false;
+                }
+                
+                function updateProgress(percent) {
+                    compressionBar.style.width = `${percent}%`;
+                }
+            });
         });
     </script>
 </x-admin-layout> 
