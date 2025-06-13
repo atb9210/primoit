@@ -540,13 +540,13 @@ class BatchController extends Controller
         $products = $batch->products ?? [];
         
         // Calcola il prossimo ID sequenziale basato sul batch
-        $batchNumber = preg_replace('/[^0-9]/', '', $batch->reference_code); // Estrae solo i numeri dal reference_code
+        $batchNumber = str_replace('BT-', '', $batch->reference_code); // Estrae il numero completo del batch (es. 0019)
         $nextSequentialId = count($products) + 1;
-        $productId = $batchNumber . '-' . str_pad($nextSequentialId, 3, '0', STR_PAD_LEFT); // Formato: BATCHNUMBER-001
+        $productId = $batchNumber . '-' . $nextSequentialId; // Formato: 0019-1
         
         // Crea un array che rappresenta il prodotto (in un formato JSON)
         $product = [
-            'id' => $productId, // ID formato da numero batch + ID sequenziale
+            'id' => $productId, // ID formato da numero batch completo + ID sequenziale
             'manufacturer' => $validated['manufacturer'],
             'model' => $validated['model'],
             'grade' => $validated['grade'],

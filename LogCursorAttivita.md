@@ -262,6 +262,7 @@
 - 21:45 - Risolto problema con parametri aggiuntivi (OS, CPU, RAM, ecc.) che non venivano visualizzati nella tabella
 - 21:45 - Modificato il redirect dopo l'aggiunta di un prodotto per tornare alla pagina di visualizzazione del batch
 - 22:00 - Migliorato formato ID prodotti: ora include il numero del batch seguito da un ID sequenziale (es. 19-001)
+- 22:15 - Semplificato formato ID prodotti: ora utilizza il formato completo del batch seguito da un numero sequenziale (es. 0019-1)
 
 ## 06/06/2024
 
